@@ -11,7 +11,7 @@ Utilized by e.g. hypdatatools_algorithms
 import numpy as np
 # import matplotlib.pyplot as plt
 # import os
-import prospect
+import spectralinvariant.prospect as prospect
 
 
 def p_forpixel(hypdata, refspectrum, p_values):

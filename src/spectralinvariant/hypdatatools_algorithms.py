@@ -20,8 +20,9 @@ import os
 import time
 from scipy.optimize import curve_fit, least_squares
 
-import spectralinvariants
-import hypdatatools_img
+
+from spectralinvariant.spectralinvariants import p_forpixel
+import spectralinvariant.hypdatatools_img import get_wavelengths
 
 def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
     refspec=None, refspecname='RefenceSpectrum' ):
@@ -77,7 +78,7 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
         hypdata_map = file2_datahandle
         print(filename2+" is already open, using the provided handles.")
     
-    wl_hyp = hypdatatools_img.get_wavelengths( filename2, hypdata )
+    wl_hyp = get_wavelengths( filename2, hypdata )
 
     # interpolate refspec to hyperspectral bands
     # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
