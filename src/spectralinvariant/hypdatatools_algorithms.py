@@ -22,7 +22,7 @@ from scipy.optimize import curve_fit, least_squares
 
 
 from spectralinvariant.spectralinvariants import p_forpixel
-import spectralinvariant.hypdatatools_img import get_wavelengths
+from spectralinvariant.hypdatatools_img import get_wavelength
 
 def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
     refspec=None, refspecname='RefenceSpectrum' ):

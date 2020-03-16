@@ -10,9 +10,10 @@ import sys
 #from hypdatatools_algorithms import *
 #from spectralinvariants import *
 
-from hypdatatools_img import world2envi, plot_hyperspectral
+from spectralinvariant.hypdatatools_img import world2envi, plot_hyperspectral
 
-datafolder = '/home/olli/Coding/hyperspectral'
+# The data files should be at the root of the repository
+datafolder = '../data'
 hyperspectral_filename = 'subset_A_20170615_reflectance.hdr'
 
 # open the data file -- reads only metadata
