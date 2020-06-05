@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import threading
 import os
 
-from hypdatatools_algorithms import PRI_processing, PRI_singlepoint
+from tools.hypdatatools_algorithms import PRI_processing, PRI_singlepoint
 
 # script to calculate the dependence of PRI on shadow fraction
 # inputs: hyperspectral image (i.e., BRF) and a file with a layer 'intercept'

@@ -25,7 +25,7 @@ class p_thread( threading.Thread ):
     the thread which will run the process
     """
     def __init__( self, tkroot, filename1, refspecno, wl_p, filename2, filename3, 
-        hypdata, hypdata_map, progressvar, refspec, refspecname ):
+        hypdata, hypdata_map, progressvar, refspec, wl_spec, refspecname ):
         """
         the inputs are
         tkroot: handle for the root window for signaling
@@ -44,6 +44,7 @@ class p_thread( threading.Thread ):
                 progressvar is also used to signal breaks by setting it to -1
             refspec=None: the actual reference spectrum data
                 if not None, filename1 and refspecno will not be used 
+            wl_spec=None: the wavelengths for refspec. Need to be set if refspec is not None
             refspecname='RefenceSpectrum': name of the refrence spectrum given in refspec
         """
         threading.Thread.__init__(self) # this call is apparently mentioned as a requirement in some tutorial
@@ -57,6 +58,7 @@ class p_thread( threading.Thread ):
         self.hypdata_map = hypdata_map
         self.progressvar = progressvar
         self.refspec = refspec
+        self.wl_spec = wl_spec
         self.refspecname = refspecname
     
     def run(self):
@@ -65,7 +67,7 @@ class p_thread( threading.Thread ):
         """
         # do the thing
         p_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
-            progressvar=self.progressvar, refspec=self.refspec, refspecname=self.refspecname )
+            progressvar=self.progressvar, refspec=self.refspec, wl_spec= self.wl_spec, refspecname=self.refspecname )
         # signal that we have finished
         self.tkroot.event_generate("<<thread_end>>", when="tail")
 
@@ -535,13 +537,16 @@ class pGUI:
                 if listboxselection == ():
                     print("No reference spectrum selected")
                     allset = False
+                else:
+                    listboxselection = listboxselection[0]
             else:
                 listboxselection = None # self.refspec will be used instead
                 refspec = self.refspec
+                wl_spec = self.wl_spec
                 refspecname = self.refspecname
             listboxselection_wl = self.listbox_wl.curselection()
             if len(listboxselection_wl) < 2:
-                print("Too few wavelengths selected: ", len(listboxselection) )
+                print("Too few wavelengths selected: ", len(listboxselection_wl) )
                 allset = False
             # where to save the new p-data:
             filename3 =  filedialog.asksaveasfilename(initialdir = self.hypdatadir, title = "p-file name to create",filetypes = (("ENVI hdr files","*.hdr"),("all files","*.*")))
@@ -566,8 +571,8 @@ class pGUI:
                     self.hypdata_map = None
                 
                 # create thread
-                self.thread1 = p_thread( self.master, self.filename1, listboxselection[0], listboxselection_wl, self.filename2, filename3, self.hypdata, self.hypdata_map, 
-                    self.progressvar_p, refspec, refspecname )
+                self.thread1 = p_thread( self.master, self.filename1, listboxselection, listboxselection_wl, self.filename2, filename3, self.hypdata, self.hypdata_map, 
+                    self.progressvar_p, refspec, wl_spec, refspecname )
                 
                 # prepare GUI and start thread
                 # disable all unnecessary stuff here

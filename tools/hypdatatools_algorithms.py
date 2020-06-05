@@ -24,7 +24,7 @@ import tools.spectralinvariants
 import tools.hypdatatools_img
 
 def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
-    refspec=None, refspecname='RefenceSpectrum' ):
+    refspec=None, wl_spec=None, refspecname='RefenceSpectrum' ):
     """the actual function which does the processing
 
     Args:
@@ -41,7 +41,8 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
       progressvar: NEEDS TO BE DoubleVar (of tkinter heritage) -- the variable used to mediate processing progress with a value  between 0 and 0.
         progressvar is also used to signal breaks by setting it to -1
       refspec=None: the actual reference spectrum data
-        if not None, filename1 and refspecno will not be used 
+        if not None, filename1 and refspecno will not be used
+      wl_spec=None: the wavelengths for refspec. Need to be set if refspec is not None
       refspecname='RefenceSpectrum': name of the refrence spectrum given in refspec
     this function can be called separately from the commandline 
     """
@@ -77,7 +78,8 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
         hypdata_map = file2_datahandle
         print(filename2+" is already open, using the provided handles.")
     
-    wl_hyp = tools.hypdatatools_img.get_wavelengths( filename2, hypdata )
+    wl_hyp = tools.hypdatatools_img.get_wavelength( filename2, hypdata )[0]
+    # NOTE: get_wavelength()[1] returns a flag whther the data could be loaded. This should be checked!
 
     # interpolate refspec to hyperspectral bands
     # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:

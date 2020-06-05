@@ -249,8 +249,11 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
         datascaling = hypdata_rgb.max()
         datascaling /= 0.95
         outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
-    else:
+    elif np.ptp(hypdata_rgb[ii]) > 0:
         datascaling = np.percentile(hypdata_rgb[ii], 98)
+    else:
+        datascaling = 0
+
 
     if datascaling != 0:
         outputcommand(" scaling by 1/" + str(datascaling) + "...")
@@ -307,7 +310,6 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         outputcommand = lambda x: print(x,end='',flush=True)
     
     hypdata_map_shape = ",".join( map(str,hypdata_map.shape) )
-    outputcommand( "plot_singleband(): "+ filename_short + " dimensions " + hypdata_map_shape+". ") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
 
     # try to use the default band. if more than one given, use the first. Otherwise, use first band.
     if bandnumber == None:
@@ -324,13 +326,19 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         hypdata_i = np.squeeze(hypdata_map[:, :, bandnumber]).astype('float32')
     else:
         hypdata_i = np.squeeze(hypdata.read_bands([bandnumber]).astype('float32'))
+
+    outputcommand( "plot_singleband(): "+ filename_short + " dimensions " + hypdata_map_shape+
+        " band " + str(bandnumber) + " min " + str(hypdata_i.min()) + " max " + str(hypdata_i.max()) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
+    
     # datascaling = hypdata_i.max()
     # datascaling /= 0.95 
     ii = hypdata_i > 0
-    datascaling = np.percentile(hypdata_i[ii], 98)
-    outputcommand("plot_singleband(): Applying a scaling factor of " + str(datascaling) + "\n")
-
-    hypdata_i /= datascaling
+    if np.where(ii)[0].size > 0:
+        if np.ptp(hypdata_i[ii]) > 0:
+            datascaling = np.percentile(hypdata_i[ii], 98)
+            hypdata_i /= datascaling
+            outputcommand("plot_singleband(): Applying a scaling factor of " + str(datascaling) + "\n")
+    
     # percentile alone seems to give not so nice plots
     hypdata_i[hypdata_i > 1] = 1
     hypdata_i[hypdata_i < 0] = 0
@@ -453,34 +461,33 @@ def zoomtoimage(fig_hypdata, hypdata_map):
 
 def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=None, fill_black=False, force=True,
                        description=None, localprintcommand=None):
-    """
-    Create a new envi raster of the same size and geometry as the input file (envifile)
-    in:
+    """ Create a new envi raster of the same size and geometry as the input file (envifile)
+    
+    Args:
         envifile = the ENVI (Spectral pyhton) raster to use as the example
         outfilename = the filename to create
         Nlayers: number of layers in the output file
         outtype = output file data type according to ENVI
-        the included range is min:max (i.e., max itself will be excluded)
+            ENVI data types
+                1=8-bit byte;
+                2=16-bit signed integer;
+                3=32-bit signed long integer;
+                4=32-bit floating point; 
+                5=64-bit double-precision floating point; 
+                6=2x32-bit complex, real-imaginary pair of double precision;
+                9=2x64-bit double-precision complex, real-imaginary pair of double precision;
+                12=16-bit unsigned integer;
+                13=32-bit unsigned long integer;
+                14=64-bit signed long integer; 
+                15=64-bit unsigned long integer.
         interleave = 'bil', 'bip, or 'bsq'
             if None, set to bsq
         fill_black = whether to fill the new file with zeros (DIVs) 
         force = whether to overwrite existing file
         description: what to write in the description header field
-    out:
+    
+    Returns:
         outfilehandle. To write to that raster, use outdata_map = outdata.open_memmap( writable=True )
-        
-    ENVI data types
-        1=8-bit byte;
-        2=16-bit signed integer;
-        3=32-bit signed long integer;
-        4=32-bit floating point; 
-        5=64-bit double-precision floating point; 
-        6=2x32-bit complex, real-imaginary pair of double precision;
-        9=2x64-bit double-precision complex, real-imaginary pair of double precision;
-        12=16-bit unsigned integer;
-        13=32-bit unsigned long integer;
-        14=64-bit signed long integer; 
-        15=64-bit unsigned long integer.
     """
 
     if localprintcommand is None:
@@ -510,7 +517,7 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
     metadata['samples'] = hypdata.ncols
     metadata['bands'] = Nlayers
     metadata['data type'] = outtype
-
+        
     metadata['data ignore value'] = "0"
 
     if description is None:
@@ -1095,7 +1102,7 @@ def resample_hyperspectral(hyp_infile, spectralsensitivitymatrix, out_pixelsize,
         use_DIV = True
 
     # check for optional keys to include    
-    for i_key in ['coordinate system string', 'data type']:
+    for i_key in ['coordinate system string', 'data type' ]:
         if i_key in hyp_metadata:
             multifile_metadata[i_key] = hyp_metadata[i_key]
 
@@ -1206,29 +1213,6 @@ def envihdr2datafile( hdrfilename, localprintcommand=None ):
                             datafilename = ''
     return datafilename
     
-def envidata2hdrfile( envidatafilename, localprintcommand=None ):
-    """
-    try to locate the header file associated with the ENVI data file envidatafilename
-    because gdal wants the name of the data file, not hdr; but sometimes we need hdr.
-    out:
-        the full filename of the header file
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'datafile2envihdr(): ' # for messaging
-    
-    # for envi files: gdal wants the name of the data file, not hdr
-    basefilename = os.path.splitext( envidatafilename )[0]
-    hdrfilename = basefilename + '.hdr'
-    if not os.path.exists(hdrfilename):
-        # try just adding hdr to datafile 
-        hdrfilename = envidatafilename + '.hdr'
-        if not os.path.exists(hdrfilename):
-            # no idea how to proceed
-            hdrfilename = ''
-            localprintcommand(functionname + "Cannot find the hdr file corresponding to {}.\n".format(envidatafilename) )
-    return hdrfilename
 
 def envifilecomponents( filename_in, localprintcommand=None ):
     """
@@ -1250,6 +1234,33 @@ def envifilecomponents( filename_in, localprintcommand=None ):
         headerfile = envidata2hdrfile( datafile, localprintcommand=localprintcommand )
     return datafile, headerfile
 
+def envi_endiannesscode( aisa1_map ):
+    """ Return the ENVI endianness-value (0 or 1) for numpy matrix.
+    
+    This information is a required field in ENVI header. Spectral python creates it automatically,
+    Therefore, this function is largely redundant -- but keep it just in case.
+    typical use would be metadata['byte order'] = envi_endiannesscode( aisa1_map )
+    
+    determine byte order to be save in header:
+    #   Byte order=0 is least significant  byte first (LSF) [==little-endian] 
+    #      data (DEC and MS-DOS systems).
+    #   Byte order=1 is most significant byte first (MSF) [==big-endian] data 
+    #       (all other platforms).
+    """
+    if aisa1_map.dtype.byteorder == "<":
+        # One of: ‘=’ native, ‘<’ little-endian, ‘>’ big-endian, ‘|’ not applicable
+        endianness = 0
+    elif aisa1_map.dtype.byteorder == ">":
+        endianness = 1
+    else:
+        # it's either irrelevant, or, most likely, system-endian
+        #  use system value -- according to ENVI documentation, a value is required
+        if sys.byteorder == 'little':
+            endianness = 0
+        else:
+            endianness = 1
+    return endianness
+    
 def envi_addheaderfield( envifilename, fieldname, values, checkifexists=True, localprintcommand=None ):
     """
     Adds a aline to ENVI header file. This function is in gdal-functions because it depends on envifilecomponents.
