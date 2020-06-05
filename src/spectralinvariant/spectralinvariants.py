@@ -11,7 +11,7 @@ Utilized by e.g. hypdatatools_algorithms
 import numpy as np
 # import matplotlib.pyplot as plt
 # import os
-import tools.prospect
+import spectralinvariant.prospect as prospect
 
 
 def p_forpixel(hypdata, refspectrum, p_values):
@@ -122,15 +122,15 @@ def referencealbedo( wl=None, model="PROSPECTCp" ):
     prospect_in = referencealbedo_prospectparams()
 
     if model == "PROSPECT5":
-        M = tools.prospect.prospect_5(*prospect_in)
+        M = prospect.prospect_5(*prospect_in)
     elif model == "PROSPECT4":
-        M = tools.prospect.prospect_4(*prospect_in)
+        M = prospect.prospect_4(*prospect_in)
     elif model == "PROSPECTD":
-        M = tools.prospect.prospect_D(*prospect_in)
+        M = prospect.prospect_D(*prospect_in)
     elif model == "PROSPECT5B":
-        M = tools.prospect.prospect_5B(*prospect_in)
+        M = prospect.prospect_5B(*prospect_in)
     else:
-        M = tools.prospect.prospect_Cp(*prospect_in)
+        M = prospect.prospect_Cp(*prospect_in)
 
     if wl is None:
         refalbedo = M[:,1] + M[:,2]
@@ -158,15 +158,15 @@ def referencealbedo_transformed( wl=None, model="PROSPECTCp"):
     # transform it using Eq. (11) by Lewis and Disney (2007)
     # we need w_inf; and for this we need the wax refractive index n
     if model == "PROSPECT5":
-        n = tools.prospect.P5_refractive
+        n = prospect.P5_refractive
     elif model == "PROSPECT4":
-        n = tools.prospect.P4_refractive
+        n = prospect.P4_refractive
     elif model == "PROSPECTD":
-        n = tools.prospect.PD_refractive
+        n = prospect.PD_refractive
     elif model == "PROSPECT5B":
-        n = tools.prospect.P5_refractive
+        n = prospect.P5_refractive
     else:
-        n = tools.prospect.Pcp_refractive
+        n = prospect.Pcp_refractive
 
     w_inf = -0.0492 -0.00618*n + 0.04836*n**2 # fraction of scattering from leaf surface only
     refalbedo_tr = ( refalbedo - w_inf ) / ( 1 - w_inf )
@@ -204,55 +204,55 @@ def leafalbedo_LD(Cab,Cw,Cm,Car=0,Cbrown=0,Canth=0,Cp=0,Ccl=0, model="PROSPECTCp
 
     # load the model component spectra and refractive index
     if model == "PROSPECT5":
-        n = tools.prospect.P5_refractive
-        kCab = tools.prospect.P5_k_Cab
-        kw = tools.prospect.P5_k_Cw
-        km = tools.prospect.P5_k_Cm
-        kCar = tools.prospect.P5_k_Car
-        kbrown = tools.prospect.P5_k_Brown
+        n = prospect.P5_refractive
+        kCab = prospect.P5_k_Cab
+        kw = prospect.P5_k_Cw
+        km = prospect.P5_k_Cm
+        kCar = prospect.P5_k_Car
+        kbrown = prospect.P5_k_Brown
         kanth = 0
         kp = 0
         kcl = 0
     elif model == "PROSPECT4":
-        n = tools.prospect.P4_refractive
-        kCab = tools.prospect.P4_k_Cab
-        kw = tools.prospect.P4_k_Cw
-        km = tools.prospect.P4_k_Cm
+        n = prospect.P4_refractive
+        kCab = prospect.P4_k_Cab
+        kw = prospect.P4_k_Cw
+        km = prospect.P4_k_Cm
         kCar = 0
         kbrown = 0
         kanth = 0
         kp = 0
         kcl = 0
     elif model == "PROSPECTD":
-        n = tools.prospect.PD_refractive
-        kCab = tools.prospect.PD_k_Cab
-        kw = tools.prospect.PD_k_Cw
-        km = tools.prospect.PD_k_Cm
-        kCar = tools.prospect.PD_k_Car
-        kbrown = tools.prospect.PD_k_Brown
-        kanth = tools.prospect.PD_k_Anth
+        n = prospect.PD_refractive
+        kCab = prospect.PD_k_Cab
+        kw = prospect.PD_k_Cw
+        km = prospect.PD_k_Cm
+        kCar = prospect.PD_k_Car
+        kbrown = prospect.PD_k_Brown
+        kanth = prospect.PD_k_Anth
         kp = 0
         kcl = 0
     elif model == "PROSPECT5B":
-        n = tools.prospect.P5_refractive
-        kCab = tools.prospect.P5_k_Cab
-        kw = tools.prospect.P5_k_Cw
-        km = tools.prospect.P5_k_Cm
-        kCar = tools.prospect.P5_k_Car
-        kbrown = tools.prospect.P5_k_Brown
+        n = prospect.P5_refractive
+        kCab = prospect.P5_k_Cab
+        kw = prospect.P5_k_Cw
+        km = prospect.P5_k_Cm
+        kCar = prospect.P5_k_Car
+        kbrown = prospect.P5_k_Brown
         kanth = 0
         kp = 0
         kcl = 0
     else:
-        n = tools.prospect.Pcp_refractive
-        kCab = tools.prospect.Pcp_k_Cab
-        kw = tools.prospect.Pcp_k_Cw
-        km = tools.prospect.Pcp_k_Cm
-        kCar = tools.prospect.Pcp_k_Car
-        kbrown = tools.prospect.Pcp_k_Brown
-        kanth = tools.prospect.Pcp_k_Anth
-        kp = tools.prospect.Pcp_k_Cp # do not use the _orig version as the latter requires a weight in absorption calculations
-        kcl = tools.prospect.Pcp_k_Ccl # do not use the _orig version as the latter requires a weight in absorption calculations
+        n = prospect.Pcp_refractive
+        kCab = prospect.Pcp_k_Cab
+        kw = prospect.Pcp_k_Cw
+        km = prospect.Pcp_k_Cm
+        kCar = prospect.Pcp_k_Car
+        kbrown = prospect.Pcp_k_Brown
+        kanth = prospect.Pcp_k_Anth
+        kp = prospect.Pcp_k_Cp # do not use the _orig version as the latter requires a weight in absorption calculations
+        kcl = prospect.Pcp_k_Ccl # do not use the _orig version as the latter requires a weight in absorption calculations
            # the decision no to use _orig was based on a quick inspection of the code from EnMapBox
 
     if correctFresnel:
@@ -318,7 +318,7 @@ def reference_wavelengths():
     A wrapper for prospect_wavelengths() function to allow the user avoid importing the prospect module directly
     :return: ndarray of wavelengths in nanometers
     """
-    return tools.prospect.prospect_wavelengths()
+    return prospect.prospect_wavelengths()
 
 def transform_albedo( albedo, refalbedo, wl=None ):
     """

@@ -20,8 +20,9 @@ import os
 import time
 from scipy.optimize import curve_fit, least_squares
 
-import tools.spectralinvariants
-import tools.hypdatatools_img
+
+from spectralinvariant.spectralinvariants import p_forpixel
+from spectralinvariant.hypdatatools_img import get_wavelength
 
 def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
     refspec=None, wl_spec=None, refspecname='RefenceSpectrum' ):
@@ -79,7 +80,7 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
         print(filename2+" is already open, using the provided handles.")
     
     wl_hyp = tools.hypdatatools_img.get_wavelength( filename2, hypdata )[0]
-    # NOTE: get_wavelength()[1] returns a flag whther the data could be loaded. This should be checked!
+    # NOTE: get_wavelength()[1] returns a flag whether the data could be loaded. This should be checked!
 
     # interpolate refspec to hyperspectral bands
     # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
@@ -143,8 +144,8 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
             for hyp_pixel,p_pixel in zip(hyp_line,p_line):
                 if hyp_pixel[ DIV_testpixel ] != DIV:
                     hyp_refl_subset = ( hyp_pixel[ wl_p ]*hypdata_factor )
-                    # tools.spectralinvariants.p_forpixel_old( hyp_refl_subset, refspec_hyp_subset, p_pixel )
-                    tools.spectralinvariants.p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
+                    # pectralinvariants.p_forpixel_old( hyp_refl_subset, refspec_hyp_subset, p_pixel )
+                    spectralinvariants.p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
                 else:
                     p_pixel.fill(0)
 

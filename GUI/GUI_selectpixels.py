@@ -23,8 +23,8 @@ if not AIROBEST_dir in sys.path:
 # sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
 # sys.path.append("hyperspectral\\AIROBEST")
 
-from tools.hypdatatools_gdal import *
-from tools.hypdatatools_utils import *
+from spectralinvariant.hypdatatools_gdal import *
+from spectralinvariant.hypdatatools_utils import *
 
 class pixelGUI:
         

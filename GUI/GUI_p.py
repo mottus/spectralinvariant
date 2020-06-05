@@ -15,8 +15,11 @@ if not AIROBEST_dir in sys.path:
 # sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
 # sys.path.append("hyperspectral\\AIROBEST")
 
-from tools.hypdatatools_algorithms import *
-from tools.spectralinvariants import *
+# Avoid wildcard imports such as the one below:
+#from spectralinvariant.hypdatatools_algorithms import *
+# Instead, import only what you need:
+from spectralinvariant.hypdatatools_algorithms import p_processing
+from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, p
 
 # GUI for running p-computations
     
@@ -93,9 +96,9 @@ class pGUI:
         
         # by default, load PROSPECT transformed reference spectrum. A new spectrum from a file can be loaded later
         # note: if a reference spectrum file is loaded, this information may not be used anymore
-        self.refspec = tools.spectralinvariants.referencealbedo_transformed()
+        self.refspec = referencealbedo_transformed()
         self.refspecname = "Transformed_PROSPECT"
-        self.wl_spec = tools.spectralinvariants.reference_wavelengths()
+        self.wl_spec = reference_wavelengths()
         self.use_refspec_file = False # whether to load reference spectra from file
         
         self.wl_hyp = np.array([]) # wavelengths of hyperspectral, hopefully in nm
@@ -247,9 +250,9 @@ class pGUI:
         else:
             # load the default PROSPECT transformed reference spectrum. A new spectrum from a file can be loaded later
             # note: if a reference spectrum file is loaded, this information may not be used anymore
-            self.refspec = tools.spectralinvariants.referencealbedo_transformed()
+            self.refspec = referencealbedo_transformed()
             self.refspecname = "Transformed_PROSPECT"
-            self.wl_spec = tools.spectralinvariants.reference_wavelengths()
+            self.wl_spec = reference_wavelengths()
             self.listbox.delete( 0, END )
             self.listbox.insert( END , self.refspecname )
             self.use_refspec_file = False # whether to load reference spectra from file
@@ -282,7 +285,8 @@ class pGUI:
         # reset openfilelist and other environment as if no data file were loaded
         self.hypdata_loaded = False
         self.openfilelist = []
-        self.button_datafile.configure( background='SystemButtonFace' )
+#        self.button_datafile.configure( background='SystemButtonFace' )
+        self.button_datafile.configure()
         self.button_run.configure( state=DISABLED )
         self.button_p.configure( state=DISABLED )
         self.filename2 = ""

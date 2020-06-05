@@ -19,7 +19,7 @@ import matplotlib.path
 import matplotlib
 import numpy as np
 
-from tools.hypdatatools_utils import *
+from spectralinvariant.hypdatatools_utils import readtextfile
 
 def get_wavelength(hypfilename, hypdata=None):
     """

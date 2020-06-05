@@ -8,8 +8,8 @@ import threading
 import time
 import os
 
-from hypdatatools_img import *
-from hypdatatools_algorithms import *
+from spectralinvariant.hypdatatools_img import *
+from spectralinvariant.hypdatatools_algorithms import *
 
 # script to calculate the spectral scattering coefficient W.
 # inputs: hyperspectral image (i.e., BRF) and a file with a layer named DASF
