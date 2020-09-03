@@ -1261,15 +1261,22 @@ def envi_endiannesscode( aisa1_map ):
             endianness = 1
     return endianness
     
-def envi_addheaderfield( envifilename, fieldname, values, checkifexists=True, localprintcommand=None ):
+def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, checkifexists=True, localprintcommand=None ):
     """
     Adds a aline to ENVI header file. This function is in gdal-functions because it depends on envifilecomponents.
     ENVI file should be closed before rewriting.
     envifilename: string, file name
     fieldname: name of the field to add
     values: the value to add. Can be a list, e.g. one per band
+    vectorfield: (boolean) whether to save the field as a vector. None == automatic detection
     checkifexists: flag -- whether to stop if the field already exists
     """
+    
+    if vectorfield is None:
+        if type(values) is list or type(values) is tuple:
+            vectorfied = True
+        else:
+            vectorfield = False
     
     if localprintcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
@@ -1283,8 +1290,11 @@ def envi_addheaderfield( envifilename, fieldname, values, checkifexists=True, lo
             .format( fieldname, hdrfile ) )
     else:
         with open(hdrfile,'a') as hfile:
-            valuestr = [ str(i) for i in values ]
-            outstr = fieldname + " = {" + ", ".join(valuestr) + "}"
-            hfile.write( outstr )
+            if vectorfield:
+                valuestr = [ str(i) for i in values ]
+                outstr = fieldname + " = {" + ", ".join(valuestr) + "}"
+            else:
+                outstr = fieldname + " = " + str(values)
+            hfile.write( outstr + "\n" )
         localprintcommand( functionname +" Added field <{}> to {}.\n"
             .format( fieldname, hdrfile ) )
