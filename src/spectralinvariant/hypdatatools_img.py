@@ -1274,7 +1274,7 @@ def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, chec
     
     if vectorfield is None:
         if type(values) is list or type(values) is tuple:
-            vectorfied = True
+            vectorfield = True
         else:
             vectorfield = False
     
