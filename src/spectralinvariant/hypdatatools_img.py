@@ -1296,5 +1296,6 @@ def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, chec
             else:
                 outstr = fieldname + " = " + str(values)
             hfile.write( outstr + "\n" )
-        localprintcommand( functionname +" Added field <{}> to {}.\n"
-            .format( fieldname, hdrfile ) )
+        fieldtype = 'as vector' if vectorfield else ''
+        localprintcommand( functionname +" Added field <{}> {} to {}.\n"
+            .format( fieldname, fieldtype, hdrfile ) )
