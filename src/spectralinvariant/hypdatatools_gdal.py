@@ -306,8 +306,8 @@ def pixel_coords( hypfilename, point, areasize, areaunit, areashape, hypdata=Non
     
     if areaunit[0]=='p' and areasize//2 != areasize/2 and areashape[0]=='s' :
         # odd number of pixels, choose symmetrically around center
-        imin = int( round( xy[0,0] - areasize/2 ) )
-        jmin = int( round( xy[0,1] - areasize/2 ) )
+        imin = int( round( xy[0,0] - (areasize-1)/2 ) )
+        jmin = int( round( xy[0,1] - (areasize-1)/2 ) )
     else:
         # even or non-integer number of pixels, the general case
         imin = int( round( xy[0,0] )  - (areasize*ptom_i)//2 )

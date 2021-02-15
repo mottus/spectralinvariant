@@ -17,9 +17,9 @@ from osgeo import osr
 import matplotlib
 import sys
 
-AIROBEST_dir = 'hyperspectral\\AIROBEST'
-if not AIROBEST_dir in sys.path:
-    sys.path.append(AIROBEST_dir)
+# AIROBEST_dir = 'hyperspectral\\AIROBEST'
+# if not AIROBEST_dir in sys.path:
+#     sys.path.append(AIROBEST_dir)
 # sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
 # sys.path.append("hyperspectral\\AIROBEST")
 
