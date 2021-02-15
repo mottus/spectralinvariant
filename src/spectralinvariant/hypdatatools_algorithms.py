@@ -79,7 +79,7 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
         hypdata_map = file2_datahandle
         print(filename2+" is already open, using the provided handles.")
     
-    wl_hyp = tools.hypdatatools_img.get_wavelength( filename2, hypdata )[0]
+    wl_hyp = get_wavelength( filename2, hypdata )[0]
     # NOTE: get_wavelength()[1] returns a flag whether the data could be loaded. This should be checked!
 
     # interpolate refspec to hyperspectral bands
@@ -145,7 +145,7 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
                 if hyp_pixel[ DIV_testpixel ] != DIV:
                     hyp_refl_subset = ( hyp_pixel[ wl_p ]*hypdata_factor )
                     # pectralinvariants.p_forpixel_old( hyp_refl_subset, refspec_hyp_subset, p_pixel )
-                    spectralinvariants.p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
+                    p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
                 else:
                     p_pixel.fill(0)
 
@@ -227,9 +227,13 @@ def W_processing( filename1, filename2, filename3, DASFnumber=0, hypdata=None, h
         # consequtive numbers starting at 1
         bandnames = [ "W"+str(i) for i in range( 1,hypdata_map.shape[2]+1 ) ]
 
-    # find the intersection of the to rasters (assumed to have the same resolution and to be in the same projection
-    mapinfo_h = hypdata.metadata['map info']
-    mapinfo_D = DASFdata.metadata['map info']
+    # find the intersection on the to rasters (assumed to have the same resolution and to be in the same projection
+    if 'map info' in hypdata.metadata.keys() and ('map info' in DASFdata.metadata.keys() ):
+        mapinfo_h = hypdata.metadata['map info']
+        mapinfo_D = DASFdata.metadata['map info']
+    else: # no georeference, assume they are the same size or crash
+        mapinfo_h = [ 0, 0, 0, 0, 0, 1, 1]
+        mapinfo_D = mapinfo_h
     # 0: projection name (UTM), 1: reference pixel x location (in file coordinates), 2: pixel y, 
     # 3: pixel easting, 4: pixel northing, 5: x pixel size, 6: y pixel size, 7: projection zone, North or South (UTM only)
     # In ENVI, pixel values always refer to the upper-left corner of the pixel
@@ -353,14 +357,20 @@ def W_processing( filename1, filename2, filename3, DASFnumber=0, hypdata=None, h
                         # NOTE: test also the speed of zip and np.vectorize
                         # for ii in brange:
                         #    W_pixel[ii]  = round(hyp_pixel[ii]/DASF_pixel)
-                        W_pixel[:] = hyp_pixel[:]/DASF_pixel
+                        if DASF_pixel != 0:
+                            W_pixel[:] = hyp_pixel[:]/DASF_pixel
+                        else:
+                            W_pixel[:] = np.zeros_like( hyp_pixel[:] )
                         # NOTE: this algorithm is fast, but may induce rounding errors (when converting float->int)
                     else:
                         W_pixel.fill(0)
                 else:
                     # for ii in brange:
                     #    W_pixel[ii]  = round( hyp_pixel[ii]/DASF_pixel )
-                    W_pixel[:] = hyp_pixel[:]/DASF_pixel
+                    if DASF_pixel != 0:
+                        W_pixel[:] = hyp_pixel[:]/DASF_pixel
+                    else:
+                        W_pixel[:] = np.zeros_like( hyp_pixel[:] )
 
     # outer loop done: for hyp_line,p_line in zip(hypdata_map,pdata):
     # how long did it take?

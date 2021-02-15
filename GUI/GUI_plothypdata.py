@@ -10,7 +10,7 @@ import time
 import os
 
 # sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
-sys.path.append("hyperspectral\\AIROBEST")
+# sys.path.append("hyperspectral\\AIROBEST")
 
 from spectralinvariant.hypdatatools_img import plot_hyperspectral, plot_singleband, get_wavelength
 from spectralinvariant.hypdatatools_utils import *
