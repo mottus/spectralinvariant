@@ -73,7 +73,7 @@ class WGUI:
         self.DASFband.set("not loaded")
 
         # a frame for buttons to load stuff etc.
-        bw = 25 # button width
+        bw = 35 # button width
         self.frame_buttons = Frame(master) #just in case, put everythin in a frame, stuff can be added later if needed
         self.button_quit = Button( self.frame_buttons, text='Quit', width=bw, command=self.buttonquit )
         self.button_datafile = Button( self.frame_buttons, text='Load datafile', width=bw, command=self.datafile )
@@ -174,10 +174,12 @@ class WGUI:
                 else:
                     #no DASF in band names, let the user decide which one to use, set default to first
                     self.DASFband.set( DASFdata.metadata['band names'][0] )
+                    print("No DASF layer in "+filename2+", defaulting to 0th band.")
             else:
                 # no band name info given, use numbers and set default to first
                 DASFfilebands = [str(i) for i in range( 1,DASFdata_map.shape[2]+1 ) ]
                 self.DASFband.set( DASFfilebands[0] )
+                print("No layer names in "+filename2+", defaulting to 0th band.")
                 
             # save the handles to the 0th element of DASFfilelist
             self.DASFfilelist = [ [ filename2 , DASFdata, DASFdata_map, DASFfilebands ] ]
@@ -185,7 +187,8 @@ class WGUI:
             # fill the DASF optionmenu
             self.option_DASFband['menu'].delete( 0, END )
             for choice in DASFfilebands:
-                self.option_DASFband['menu'].add_command(label=choice, command=lambda v=choice: self.DASFband.set(v))
+                # self.option_DASFband['menu'].add_command(label=choice, command=lambda v=choice: self.DASFband.set(v))
+                self.option_DASFband['menu'].add_command(label=choice, command=lambda v=choice: self.selectband(v) )
             
             self.option_DASFband['state'] = ACTIVE
             self.button_plotDASF.configure( state=ACTIVE )
@@ -193,6 +196,10 @@ class WGUI:
             self.button_DASFfile.configure( background='green' )
             if self.hypdata_loaded:
                 self.button_run.configure( state=ACTIVE )
+                
+    def selectband(self, choice):
+        self.DASFband.set(choice)
+        self.button_plotDASF.configure( text="Plot <"+choice+">" )
                 
     def plotDASF(self):
         """ 
@@ -215,7 +222,7 @@ class WGUI:
         self.button_quit.configure( state=ACTIVE )
         self.button_datafile.configure( state=ACTIVE )
         self.button_DASFfile.configure( state=ACTIVE )
-        self.button_run.configure( state=ACTIVE )
+        self.button_run.configure( text='Calculate W for image', state=ACTIVE )
         print("Thread exit caught")
 
     def buttonquit(self):
@@ -237,7 +244,8 @@ class WGUI:
             self.button_quit.configure( state=ACTIVE )
             self.button_datafile.configure( state=ACTIVE )
             self.button_DASFfile.configure( state=ACTIVE )
-            self.button_run.configure( text='Calculate W for image', state=DISABLED ) # the button will be enabled once the thread exits
+            # self.button_run.configure( text='Calculate W for image', state=DISABLED ) # the button will be enabled once the thread exits
+            self.button_run.configure( text='Calculate W for image') # the button will be enabled once the thread exits
             print("Break signaled")
         else:                 
             # sanity check: do we have selections in both listboxes
