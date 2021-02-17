@@ -51,21 +51,20 @@ class WGUI:
     """
     the GUI for creating the thread which will do the calulation
     """    
-    openfilelist = [] # list of loaded hyperspectral file names and handles
-        # each element is a list [ filename filehandle datahandle ]
-        # intially, when loading the hyperspectral handles are set to None; they are assigned whn file is opened for e.g. plotting
-        # the list will contain only one element as only one file is opened in this program
-    dasffilelist = [] # same as openfilelist, but for DASF file + element [3] = list of band names
     
-    hypdatadir="D:\\mmattim\\wrk\\hyytiala-D\\" # location of hyperspectral data, initial suggestion in file dialog
-    
-    DASF_loaded = False # flag
-    hypdata_loaded = False # flag
-
+    hypdatadir="" # location of hyperspectral data, initial suggestion in file dialog -- currently, left empty
     
     def __init__(self, master):
         self.master = master
         master.title("GUI for calculating W")
+        self.openfilelist = [] # list of loaded hyperspectral file names and handles
+            # each element is a list [ filename filehandle datahandle ]
+            # intially, when loading the hyperspectral handles are set to None; they are assigned whn file is opened for e.g. plotting
+            # the list will contain only one element as only one file is opened in this program
+        self.dasffilelist = [] # same as openfilelist, but for DASF file + element [3] = list of band names
+        self.DASF_loaded = False # flag
+        self.hypdata_loaded = False # flag
+
         self.progressvar_W = DoubleVar() # variable to signal progress and breaks
         self.progressvar_W.set(0) # just in case
         # initialize DASF optiomenu to empty
@@ -107,7 +106,7 @@ class WGUI:
         self.openfilelist = []
         self.button_datafile.configure( background='SystemButtonFace' )
         self.button_run.configure( state=DISABLED )
-        
+
         filename1 =  filedialog.askopenfilename(initialdir = self.hypdatadir, title = "Choose hyperspectal data file", filetypes = (("ENVI header files","*.hdr"),("all files","*.*")))
         
         if filename1 != "" : 

@@ -23,6 +23,7 @@ import sys
 # sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
 # sys.path.append("hyperspectral\\AIROBEST")
 
+from GUI_pointsfromband import PfBGUI
 from spectralinvariant.hypdatatools_gdal import *
 from spectralinvariant.hypdatatools_utils import *
 
@@ -35,7 +36,7 @@ class pixelGUI:
 
         #  Currently, use of just 1 polygon is implemented
 
-        self.pointlist = [] # list of points: id, x, y (in global projected coordinates )
+        self.pointlist = [] # list of points, each point is a tuple: ( id, x, y ) (in global projected coordinates )
 
         self.openfilelist = [] # list of loaded file names and handles, reflects the contents of self.listbox_files
             # each element is a list [ filename filehandle datahandle DataIgnoreValue ]
@@ -86,13 +87,14 @@ class pixelGUI:
         
         self.frame_button = Frame( self.w )
         self.button_quit = Button( self.frame_button, width=bw, text='Quit', command=self.buttonquit_fun )
-        self.button_loadpoints = Button( self.frame_button, width=bw, text='Load points', command=self.loadpoints_fun )
+        self.button_loadpoints = Button( self.frame_button, width=bw, text='Load points from .txt', command=self.loadpoints_fun )
         self.button_loadfile = Button( self.frame_button, width=bw, text='Load raster files', command=self.loadfiles_fun )
-        self.button_pixelvalue = Button( self.frame_button, width=bw, text='Store values', command=self.pixelvalue_fun, state=DISABLED )
+        self.button_pixelvalue = Button( self.frame_button, width=bw, text='Store values at points', command=self.pixelvalue_fun, state=DISABLED )
         self.button_plotspectra = Button( self.frame_button, width=bw, text='Plot spectra', command=self.plotspectra_fun, state=DISABLED )
-        self.button_loadshp = Button( self.frame_button, width=bw, text='Load polygon', command=self.loadshp_fun )
+        self.button_loadshp = Button( self.frame_button, width=bw, text='Load polygon from .shp', command=self.loadshp_fun )
         self.button_plotshp = Button( self.frame_button, width=bw, text='Plot polygon', command=self.plotshp_fun, state=DISABLED )
         self.button_zoomtoshp = Button( self.frame_button, width=bw, text='Zoom to polygon', command=self.zoomtoshp_fun, state=DISABLED )
+        self.button_pointsfromband = Button( self.frame_button, width=bw, text='Points from band threshold', command=self.pointsfromband_fun, state=DISABLED )
         self.option_areashape = OptionMenu( self.frame_button, self.areashape_string, *areashape_list )
         self.option_areashape['width'] = ow
         self.option_areaunit = OptionMenu( self.frame_button, self.areaunit_string, *areaunit_list )
@@ -108,6 +110,7 @@ class pixelGUI:
         self.button_loadshp.pack( side='top' )
         self.button_plotshp.pack( side='top' )
         self.button_zoomtoshp.pack( side='top' )
+        self.button_pointsfromband.pack( side='top' )
         self.button_quit.pack( side='bottom' )
         self.frame_button.pack( side='left' )
         
@@ -144,9 +147,9 @@ class pixelGUI:
         self.option_pointcolor = OptionMenu( self.frame_points, self.pointcolor_string, *pythonplotcolors_list )
         self.option_pointcolor['width'] = ow
         self.button_showpoints = Button( self.frame_points, width=bw, text='Show in raster', command=self.showpoints_fun, state=DISABLED )
-        self.button_addpoint = Button( self.frame_points, width=bw, text='Add', command=self.addpoint_fun, state=DISABLED )
+        self.button_addpoint = Button( self.frame_points, width=bw, text='Add with mousef', command=self.addpoint_fun, state=DISABLED )
         self.button_deletepoints = Button( self.frame_points, width=bw, text='Delete', command=self.deletepoints_fun, state=DISABLED )
-        self.button_savepoints = Button( self.frame_points, width=bw, text='Save selected to file', command=self.savepoints_fun, state=DISABLED )
+        self.button_savepoints = Button( self.frame_points, width=bw, text='Save selected to txt file', command=self.savepoints_fun, state=DISABLED )
         self.button_updatepoints = Button( self.frame_points, width=bw, text='Update list', command=self.updatepoints_fun, state=DISABLED )
         self.button_selectzoomedpoints = Button( self.frame_points, width=bw, text="Select points in zoom", command=self.selectpoints_zoom_fun, state=DISABLED )
         
@@ -192,6 +195,9 @@ class pixelGUI:
         self.listbox_figures.pack( side='top', fill='y', expand=True )
         self.frame_figures.pack( side='right', fill='y' )
         self.foldername1 = get_hyperspectral_datafolder( localprintcommand=self.printlog ) # where the data is. This is the initial value, will be modified later
+        
+        # catch the signal that the point list has been updated by PfBGUI
+        master.bind("<<PfBGUI_exit>>", self.updatepoints_fun )
         
     def printlog( self , text ):
         """
@@ -470,7 +476,7 @@ class pixelGUI:
         # just in case 
         self.update_figures_fun()
                     
-    def updatepoints_fun( self ):
+    def updatepoints_fun( self, *args ):
         """
         update the listbox containing points. Not done automatically because of a mysterious python crash
         """
@@ -652,9 +658,15 @@ class pixelGUI:
           NOTE: the output needs to be a np.matrix, not np.ndarray in order to have proper 
             indexing also for the case of just one point
         """
-        pointlistarr = np.matrix( self.pointlist )
+        
+        # most pythonic: unzip, remove id, and zip again
+        unzipped = list( zip(*self.pointlist) )
+        xy = np.matrix( list( zip(unzipped[1],unzipped[2]) ) )
+        
+        # older methods
+        # pointlistarr = np.matrix( self.pointlist )
         # point:(id,x,y)
-        xy = pointlistarr[:,[1,2]].astype(float)
+        # xy = pointlistarr[:,[1,2]].astype(float)
         
         # old alternative version
         # xy = np.asmatrix( np.empty( (len(self.pointlist), 2 ) ) )
@@ -725,7 +737,21 @@ class pixelGUI:
             self.printlog("showpoints(): No points selected, nothing to plot.\n")
         self.update_figures_fun() # this should be called as often as possible
             
-
+    def pointsfromband_fun( self ):
+        """
+        Select pixels as points using band values as threshold.
+        Opens a new window for dialogs.
+        """
+        # use the first select file in the list box
+        if len( self.listbox_files.curselection() ) == 0:
+            # I am not sure if this is even possible -- no selection
+            self.printlog("pointsfromband_fun: no files selected. Not doing anything.\n")
+        else:
+            selection = self.listbox_files.curselection()[0]
+            # PfBGUI wants just a sublist from the openfilelist here containing file handles of a single file
+            GUI = PfBGUI( self.master, openfilelist=self.openfilelist[selection], 
+                exportpointlist=self.pointlist )
+    
     def loadshp_fun( self ):
         """
         loads a shapefile, or unloads it if loaded
@@ -934,6 +960,7 @@ class pixelGUI:
             self.button_displayfile.configure( state=ACTIVE )
             self.button_loadfile.configure( background='green' )
             self.button_deletefile.configure( state=ACTIVE )
+            self.button_pointsfromband.configure( state=ACTIVE )
             if len(self.pointlist)>0:
                 self.button_pixelvalue.configure( state=ACTIVE )
                 self.button_updatepoints.configure( state=ACTIVE )
@@ -958,9 +985,7 @@ class pixelGUI:
 
     def displayfile_fun( self ):
         """
-        load the first file of the current selection in listbox_files into a new plot
-        (i.e., try to use actual current mouse selecton)
-        if nothing selected, use the first file of current saved by clicking "select" button
+        load the selected files in listbox_files into new plots
         """
         
         if len( self.listbox_files.curselection() ) == 0:

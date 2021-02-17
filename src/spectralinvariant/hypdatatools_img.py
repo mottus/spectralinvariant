@@ -23,7 +23,7 @@ from spectralinvariant.hypdatatools_utils import readtextfile
 
 def get_wavelength(hypfilename, hypdata=None):
     """
-    Get the array of wavelengths as numpy float array. If not present, return a range of decreasing integers starting at -1
+    Get the array of wavelengths in nm as numpy float array. If not present, return a range of decreasing integers starting at -1
     hypdata is a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
     output
@@ -104,7 +104,7 @@ def envi_isfloat( hypfilename, hypdata=None ):
         # data type not given. Output undetermined
         return None
         
-def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, plotmode='default', plotbands=None ):
+def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, plotmode='default', plotbands=None, fig_hypdata=None ):
     """
     Create a figure with hyperspectral image and return handle
     hypfilename: the name + full path to Envi hdr file
@@ -116,7 +116,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
         default means looking for the suggested bands in hdr, if not found, use RGB
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
     plotbands = list [r,g,b], if not set, guessed from metadata and elsewhere
-    outputs figure handle
+    fig_hypdata: figure handle to use and return
     """
 
     functionname = "plot_hyperspectral(): "  # used in messaging
@@ -263,7 +263,13 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     hypdata_rgb[hypdata_rgb > 1] = 1
     hypdata_rgb[hypdata_rgb < 0] = 0
 
-    fig_hypdata = plt.figure()  # create a new figure
+    if fig_hypdata is None:
+        fig_hypdata = plt.figure()  # create a new figure
+        outputcommand( functionname+" Creating new figure.\n")
+    else:
+        fig_hypdata.clf() # clear the figure
+        outputcommand( functionname+"Reusing old figure.\n")
+        
     ax0 = fig_hypdata.add_subplot(1, 1, 1)
     if not plot_rgb:
         outputcommand(" stacking layers...")
@@ -283,16 +289,18 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     return fig_hypdata
 
 
-def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, outputcommand=None):
+def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None, outputcommand=None):
     """
     Create a figure with a single band from hypersectral image and return handle
     hypfilename: the name + full path to Envi hdr file
     hypdata: a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
     hypdata_map: 3D np.ndarray-like object, e.g. the memory map of hypdata file handle
+    fig_hypdata: figure handle to use and return
     outputcommand: the optional print command for redirecting output
-    outputs figure handle
+    returns figure handle
     """
+    functionname = "plot_singleband(): "  # used in messaging
     if hypdata is None:
         hypdata = spectral.open_image(hypfilename)
         hypdata_map = hypdata.open_memmap()
@@ -316,8 +324,8 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         if 'default bands' in hypdata.metadata:
             bandnumber = int(hyp_metadata['default bands'][0]) - 1
             # avoid official printing band names, they usually contain long crappy strings
-            outputcommand(
-                "plot_singleband(): " + filename_short + ": using the default band %i for plotting RGB. \n" % bandnumber)
+            outputcommand( functionname 
+                 + filename_short + ": using the default band %i for plotting RGB. \n" % bandnumber)
         else:
             bandnumber = 0
 
@@ -327,7 +335,7 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     else:
         hypdata_i = np.squeeze(hypdata.read_bands([bandnumber]).astype('float32'))
 
-    outputcommand( "plot_singleband(): "+ filename_short + " dimensions " + hypdata_map_shape+
+    outputcommand( functionname + filename_short + " dimensions " + hypdata_map_shape+
         " band " + str(bandnumber) + " min " + str(hypdata_i.min()) + " max " + str(hypdata_i.max()) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
     
     # datascaling = hypdata_i.max()
@@ -337,13 +345,18 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         if np.ptp(hypdata_i[ii]) > 0:
             datascaling = np.percentile(hypdata_i[ii], 98)
             hypdata_i /= datascaling
-            outputcommand("plot_singleband(): Applying a scaling factor of " + str(datascaling) + "\n")
+            outputcommand(functionname + "Applying a scaling factor of " + str(datascaling) + "\n")
     
     # percentile alone seems to give not so nice plots
     hypdata_i[hypdata_i > 1] = 1
     hypdata_i[hypdata_i < 0] = 0
 
-    fig_hypdata = plt.figure()  # create a new figure
+    if fig_hypdata is None:
+        fig_hypdata = plt.figure()  # create a new figure
+        outputcommand( functionname + "creating new figure.\n")
+    else:
+        fig_hypdata.clf() # clear the figure
+        outputcommand( functionname + "reusing old figure.\n")
     ax0 = fig_hypdata.add_subplot(1, 1, 1)
     ax0.imshow(hypdata_i)  # ax0 is fig_hypdata.axes[0]
 
