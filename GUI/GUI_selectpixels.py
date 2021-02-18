@@ -1624,16 +1624,21 @@ class AnalyzeGUI:
         self.button_plot.pack( side='top' )
         self.frame_buttons.pack( side='left' )
 
-    def comboprocess_band( self, event ):
+    def comboprocess_band( self, event=None, bandnumber=None ):
         """
         Catch clicks in the file selection comboboxes and updates the band list comboboxes
+        event is the information created by the click
+        bandnumber is an alternative way to call the function to create a fake click
         """
-        if event.widget._name == "combo_band1":
+
+        if event is not None:
+            bandnumber = int(event.widget._name[-1])
+        if bandnumber == 1:
             self.data1_set = True
-        elif event.widget._name == "combo_band2":
+        elif bandnumber == 2:
             self.data2_set = True
         else:
-            print(" --- comboprocess_band: sth strange happened")
+            print(" --- comboprocess_band: sth strange happened "+ str(event) )
             return
         if self.data1_set and self.data2_set:
             self.button_plot.configure( state=ACTIVE )
@@ -1646,17 +1651,27 @@ class AnalyzeGUI:
         if event.widget._name == "combo_file1":
             combo_band = self.combo_band1
             combo_file = self.combo_file1
+            self.data1_set = False
         elif event.widget._name == "combo_file2":
             combo_band = self.combo_band2
             combo_file = self.combo_file2
+            self.data2_set = False
         else:
-            print(" --- comboprocess_file: sth strange happened")
+            print(" --- comboprocess_file: sth strange happened:" + event.widget._name )
             return
 
         # combo_band['state'] = ACTIVE
         filename = combo_file.get()
         bandnames = [ q["name"] for q in self.hypdatalist[1:] if q["filename"]==filename  ]      
-        combo_band.configure( values = bandnames )            
+        combo_band.configure( values = bandnames )
+        combo_band.delete(0,END)
+        if len( bandnames) == 1:
+            # fill the combobox with the only band and simulate a selection event
+            combo_band.insert(0,bandnames[0])
+            self.comboprocess_band( bandnumber=int(event.widget._name[-1]) )
+        else:
+            combo_band.insert(0,"Select band")
+            self.button_plot.configure( state=DISABLED )
         
     def get_data( self ):
         """
