@@ -63,10 +63,10 @@ class PfBGUI:
         self.button_datafile = Button( self.frame_buttons, text='Load datafile', width=bw, command=self.datafile )
         self.button_savepoints = Button( self.frame_buttons, text="save points in file", width=bw, command=self.savepoints )
         
-        self.option_band = OptionMenu( self.frame_buttons, self.band, "" )
-        # for some strange reason, I could not configure OptionMenu as any other widget
-        self.option_band['width'] = bw-5
-        self.option_band['state'] = DISABLED
+        self.combo_band = ttk.Combobox( self.frame_buttons, textvariable=self.band, values=["select band"] )
+        self.combo_band.bind( "<<ComboboxSelected>>", self.selectband )
+        self.combo_band['width'] = bw-5
+        self.combo_band['state'] = DISABLED
         
         self.button_plotband = Button( self.frame_buttons, text='Plot band', width=bw, command=self.plotband, state=DISABLED )
         self.label_min = Label( self.frame_buttons, width=bw, text="Lower value:")
@@ -101,7 +101,7 @@ class PfBGUI:
                 self.load_hypdata()
             self.fill_bandnames()
 
-        self.option_band.pack( side='top' )
+        self.combo_band.pack( side='top' )
         self.button_plotband.pack( side='top' )
         self.label_min.pack( side='top' )
         self.entry_minvalue.pack( side='top' )
@@ -119,8 +119,6 @@ class PfBGUI:
         self.button_quit.pack( side='bottom' )
 
         self.frame_buttons.pack( side='left' )
-        
-        # master.bind("<<thread_end>>", self.thread_end )
 
         
     def datafile( self ):
@@ -134,6 +132,11 @@ class PfBGUI:
             self.openfilelist = [ filename1, None, None ]
             self.load_hypdata() 
             self.fill_bandnames()
+            
+        shortfilename = os.path.split( filename1 )[1]
+        shortfilename = os.path.splitext( shortfilename )[0]
+        self.button_datafile.configure( text="File: "+shortfilename )
+
         
     def load_hypdata( self ):
         """
@@ -152,8 +155,8 @@ class PfBGUI:
         self.printlog("data file dimensions " + ", ".join( [ str(i) for i in hypdata_map.shape ] ) + "\n" ) #shape[0]==lines, shape[1]==pixels, shape[2]==bands
         
         # save the handles to the openfilelist
-        self.openfilelist = [ self.openfilelist[0], hypdata, hypdata_map ]        
-                    
+        self.openfilelist = [ self.openfilelist[0], hypdata, hypdata_map ]     
+        
     def fill_bandnames( self ):
         """
         Retrieve band names from the datafile metadata and fill the OptionMenu 
@@ -178,22 +181,22 @@ class PfBGUI:
             self.DIV.set( str(DIV) )
             self.entry_DIV.delete( 0, END )
             self.entry_DIV.insert( str(DIV) )
-        # fill the OptionMenu
-        self.option_band['menu'].delete( 0, END )
-        for choice in self.bandnames:
-            self.option_band['menu'].add_command(label=choice, command=lambda v=choice:self.selectband(v) )
-        #activate first band
-        self.selectband( self.bandnames[0] )
-        self.option_band['state'] = ACTIVE
+        # fill the band name ComboBox
+        self.combo_band['state'] = ACTIVE
+        self.combo_band.configure( values = self.bandnames )
+        self.combo_band.delete( 0, END )
+        self.combo_band.insert( 0, self.bandnames[0] )
+        self.selectband()
+                    
         self.button_plotband.configure( state=ACTIVE )
         self.button_applyrange.configure( state=ACTIVE  )
                 
-    def selectband(self, choice):
+    def selectband( self, event=None ):
         """
-        Activate a selection in the band selection OptionMenu 
+        Activate a selection in the band selection ComboBox 
         and load pixel value ranges
         """
-        self.band.set(choice)
+        choice = self.combo_band.get()
         bandnumber = self.bandnames.index(choice)
         bandimage = self.openfilelist[2][ :,:,bandnumber]
         if self.DIV.get() != "":
@@ -355,6 +358,6 @@ if __name__ == '__main__':
     GUI = PfBGUI( root )
     root.withdraw()
     root.mainloop()
-    
+
 
     

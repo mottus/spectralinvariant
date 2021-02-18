@@ -91,6 +91,7 @@ class pixelGUI:
         self.button_loadfile = Button( self.frame_button, width=bw, text='Load raster files', command=self.loadfiles_fun )
         self.button_pixelvalue = Button( self.frame_button, width=bw, text='Store values at points', command=self.pixelvalue_fun, state=DISABLED )
         self.button_plotspectra = Button( self.frame_button, width=bw, text='Plot spectra', command=self.plotspectra_fun, state=DISABLED )
+        self.button_analyzepoints = Button( self.frame_button, width=bw, text='Analyze point data', command=self.analyzepoints_fun, state=DISABLED )
         self.button_loadshp = Button( self.frame_button, width=bw, text='Load polygon from .shp', command=self.loadshp_fun )
         self.button_plotshp = Button( self.frame_button, width=bw, text='Plot polygon', command=self.plotshp_fun, state=DISABLED )
         self.button_zoomtoshp = Button( self.frame_button, width=bw, text='Zoom to polygon', command=self.zoomtoshp_fun, state=DISABLED )
@@ -107,6 +108,7 @@ class pixelGUI:
         self.option_areaunit.pack( side='top' )
         self.button_pixelvalue.pack( side='top' )
         self.button_plotspectra.pack( side = 'top' )
+        self.button_analyzepoints.pack( side = 'top' )
         self.button_loadshp.pack( side='top' )
         self.button_plotshp.pack( side='top' )
         self.button_zoomtoshp.pack( side='top' )
@@ -147,7 +149,7 @@ class pixelGUI:
         self.option_pointcolor = OptionMenu( self.frame_points, self.pointcolor_string, *pythonplotcolors_list )
         self.option_pointcolor['width'] = ow
         self.button_showpoints = Button( self.frame_points, width=bw, text='Show in raster', command=self.showpoints_fun, state=DISABLED )
-        self.button_addpoint = Button( self.frame_points, width=bw, text='Add with mousef', command=self.addpoint_fun, state=DISABLED )
+        self.button_addpoint = Button( self.frame_points, width=bw, text='Add with mouse', command=self.addpoint_fun, state=DISABLED )
         self.button_deletepoints = Button( self.frame_points, width=bw, text='Delete', command=self.deletepoints_fun, state=DISABLED )
         self.button_savepoints = Button( self.frame_points, width=bw, text='Save selected to txt file', command=self.savepoints_fun, state=DISABLED )
         self.button_updatepoints = Button( self.frame_points, width=bw, text='Update list', command=self.updatepoints_fun, state=DISABLED )
@@ -328,6 +330,7 @@ class pixelGUI:
             if len(self.openfilelist)>0:
                 self.button_pixelvalue.configure( state=ACTIVE )
                 self.button_plotspectra.configure( state=ACTIVE )
+                self.button_analyzepoints.configure( state=ACTIVE )
                 if len( self.figurelist ) > 0:
                     self.button_zoomtopoints.configure( state=ACTIVE )
                     self.button_selectzoomedpoints.configure( state=ACTIVE )
@@ -492,6 +495,7 @@ class pixelGUI:
             self.button_deletepoints.configure( state=ACTIVE )
             self.button_savepoints.configure( state=ACTIVE )
             self.button_plotspectra.configure( state=ACTIVE )
+            self.button_analyzepoints.configure( state=ACTIVE )
             self.button_pixelvalue.configure( state=ACTIVE )
             self.update_figures_fun() # this should be called as often as possible
             
@@ -500,7 +504,7 @@ class pixelGUI:
         catch clicks in figure self.fig_hypdata and adds a new point    
         action depends on the state of the button self.button_addpoint
         """
-        if self.button_addpoint.cget('text') == 'Add':
+        if self.button_addpoint.cget('text') == 'Add with mouse':
             # initiate pixel location collection, set up connection with figure window
             if not self.hypdata_ciglock: # only do sth if no other function is waiting for a click in fig_hypdata
                 curfigurelist = self.listbox_figures.curselection() # get the current figure
@@ -537,7 +541,7 @@ class pixelGUI:
             self.printlog("addpoint_fun(): canceling pixel selection.\n")
             try:
                 # tkinter may have a bug and SystemButtonFace would give an error, use gray85 instead
-                self.button_addpoint.configure( text='Add', background='SystemButtonFace') 
+                self.button_addpoint.configure( text='Add with mouse', background='SystemButtonFace') 
             except TclError:
                 self.button_addpoint.configure( text='Add', background='gray85')
             self.button_updatepoints.configure( state=ACTIVE )
@@ -572,9 +576,9 @@ class pixelGUI:
             fig_hypdata.axes[0].annotate( newid, (event.xdata+1, event.ydata-1 ), color=self.plotcolors[col] )
             try:
                 # tkinter may have a bug and SystemButtonFace would give an error, use gray85 instead
-                self.button_addpoint.configure( text='Add', background='SystemButtonFace') 
+                self.button_addpoint.configure( text='Add with mouse', background='SystemButtonFace') 
             except TclError:
-                self.button_addpoint.configure( text='Add', background='gray85')
+                self.button_addpoint.configure( text='Add with mouse', background='gray85')
 
             self.button_updatepoints.configure( state=ACTIVE )
             
@@ -813,6 +817,7 @@ class pixelGUI:
                                 self.button_savepoints.configure( state=DISABLED )
                                 self.button_pixelvalue.configure( state=ACTIVE )
                                 self.button_plotspectra.configure( state=ACTIVE )
+                                self.button_analyzepoints.configure( state=ACTIVE )
                                 if len(self.figurelist) > 0:
                                     self.button_plotshp.configure( state=ACTIVE )
                                     self.button_zoomtoshp.configure( state=ACTIVE )
@@ -965,6 +970,7 @@ class pixelGUI:
                 self.button_pixelvalue.configure( state=ACTIVE )
                 self.button_updatepoints.configure( state=ACTIVE )
                 self.button_plotspectra.configure( state=ACTIVE )
+                self.button_analyzepoints.configure( state=ACTIVE )
                 if len( self.figurelist ) > 0:
                     self.button_zoomtopoints.configure( state=ACTIVE )
                     self.button_selectzoomedpoints.configure( state=ACTIVE )
@@ -1133,10 +1139,7 @@ class pixelGUI:
             
             # process the loaded spectra
             # find all possible wavelengths
-            allwl = []
-            for wl in wllist:
-                allwl.append( wl )
-            allwl = np.unique( allwl )
+            allwl = np.unique( np.concatenate( wllist ) )
             outmatrix = np.empty( (allwl.shape[0], N_points*N_files+1 ) )
             outmatrix[:,0] = allwl # wavelength as the first column
             legends = [ 'wl' ] # column headings in outmatrix
@@ -1287,6 +1290,123 @@ class pixelGUI:
 
         self.update_figures_fun() # this should be called as often as possible
         
+    def collectdata( self ):
+        """ extract the values at point location from the data layers (spectral 
+        bands of the different files) and arrange it into a data structure.
+        returns: a data structure, list, containing all data values for the points
+        
+        only works for points, not shapes
+        """
+        
+        """
+        store the selected pixel values in a csv file
+        double loop: over selected files and selected points
+        """
+        hypdatalist = [] # the big output data list, contains dicts for each data layer
+        
+        selectedfileslist = self.listbox_files.curselection()
+        N_files = len(selectedfileslist)
+        if N_files == 0:
+            self.printlog("collectdata(): No files selected, cannot continue.\n")
+            # the for loop below will be skipped and no results produced
+        # get the shape and dimensions of the requested area
+
+        # select pixels based on user selection
+        areasize = float( self.areasize_string.get() )
+        self.printlog("Area size:"+str(areasize) )
+        if areasize == 0:
+            self.printlog("collectdata(): could not get the value for area size. Aborting.\n")
+            return None
+        areashape = self.areashape_string.get()
+        areashape = areashape.split(" ")[1] # this returns either 'square,' or 'circle,'
+        areaunit = self.areaunit_string.get() # either 'pixels' or 'meters'
+        self.printlog( areaunit + ' ' + areashape + ".\n" )
+        if areaunit == 'pixels':
+            areasize = int( round(areasize) )
+        self.printlog("pixelvalue: selecting a " + areashape + " " + str(areasize) + " " + areaunit + ".\n" )
+        
+        selectedpointlist = self.listbox_points.curselection()
+        N_points = len( selectedpointlist )
+        points = [ self.pointlist[i] for i in selectedpointlist ]
+        if N_points == 0:
+            self.printlog("pixelvalue(): No points selected, cannot continue.\n")
+            return None
+        pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
+        
+        # store the points as the 0th element of hypdatalist
+        D = { "name":"pointlist" }
+        D["filename"] = ""
+        D["bandnumber"] = 0
+        D["description"] = "point coordinates in global coordinates"
+        D["foldername"] = ""
+        D["wl"] = None
+        D["areasize"] = areasize
+        D["areaunit"] = areaunit
+        D["areashape"] = areashape
+        D["mapinfo"] = ""
+        D["datalength"] = N_points
+        D["data"] = points
+        hypdatalist.append( D )
+                
+        counter = 0 # for printout
+        for i_file in selectedfileslist:
+            self.openhypfile( i_file )
+            hypfilename = self.openfilelist[i_file][0]
+            hypdata = self.openfilelist[i_file][1]
+            hypdata_map = self.openfilelist[i_file][2]
+
+            foldername = os.path.split( hypfilename )[0]
+            shortfilename = os.path.split( hypfilename )[1]
+            shortfilename = os.path.splitext( shortfilename )[0]
+            
+            wl_hyp, wl_found = get_wavelength( hypfilename, hypdata )
+            N_bands = int( hypdata.metadata['bands'] )
+            if 'band names' in hypdata.metadata:
+                bandnames = hypdata.metadata['band names']
+                # add wavelength as integer for each band name
+                bandnames = [ str(int(i))+" "+j for i,j in zip(wl_hyp,bandnames) ]
+            else:
+                # name as wavelength: even if not given, negative integers are in wl_hyp
+                bandnames = [ str(int(i)) for i in wl_hyp ]        
+            if 'description' in hypdata.metadata:
+                filedescription = hypdata.metadata["description"]
+            else:
+                filedescription = ""
+            if 'map info' in hypdata.metadata:
+                mapinfo = hypdata.metadata["map info"]
+            else:
+                mapinfo = ""
+            # Note: DIVs are handled by default by extract_spectrum()
+
+            spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
+            # the number of pixels is reported for each point and can vary, depending if the point is at the edge of the data or has NaNs.
+            #   this is difficult to pass on into the data dictionary
+            
+            # split into data libraries: one library per band
+            for i in range( N_bands ):
+                D = { "name":bandnames[i] }
+                D["filename"] = shortfilename
+                D["bandnumber"] = i
+                D["description"] = filedescription
+                D["foldername"] = foldername
+                D["wl"] = wl_hyp[i]
+                D["areasize"] = areasize
+                D["areaunit"] = areaunit
+                D["areashape"] = areashape
+                D["datalength"] = N_points
+                D["data"] = [ spectrumlist[j][i] for j in range( len(spectrumlist)) ]
+                hypdatalist.append( D )
+                counter += 1
+                
+        self.printlog("collectdata(): collected "+ str(counter) + "data bands.\n")
+        return hypdatalist
+        
+    def analyzepoints_fun( self ):
+        """ Collect data for all poins in all bands of all open files and 
+        start analysis tool in a separate GUI
+        """
+        hypdatalist = self.collectdata()
+        GUI = AnalyzeGUI( self.master, hypdatalist, outputcommand=self.printlog )
             
     def update_figures_fun( self ):
         """ force the listbox_figures to correspond to actual opened figures, 
@@ -1422,6 +1542,167 @@ class pixelGUI:
         """
         set_hyperspectral_datafolder( self.foldername1 )
         self.master.destroy() # destruction of root required for program to continue
+
+
+
+class AnalyzeGUI:
+    """
+    the GUI for simple analysis of data for selected points: plot one band against another
+    """    
+
+    def __init__(self, master, hypdatalist, outputcommand=None ):
+        """ 
+        hypdatalist: a list of dictionaries with data. First list element contains point coordinates
+        Other dictionaries contain the values for each point from one band and metadata for the band
+        """
+        
+        self.master = master # the master is likely tkroot
+        self.hypdatalist = hypdatalist 
+        self.outputcommand = outputcommand
+        
+        # Show the GUI in a Toplevel window instead of Root. 
+        # This allows many such programs to be run independently in parallel.
+        self.w = Toplevel( master )
+        self.w.title("GUI for selecting pixels based on band values")
+        
+        # get all distinct file names
+        self.filenames = list( np.unique( [ q["filename"] for q in hypdatalist[1:] ] ) )
+        self.data1_set = False
+        self.data2_set = False
+        
+        if outputcommand is None:
+            self.textlog = ScrolledText( self.w, height=6 )
+            self.textlog.pack( side='bottom' )
+            self.outputcommand=printlog
+        
+        #just in case, put everythin in a frame, stuff can be added later if needed
+        self.frame_buttons = Frame(self.w) 
+
+        bw = 35 # button width
+        self.label_1 = Label( self.frame_buttons, width=bw, text="Data #1: file and band")
+        self.combo_file1 = ttk.Combobox( self.frame_buttons, values=self.filenames, name = "combo_file1" )
+        if len(self.filenames) == 1:
+            self.combo_file1.insert(0,self.filenames[0])
+            bandnames = [ q["name"] for q in self.hypdatalist[1:] if q["filename"]==self.filenames[0] ]
+            self.combo_band1 = ttk.Combobox( self.frame_buttons, values=bandnames, name = "combo_band1" )
+            self.combo_band1.insert(0,"Select band")
+        else:
+            self.combo_file1.insert(0,"Select file")
+            self.combo_band1 = ttk.Combobox( self.frame_buttons, values=[], name = "combo_band1" )
+            self.combo_band1.insert(0,"No file selected")
+        self.combo_file1['width'] = bw-5
+        self.combo_band1['width'] = bw-5
+        
+
+        self.label_2 = Label( self.frame_buttons, width=bw, text="Data #2: file and band")
+        self.combo_file2 = ttk.Combobox( self.frame_buttons, values=self.filenames, name = "combo_file2" )
+        if len(self.filenames) == 1:
+            self.combo_file2.insert(0,self.filenames[0])
+            self.combo_band2 = ttk.Combobox( self.frame_buttons, values=bandnames, name = "combo_band2" )
+            self.combo_band2.insert(0,"Select band")
+        else:
+            self.combo_file2.insert(0,"Select file")
+            self.combo_band2 = ttk.Combobox( self.frame_buttons, values=[], name = "combo_band2" )
+            self.combo_band2.insert(0,"No file selected")
+        self.combo_file2['width'] = bw-5
+        self.combo_band2['width'] = bw-5
+
+        self.combo_file1.bind( "<<ComboboxSelected>>", self.comboprocess_file )
+        self.combo_file2.bind( "<<ComboboxSelected>>", self.comboprocess_file )
+        self.combo_band1.bind( "<<ComboboxSelected>>", self.comboprocess_band )
+        self.combo_band2.bind( "<<ComboboxSelected>>", self.comboprocess_band )
+        # event.widget._name in callback function gives the name
+        self.button_plot = Button( self.frame_buttons, text='Plot', width=bw, command=self.plot_fun, state=DISABLED )
+                
+        
+        self.label_1.pack( side='top' )
+        self.combo_file1.pack( side='top' )
+        self.combo_band1.pack( side='top' )
+        self.label_2.pack( side='top' )
+        self.combo_file2.pack( side='top' )
+        self.combo_band2.pack( side='top' )
+        self.button_plot.pack( side='top' )
+        self.frame_buttons.pack( side='left' )
+
+    def comboprocess_band( self, event ):
+        """
+        Catch clicks in the file selection comboboxes and updates the band list comboboxes
+        """
+        if event.widget._name == "combo_band1":
+            self.data1_set = True
+        elif event.widget._name == "combo_band2":
+            self.data2_set = True
+        else:
+            print(" --- comboprocess_band: sth strange happened")
+            return
+        if self.data1_set and self.data2_set:
+            self.button_plot.configure( state=ACTIVE )
+        
+    def comboprocess_file( self, event ):
+        """
+        Catch clicks in the file selection comboboxes and updates the file list comboboxes
+        """
+        
+        if event.widget._name == "combo_file1":
+            combo_band = self.combo_band1
+            combo_file = self.combo_file1
+        elif event.widget._name == "combo_file2":
+            combo_band = self.combo_band2
+            combo_file = self.combo_file2
+        else:
+            print(" --- comboprocess_file: sth strange happened")
+            return
+
+        # combo_band['state'] = ACTIVE
+        filename = combo_file.get()
+        bandnames = [ q["name"] for q in self.hypdatalist[1:] if q["filename"]==filename  ]      
+        combo_band.configure( values = bandnames )            
+        
+    def get_data( self ):
+        """
+        Returns the selected x1, x2 data dictionaries
+        """
+        filename1 = self.combo_file1.get()
+        bandname1 = self.combo_band1.get()
+        filename2 = self.combo_file2.get()
+        bandname2 = self.combo_band2.get()
+        x1D = [ q for q in self.hypdatalist[1:] 
+            if q["filename"]==filename1 and q["name"]==bandname1 ]
+        x2D = [ q for q in self.hypdatalist[1:] 
+            if q["filename"]==filename2 and q["name"]==bandname2 ]
+        
+        if len( x1D ) > 1:
+            self.outputcommand("non-unique data selection for #1\n")
+        if len( x2D ) > 1:
+            self.outputcommand("non-unique data selection for #2\n")
+        if len(x1D)==0 or len(x2D)==0:
+            self.outputcommand("zero-length data vector, lengths:"+
+                str(len(x1D))+","+str(len(x2D))+"\n")
+            return None,None
+        return x1D[0], x2D[0]
+        
+    def plot_fun( self ):
+        """
+        The most basic analysis, plot data
+        """
+        x1D,x2D = self.get_data()
+        x1 = x1D["data"]
+        x2 = x2D["data"]
+        fig_plot = plt.figure() # later, maybe make use of the handle
+        fig_plot_axes = fig_plot.add_subplot(1,1,1)
+        fig_plot_axes.plot( x1, x2, "x" )
+        fig_plot_axes.set_xlabel(x1D["name"]+" "+x1D["filename"])
+        fig_plot_axes.set_ylabel(x2D["name"]+" "+x2D["filename"])
+        fig_plot.show()
+
+    def printlog( self , text ):
+        """
+        Output to log window. Note: no newline added beteen inputs.
+        text need not be a string, will be converted when printing.
+        """
+        self.textlog.insert( END, str(text) )
+        self.textlog.yview( END )
+        self.master.update_idletasks()
 
 
 

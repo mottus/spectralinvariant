@@ -241,7 +241,7 @@ class disp_GUI:
         Plot the data with the band specified in the monochrome option menu
         """
         i_m = int( self.monoband_string.get().split(':')[0] )-1
-        plot_singleband( self.hypfilename, self.hypdata, self.hypdata_map, i_m, self.printlog )
+        plot_singleband( self.hypfilename, self.hypdata, self.hypdata_map, i_m, outputcommand=self.printlog )
         
             
     def printlog( self , text ):
