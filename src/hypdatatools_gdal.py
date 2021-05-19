@@ -1022,8 +1022,6 @@ def vector_rasterize( shpfile, rasterfile, shpfield=None, layernumber=0, band=1,
         return False
     
 
-
-
 def geopackage_getdatatables( datasource, localprintcommand=None ):
     """
     get the data tables from a geopackage file.
@@ -1088,6 +1086,52 @@ def geopackage_getfieldnames( datasource, tablename, localprintcommand = None ):
     if closefile:
         conn.close()
     return fieldnames
+    
+def geopackage_readtable(datasource, tablename, localprintcommand=None):
+    """ import a whole data table from a geopackage into a dictionary
+    
+    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
+        tablename: table name in geoopackage
+    out: a dictionary with data
+        dictionary keys consist column names
+        each dictionary element is a list with a table column
+    """
+    if localprintcommand is None:
+        # use a print command with no line feed in the end. The line feeds are given manually when needed.
+        localprintcommand = lambda x: print(x,end='',flush=True)
+    functionname = 'geopackage_readtable(): ' # for messaging
+    
+    # open geopackage as sqlite database if necessary
+    if type(datasource) == str:
+        conn = sqlite3.connect( datasource ) 
+        closefile = True
+    else: 
+        conn = datasource
+        closefile = False
+    # conn is now either sqlite3.Connection or sqlite3.Cursor
+    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
+    
+    # Get all field names from the table
+    field_names = geopackage_getfieldnames(c, tablename, localprintcommand=localprintcommand)
+
+    # Append list of field data to a larger list
+    data = []
+    for j in range(len(field_names)):
+        read_field = geopackage_getvalues(c, tablename, field_names[j], additionalconstraint=None)
+        data.append(read_field)
+
+    # Close the connection to the table
+    if closefile:
+        conn.close()
+
+    # Create dictionary (or dataframe) to which all data from the table are collected
+    Keys = field_names # field names
+    Values = data # field data
+    Dictionary = dict(zip(Keys, Values))
+    
+    #Dataframe = pd.DataFrame.from_dict(Dictionary)
+    #return Dataframe
+    return Dictionary
 
 def geopackage_getuniquevalues( datasource, tablename, fieldnames, additionalconstraint='', localprintcommand=None ):
     """
