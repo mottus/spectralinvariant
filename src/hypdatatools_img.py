@@ -141,6 +141,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     outputcommand( functionname + filename_short + " dimensions " + hypdata_map_shape+". \n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
 
     plot_rgb = True # flag: plot with three bands (as opposed to monochrome)
+    falsecolor = False # flag: plot as falsecolor pallette using the first band
     
     if plotbands is None:
         if plotmode == 'default':
@@ -158,15 +159,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
                     plotmode = 'RGB'
             else:
                 plotmode = 'RGB'
-        elif plotmode == 'falsecolor':
-            # monochromatic, use first band only as the hue component
-            i_r = 0
-            if 'band names' in hyp_metadata:
-                name_r = hyp_metadata['band names'][i_r]
-            else:
-                name_r = 'band0'
-            plot_rgb = False
-        if plotmode != 'default':
+        else:
             # wavelengths should be in metadata
             # these will be stored in the class for other functions to use (interpolation and plotting of reference data)
             wl_hyp, wl_found = get_wavelength(hypfilename, hypdata)
@@ -207,9 +200,9 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
                     else:
                         name_r = 'band0'
                     plot_rgb = False
-                    outputcommand(functionname + "Plotting " + filename_short + " as monocrome with band0.\n")
-    else:
-        # outputcommand( functionname + "Bands to plot given as argument.\n")
+                    outputcommand(functionname + "Plotting " + filename_short + " as monochrome with band0.\n")
+    else: # if plotbands is None:
+        # outputcommand( functionname + "Bands to plot given as argument, "+str(len(plotbands))+" band(s).\n")
         if len(plotbands) >= 3:
             plot_rgb = True
             i_r = plotbands[0]
@@ -218,6 +211,16 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
         else:
             plot_rgb = False
             i_r = plotbands[0]
+            
+    if plotmode == 'falsecolor':
+        # monochromatic, use first band only as the hue component
+        # outputcommand(functionname + "Plotting " + filename_short + " as falsecolor.\n")
+        if 'band names' in hyp_metadata:
+            name_r = hyp_metadata['band names'][i_r]
+        else:
+            name_r = 'band0'
+        plot_rgb = False
+        falsecolor = True
 
     # set max area
     # plotsize_max = 1024
@@ -234,58 +237,14 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
             hypdata_rgb = hypdata_map[:, :, i_r].astype('float32')
     else:
         if plot_rgb:
-            hypdata_rgb = hypdata.read_bands([i_r, i_g, i_b]).astype('float32')
+            hypdata_rgb = hypdata.read_bands( (i_r, i_g, i_b) ).astype('float32')
         else:
             hypdata_rgb = hypdata.read_bands([i_r]).astype('float32')
-
-    # datascaling = hypdata_rgb.max()
-    # 
-    ii = hypdata_rgb > 0
-    outputcommand(" calculating range...")
-
-    if plotmode == 'falsecolor':
-        datascaling = hypdata_rgb.max()
-    elif np.where(ii)[0].size < 200:
-        datascaling = hypdata_rgb.max()
-        datascaling /= 0.95
-        outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
-    elif np.ptp(hypdata_rgb[ii]) > 0:
-        datascaling = np.percentile(hypdata_rgb[ii], 98)
-    else:
-        datascaling = 0
-
-
-    if datascaling != 0:
-        outputcommand(" scaling by 1/" + str(datascaling) + "...")
-        hypdata_rgb /= datascaling
-
-    # percentile alone seems to give not so nice plots
-    hypdata_rgb[hypdata_rgb > 1] = 1
-    hypdata_rgb[hypdata_rgb < 0] = 0
-
-    if fig_hypdata is None:
-        fig_hypdata = plt.figure()  # create a new figure
-        outputcommand( functionname+" Creating new figure.\n")
-    else:
-        fig_hypdata.clf() # clear the figure
-        outputcommand( functionname+"Reusing old figure.\n")
-        
-    ax0 = fig_hypdata.add_subplot(1, 1, 1)
-    if not plot_rgb:
-        outputcommand(" stacking layers...")
-        if plotmode == 'falsecolor':
-            hypdata_hsv = np.concatenate([hypdata_rgb, np.ones_like(hypdata_rgb), np.ones_like(hypdata_rgb)], axis=-1)
-            outputcommand(" converting from HSV (SLOW!!!)...")
-            hypdata_rgb = matplotlib.colors.hsv_to_rgb(hypdata_hsv)
-        else:
-            hypdata_rgb = np.concatenate([hypdata_rgb, hypdata_rgb, hypdata_rgb], axis=-1)
-    outputcommand(" displaying...")
-    ax0.imshow(hypdata_rgb)  # ax0 is fig_hypdata.axes[0]
-    ax0.set_title(filename_short)
-
-    fig_hypdata.canvas.draw()
-    fig_hypdata.show()
-    outputcommand(" done.\n")
+    if plot_rgb:
+        plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+    else: 
+        plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short, falsecolor=falsecolor, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+    
     return fig_hypdata
 
 
@@ -310,12 +269,12 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     else:
         hyp_metadata = hypdata.metadata
 
-    filename_short = os.path.split(hypfilename)[1]
-    filename_short = os.path.splitext(filename_short)[0]
-
     if outputcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
         outputcommand = lambda x: print(x,end='',flush=True)
+        
+    filename_short = os.path.split(hypfilename)[1]
+    filename_short = os.path.splitext(filename_short)[0]
     
     hypdata_map_shape = ",".join( map(str,hypdata_map.shape) )
 
@@ -338,33 +297,129 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     outputcommand( functionname + filename_short + " dimensions " + hypdata_map_shape+
         " band " + str(bandnumber) + " min " + str(hypdata_i.min()) + " max " + str(hypdata_i.max()) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
     
-    # datascaling = hypdata_i.max()
-    # datascaling /= 0.95 
-    ii = hypdata_i > 0
-    if np.where(ii)[0].size > 0:
-        if np.ptp(hypdata_i[ii]) > 0:
-            datascaling = np.percentile(hypdata_i[ii], 98)
-            hypdata_i /= datascaling
-            outputcommand(functionname + "Applying a scaling factor of " + str(datascaling) + "\n")
-    
+    # the actual work in a separate function
+    plot_hypdatamatrix_singleband( hypdata_i, plottitle=filename_short, falsecolor=False, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+
+    return fig_hypdata
+
+
+def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, outputcommand=None):
+    """ Plot a 2D matrix using imshow() as RGB or grayscale
+        the actual plotting work for plotting a RGB hyperspectral data matrix
+    in: hypdata_rgb: 3-band numpy matrix
+        plottitle: string with the plot title
+    inout: fig_hypdata: figure handle to use and return
+    out: returns figure handle
+    """
+
+    functionname = "plot_hypdatamatrix(): "  # used in messaging
+
+    if outputcommand is None:
+        # use a print command with no line feed in the end. The line feeds are given manually when needed.
+        outputcommand = lambda x: print(x,end='',flush=True)
+    outputcommand(" calculating range...")
+    # stretch the image: calculate nice scaling. 
+    # currently, the bands are not treated separately.
+    ii = hypdata_rgb > 0
+    outputcommand(" calculating range...")
+
+    if np.where(ii)[0].size < 200:
+        datascaling = hypdata_rgb.max()
+        datascaling /= 0.95
+        outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
+    elif np.ptp(hypdata_rgb[ii]) > 0:
+        datascaling = np.percentile(hypdata_rgb[ii], 98)
+    else:
+        datascaling = 1.0 # no scaling
+
+    outputcommand(" scaling by 1/" + str(datascaling) + "...")
+    hypdata_rgb_plot = hypdata_rgb / datascaling
+    # this also forces the hypdata_plot to be a copy -- hypdata_band may be read-only
+
     # percentile alone seems to give not so nice plots
-    hypdata_i[hypdata_i > 1] = 1
-    hypdata_i[hypdata_i < 0] = 0
+    hypdata_rgb_plot[hypdata_rgb_plot > 1] = 1
+    hypdata_rgb_plot[hypdata_rgb_plot < 0] = 0
 
     if fig_hypdata is None:
         fig_hypdata = plt.figure()  # create a new figure
-        outputcommand( functionname + "creating new figure.\n")
+        outputcommand( functionname+" Creating new figure.\n")
     else:
         fig_hypdata.clf() # clear the figure
-        outputcommand( functionname + "reusing old figure.\n")
+        outputcommand( functionname+"Reusing old figure.\n")
+        
     ax0 = fig_hypdata.add_subplot(1, 1, 1)
-    ax0.imshow(hypdata_i)  # ax0 is fig_hypdata.axes[0]
 
-    ax0.set_title(filename_short)
+    outputcommand(" displaying...")
+    ax0.imshow(hypdata_rgb_plot)  # ax0 is fig_hypdata.axes[0]
+    ax0.set_title( plottitle )
 
     fig_hypdata.canvas.draw()
     fig_hypdata.show()
+    outputcommand(" done.\n")
+    return fig_hypdata
+    
+def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False, fig_hypdata=None, outputcommand=None):
+    """ Plot a 2D matrix using imshow()
+        the actual plotting work for plotting a single-band hyperspectral data matrix
+    in: hypdata_band: 1-band numpy matrix
+        plottitle: string with the plot title
+        falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
+    inout: fig_hypdata: figure handle to use and return
+    out: returns figure handle
+    """
 
+    functionname = "plot_hypdatamatrix_singleband(): "  # used in messaging
+
+    if outputcommand is None:
+        # use a print command with no line feed in the end. The line feeds are given manually when needed.
+        outputcommand = lambda x: print(x,end='',flush=True)
+    
+    # we wand a 2-d matrix
+    if hypdata_band.ndim > 2:
+        hypdata_band = np.squeeze( hypdata_band )
+        if hypdata_band.ndim > 2:
+            hypdata_band = hypdata_band[:,:,0]
+
+    outputcommand(functionname +" calculating range...")
+    # stretch bands to get nice scaling
+    ii = hypdata_band > 0
+
+    if np.where(ii)[0].size < 200:
+        datascaling = hypdata_band.max()
+        datascaling /= 0.95
+        outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
+    elif np.ptp(hypdata_band[ii]) > 0:
+        datascaling = np.percentile(hypdata_band[ii], 98)
+    else:
+        datascaling = 1.0 # no scaling
+
+    outputcommand(" scaling by 1/" + str(datascaling) + "...\n")
+    hypdata_plot =  hypdata_band / datascaling 
+    # this also forces the hypdata_plot to be a copy -- hypdata_band may be read-only
+
+    # percentile alone seems to give not so nice plots
+    hypdata_plot[hypdata_plot > 1] = 1
+    hypdata_plot[hypdata_plot < 0] = 0
+
+    if fig_hypdata is None:
+        fig_hypdata = plt.figure()  # create a new figure
+        outputcommand( functionname+" Creating new figure.\n")
+    else:
+        fig_hypdata.clf() # clear the figure
+        outputcommand( functionname+"Reusing old figure.\n")
+
+    ax0 = fig_hypdata.add_subplot(1, 1, 1)   
+    if falsecolor:
+        outputcommand(" ... converting from HSV (SLOW!!!)...")
+        hypdata_hsv = np.stack([hypdata_plot, np.ones_like(hypdata_plot), np.ones_like(hypdata_plot)], axis=-1)
+        hypdata_plot = matplotlib.colors.hsv_to_rgb(hypdata_hsv)
+    outputcommand(" ... displaying...")
+    ax0.imshow(hypdata_plot)  # ax0 is fig_hypdata.axes[0]
+    ax0.set_title( plottitle )
+
+    fig_hypdata.canvas.draw()
+    fig_hypdata.show()
+    outputcommand(" done.\n")
     return fig_hypdata
 
 
