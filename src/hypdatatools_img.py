@@ -114,7 +114,8 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     outputdata is the optional print command for redirecting output
     plotmode = 'RGB', 'NIR', 'default', 'falsecolor'. Which mode to use for plotting. Overriden by plotbands (if set).
         default means looking for the suggested bands in hdr, if not found, use RGB
-        falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
+        falsecolor: plot with band #0 as hue. Useful for classified images. 
+            was slow because of hsv->rgb conversion, but not anymore as is done by imshow()
     plotbands = list [r,g,b], if not set, guessed from metadata and elsewhere
     fig_hypdata: figure handle to use and return
     """
@@ -409,12 +410,15 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
         outputcommand( functionname+"Reusing old figure.\n")
 
     ax0 = fig_hypdata.add_subplot(1, 1, 1)   
-    if falsecolor:
-        outputcommand(" ... converting from HSV (SLOW!!!)...")
-        hypdata_hsv = np.stack([hypdata_plot, np.ones_like(hypdata_plot), np.ones_like(hypdata_plot)], axis=-1)
-        hypdata_plot = matplotlib.colors.hsv_to_rgb(hypdata_hsv)
+#    if falsecolor:
+#        outputcommand(" ... converting from HSV (SLOW!!!)...")
+#        hypdata_hsv = np.stack([hypdata_plot, np.ones_like(hypdata_plot), np.ones_like(hypdata_plot)], axis=-1)
+#        hypdata_plot = matplotlib.colors.hsv_to_rgb(hypdata_hsv)
     outputcommand(" ... displaying...")
-    ax0.imshow(hypdata_plot)  # ax0 is fig_hypdata.axes[0]
+    if falsecolor:
+        ax0.imshow(hypdata_plot)  # ax0 is fig_hypdata.axes[0]
+    else:
+        ax0.imshow(hypdata_plot,cmap='gray', vmin=0, vmax=1)  # ax0 is fig_hypdata.axes[0]
     ax0.set_title( plottitle )
 
     fig_hypdata.canvas.draw()
