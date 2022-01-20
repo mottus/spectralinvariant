@@ -756,7 +756,7 @@ class pixelGUI:
         """
         loads a shapefile, or unloads it if loaded
         """
-        if self.button_loadshp.cget('text') == "Load polygon":
+        if self.button_loadshp.cget('text') == "Load polygon from .shp":
             filename_shape = filedialog.askopenfilename(initialdir = self.foldername1, title = "Load vector shapefile",filetypes = (("shp files","*.shp"),("all files","*.*")))
             if filename_shape != "":
                 if len( self.polygonlist ) > 0:
@@ -768,11 +768,14 @@ class pixelGUI:
                 N_layers = sh_file.GetLayerCount() 
                 self.printlog("Shapefile: " + str( N_layers ) + " layers" )
                 N_pts = 0 # the number of points in the final polygon. Used also to test if a polygon has been found
+                i_poly = 0 # the index counting the polygons in the file
                 # find the first layer with some features
                 for il in range(N_layers):
                     sh_layer = sh_file.GetLayerByIndex(il)
                     # print( sh_layer.GetExtent() )
                     sh_SpatialReference = sh_layer.GetSpatialRef()
+                    self.printlog(", layer " + str(il) + ", "+ sh_layer.GetName() + ", has " + str(sh_layer.GetFeatureCount()) + " feature(s).\n" )
+                    self.printlog("layer :" + sh_SpatialReference.ExportToProj4() +".\n")
                     # sh_f = sh_layer.GetFeature(0) #  The returned feature should be free with OGR_F_Destroy(). -- not done in Cookbook?
                     sh_f = sh_layer.GetNextFeature() 
                     while sh_f != None:
@@ -792,15 +795,13 @@ class pixelGUI:
                             if sh_g_ring.GetSpatialReference()==None and sh_SpatialReference!=None:
                                 sh_g_ring.AssignSpatialReference( sh_SpatialReference )
                             N_pts = sh_g_ring.GetPointCount()
-                            if N_pts > 2:
-                                self.printlog(", layer " + str(il) + ", "+ sh_layer.GetName() + ", has " + str(sh_layer.GetFeatureCount()) + " feature(s).\n" )
-                                self.printlog( "Found geometry of type " + sh_g_type + " with " + str(N_pts) + " points.\n")
-                                self.printlog("layer :" + sh_SpatialReference.ExportToProj4() +".\n")
+                            if N_pts > 2:                                
+                                self.printlog( "Found geometry "+str(i_poly)+" of type " + sh_g_type + " with " + str(N_pts) + " points.\n")
                                 # plot the feature
                                 R = sh_g_ring.Clone() # store a clone so the file can be (hopefully) closed
                                 # self.printlog( "ring : "+ R.GetSpatialReference().ExportToProj4() +"\n" )
-                                
-                                self.polygonlist = [ R ]
+                                # self.polygonlist = [ R ] # XXX
+                                self.polygonlist.append( R )
                                 self.button_loadshp.configure( text = "Unload polygon")
                                 self.button_plotshp.configure( state=ACTIVE )
                                 self.button_zoomtoshp.configure( state=ACTIVE )
@@ -818,9 +819,10 @@ class pixelGUI:
                                     self.button_plotshp.configure( state=ACTIVE )
                                     self.button_zoomtoshp.configure( state=ACTIVE )
                                 # plot
-                                if len(self.figurelist) > 0:
-                                    self.plotshp_fun()
-                                break
+                                # if len(self.figurelist) > 0:
+                                #    self.plotshp_fun( i_poly )
+                                i_poly += 1
+                                # break
                         sh_f = sh_layer.GetNextFeature() 
                 if N_pts == 0:
                     self.printlog("loadshp_fun(): Could not load shapefile, no suitable features found.\n")
@@ -830,7 +832,7 @@ class pixelGUI:
                 self.printlog("loadshp_fun(): Shapefile loading aborted.\n")
         else:
             # we were called to unload the shapefile
-            self.button_loadshp.configure( text = "Load polygon")
+            self.button_loadshp.configure( text = "Load polygon from .shp")
             self.shapefilelist = [] # this should also close the shapefile
             self.button_plotshp.configure( state=DISABLED )
             self.button_zoomtoshp.configure( state=DISABLED )
@@ -845,16 +847,30 @@ class pixelGUI:
                     self.button_showpoints.configure( state=ACTIVE )
                     self.button_deletepoints.configure( state=ACTIVE )
                     self.button_savepoints.configure( state=ACTIVE )
+                    self.button_plotshp.configure( state=DISABLED )
+                    self.button_zoomtoshp.configure( state=DISABLED )
         self.update_figures_fun() # this should be called as often as possible
             
-    def plotshp_fun( self, i=0 ):
+    def plotshp_fun( self, i_range=None ):
         """
         Plot the vector points in the ring self.polygonlist[i] in the active raster windows. Reprojects XY
         self.polygonlist is a "ring" of a polygon, of type osgeo.ogr.Geometry
+        
+        i: the index of the self.polygonlist elements to plot. If None, all will be plotted
         """
+        # set up i_range. 
+        if i_range is None:
+            i_range = range( len(self.polygonlist) )
+        else:
+            # Check if i_range is iterable -- and make sure it is!
+            try:
+                temp = iter(i_range)
+            except TypeError as te:
+                i_range = [ i_range ]
+        
         curfigurelist = self.listbox_figures.curselection() # get the current figure
         if len( curfigurelist ) == 0:
-            self.printlog("showpoints(): No figures selected, cannot plot.")
+            self.printlog("plotshp_fun(): No figures selected, cannot plot.\n")
         for curfigure in curfigurelist:
             existingfigs = plt.get_fignums() # the list of existing figures
             curfigno = self.figurelist[ curfigure ][0]
@@ -863,14 +879,18 @@ class pixelGUI:
                 # the window is still open, use it
                 fig_hypdata = self.figurelist[ curfigure ][2]
                 hypfilename = self.figurelist[ curfigure ][4]
-                xy = shape2imagecoords( self.polygonlist[i], hypfilename )
                 # clear the plot of previous drawings
                 while len( fig_hypdata.axes[0].get_lines() ) > 0:
                     fig_hypdata.axes[0].get_lines()[0].remove()
-                # fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c='r' )
-                col = i % len(self.plotcolors[i])
-                fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c=self.plotcolors[col] )
-                fig_hypdata.canvas.draw()
+                self.printlog("plotshp_fun(): plotting polygons ")
+                for i in i_range:
+                    xy = shape2imagecoords( self.polygonlist[i], hypfilename )
+                    # fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c='k' )
+                    col = i % len(self.plotlinecolors)
+                    fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c=self.plotlinecolors[col] )
+                    self.printlog("#")
+                    fig_hypdata.canvas.draw()
+                self.printlog("\n")
             else:
                 self.printlog("plotvector(): Figure " +str(curfigno) + " not open, cannot plot.\n")
         self.update_figures_fun() # this is run as often as possible
