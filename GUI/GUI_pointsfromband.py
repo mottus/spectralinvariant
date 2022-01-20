@@ -180,7 +180,7 @@ class PfBGUI:
         if DIV is not None:
             self.DIV.set( str(DIV) )
             self.entry_DIV.delete( 0, END )
-            self.entry_DIV.insert( str(DIV) )
+            self.entry_DIV.insert( 0, str(DIV) )
         # fill the band name ComboBox
         self.combo_band['state'] = ACTIVE
         self.combo_band.configure( values = self.bandnames )

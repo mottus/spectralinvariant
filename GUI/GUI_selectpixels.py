@@ -17,15 +17,11 @@ from osgeo import osr
 import matplotlib
 import sys
 
-# AIROBEST_dir = 'hyperspectral\\AIROBEST'
-# if not AIROBEST_dir in sys.path:
-#     sys.path.append(AIROBEST_dir)
-# sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
-# sys.path.append("hyperspectral\\AIROBEST")
-
+# sys.path.append("C:/data/koodid/python/hyperspectral/spectralinvariant/GUI")
 from GUI_pointsfromband import PfBGUI
 from spectralinvariant.hypdatatools_gdal import *
 from spectralinvariant.hypdatatools_utils import *
+from spectralinvariant.hypdatatools_img import *
 
 class pixelGUI:
         

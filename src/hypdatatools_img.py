@@ -242,9 +242,9 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
         else:
             hypdata_rgb = hypdata.read_bands([i_r]).astype('float32')
     if plot_rgb:
-        plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+        fig_hypdata = plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
     else: 
-        plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short, falsecolor=falsecolor, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+        fig_hypdata = plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short, falsecolor=falsecolor, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
     
     return fig_hypdata
 
