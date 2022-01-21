@@ -262,27 +262,37 @@ class pixelGUI:
                 # use default values
                 i_x = 0 # xcoordinates of points
                 i_y = 1 # y coordinates of points
+                
+            if ( i_id == -1 ):
+                if xy.shape[1] > 2:
+                    i_id = 2
+                    self.printlog( filename + ": Using 3rd column as ID.\n")
+                else:
+                    i_id = None
+                    self.printlog( filename + ": Using counter as ID.\n")
             
-            # read x,y. First, we need to determine the first numeric value
-            for firstnum in range( xy.shape[0] ):
+            # read x,y. We need to determine the rows with numerical coordinates
+            #   empty rows should be discarded
+            x_in = []
+            y_in = []
+            id_in = []
+            counter_rows = 0
+            for ii in range( xy.shape[0] ):
                 try:
-                    x_temp = np.float32( xy[ firstnum, i_x ] )
+                    # check only x-coordinate, assume y is OK if x is.
+                    x_temp = np.float32( xy[ ii, i_x ] )
                 except ValueError:
                     pass
                 else:
-                    break
-            # XXX sanity check -- what if no umeric values found? Error should be created
-            
-            x_in = [ np.float32(x) for x in xy[firstnum:,i_x] ]
-            y_in = [ np.float32(x) for x in xy[firstnum:,i_y] ]
-            
-            if i_id == -1:
-                if xy.shape[1] < 3:
-                    id_in = [ str[x] for x in range( len(x_in) ) ]
-                else:
-                    id_in = xy[ firstnum:,2 ]
-            else:
-                id_in = xy[ firstnum:,i_id ]
+                    counter_rows += 1
+                    x_in.append( x_temp )
+                    # assume y coordinate is OK, too
+                    y_in.append( np.float32( xy[ ii, i_y ] ) )
+                    if i_id is not None:
+                        id_in.append( str( xy[ ii, i_id ] ) )
+                    else:
+                        # use just sequential numbers as IDs
+                        id_in.append( str( counter_rows ) )
     
             # store the points in listbox and self.pointlist
             # select format based on their values

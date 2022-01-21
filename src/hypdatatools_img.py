@@ -160,48 +160,48 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
                     plotmode = 'RGB'
             else:
                 plotmode = 'RGB'
-        else:
-            # wavelengths should be in metadata
-            # these will be stored in the class for other functions to use (interpolation and plotting of reference data)
-            wl_hyp, wl_found = get_wavelength(hypfilename, hypdata)
-            if wl_found:
-                if plotmode == 'NIR':
-                    i_r = abs(wl_hyp - 780).argmin()  # red band, use NIR channel
-                    i_g = abs(wl_hyp - 670).argmin()  # green band, use red channel
-                    i_b = abs(wl_hyp - 550).argmin()  # blue band, use green channel
-                else:
-                    # plotmode should be 'RGB', but make this also the default case
-                    i_r = abs(wl_hyp - 670).argmin()  # red band
-                    i_g = abs(wl_hyp - 550).argmin()  # green
-                    i_b = abs(wl_hyp - 450).argmin()  # blue
-                outputcommand(functionname + filename_short + ": using wavelengths for plotting, ")
-                outputcommand("%5.1f,%5.1f,%5.1f nm.\n" % (wl_hyp[i_r], wl_hyp[i_g], wl_hyp[i_b]))
+
+        # wavelengths should be in metadata
+        # these will be stored in the class for other functions to use (interpolation and plotting of reference data)
+        wl_hyp, wl_found = get_wavelength(hypfilename, hypdata)
+        if wl_found:
+            if plotmode == 'NIR':
+                i_r = abs(wl_hyp - 780).argmin()  # red band, use NIR channel
+                i_g = abs(wl_hyp - 670).argmin()  # green band, use red channel
+                i_b = abs(wl_hyp - 550).argmin()  # blue band, use green channel
             else:
-                # just use the first one or three bands
-                if hypdata_map.shape[2] > 2:
-                    # we have at least 3 bands
-                    i_r = 0
-                    i_g = 1
-                    i_b = 2
-                    if 'band names' in hyp_metadata:
-                        name_r = hyp_metadata['band names'][i_r]
-                        name_g = hyp_metadata['band names'][i_g]
-                        name_b = hyp_metadata['band names'][i_b]
-                    else:
-                        name_r = 'band ' + str(i_r)
-                        name_g = 'band ' + str(i_g)
-                        name_b = 'band ' + str(i_b)
-                    outputcommand(
-                        functionname + filename_short + " display bands: " + name_r + ", " + name_g + ", " + name_b + ".\n")
+                # plotmode should be 'RGB', but make this also the default case
+                i_r = abs(wl_hyp - 670).argmin()  # red band
+                i_g = abs(wl_hyp - 550).argmin()  # green
+                i_b = abs(wl_hyp - 450).argmin()  # blue
+            outputcommand(functionname + filename_short + ": using wavelengths for plotting, ")
+            outputcommand("%5.1f,%5.1f,%5.1f nm.\n" % (wl_hyp[i_r], wl_hyp[i_g], wl_hyp[i_b]))
+        else:
+            # just use the first one or three bands
+            if hypdata_map.shape[2] > 2:
+                # we have at least 3 bands
+                i_r = 0
+                i_g = 1
+                i_b = 2
+                if 'band names' in hyp_metadata:
+                    name_r = hyp_metadata['band names'][i_r]
+                    name_g = hyp_metadata['band names'][i_g]
+                    name_b = hyp_metadata['band names'][i_b]
                 else:
-                    # monochromatic, use first band only
-                    i_r = 0
-                    if 'band names' in hyp_metadata:
-                        name_r = hyp_metadata['band names'][i_r]
-                    else:
-                        name_r = 'band0'
-                    plot_rgb = False
-                    outputcommand(functionname + "Plotting " + filename_short + " as monochrome with band0.\n")
+                    name_r = 'band ' + str(i_r)
+                    name_g = 'band ' + str(i_g)
+                    name_b = 'band ' + str(i_b)
+                outputcommand(
+                    functionname + filename_short + " display bands: " + name_r + ", " + name_g + ", " + name_b + ".\n")
+            else:
+                # monochromatic, use first band only
+                i_r = 0
+                if 'band names' in hyp_metadata:
+                    name_r = hyp_metadata['band names'][i_r]
+                else:
+                    name_r = 'band0'
+                plot_rgb = False
+                outputcommand(functionname + "Plotting " + filename_short + " as monochrome with band0.\n")
     else: # if plotbands is None:
         # outputcommand( functionname + "Bands to plot given as argument, "+str(len(plotbands))+" band(s).\n")
         if len(plotbands) >= 3:
@@ -1271,18 +1271,17 @@ def envihdr2datafile( hdrfilename, localprintcommand=None ):
     if hdrfilename_split[1] == ".hdr":
         datafilename = hdrfilename_split[0]
         if not os.path.exists(datafilename):
-            # try different extensions, .dat and .bin and .bil
+            # try different extensions, .dat and .bin and .bil and img
             basefilename = datafilename
-            datafilename += '.dat'
-            if not os.path.exists(datafilename):
-                datafilename  = basefilename + '.bin'
-                if not os.path.exists(datafilename):
-                    datafilename  = basefilename + '.bil'
-                    if not os.path.exists(datafilename):
-                        datafilename  = basefilename + '.bsq'
-                        if not os.path.exists(datafilename):
-                            localprintcommand(functionname + "Cannot find the data file corresponding to {}.\n".format(hdrfilename) )
-                            datafilename = ''
+            
+            extensionlist = [ 'dat', 'bin', 'bil', 'bsq', 'img' ]
+            for extension in extensionlist:
+                datafilename  = basefilename + '.'+ extension
+                if os.path.exists(datafilename):
+                    break
+    if not os.path.exists(datafilename):
+        localprintcommand(functionname + "Cannot find the data file corresponding to {}.\n".format(hdrfilename) )
+        datafilename = ''
     return datafilename
     
 
