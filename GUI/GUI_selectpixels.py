@@ -556,7 +556,7 @@ class pixelGUI:
             self.hypdata_ciglock = False
             self.catch_figure_listno = -1
         else: 
-            # we are called by pyplot event, click in fig_hypdata
+            # we are called by pyplot event, a click in fig_hypdata
             self.printlog("addpoint_fun(): clicked "+str(event.xdata)+','+str(event.ydata)+".\n")
 
             hypfilename = self.figurelist[ self.catch_figure_listno ][ 4 ] 
@@ -572,7 +572,7 @@ class pixelGUI:
             while newid in existingids:
                 newid = str( int(newid)+1 )            
             
-            self.printlog( "addpoint() adding point %s: %0.1f,%0.1f (%0.1f,%0.1f)\n" 
+            self.printlog( "addpoint_fun() adding point %s: %0.1f,%0.1f (%0.1f,%0.1f)\n" 
                 % (newid, xy[0,0], xy[0,1], event.xdata, event.ydata) )
             self.pointlist.append( (newid, xy[0,0], xy[0,1] ) )
 
