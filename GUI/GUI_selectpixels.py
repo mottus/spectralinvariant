@@ -818,7 +818,6 @@ class pixelGUI:
                                 # plot the feature
                                 R = sh_g_ring.Clone() # store a clone so the file can be (hopefully) closed
                                 # self.printlog( "ring : "+ R.GetSpatialReference().ExportToProj4() +"\n" )
-                                # self.polygonlist = [ R ] # XXX
                                 self.polygonlist.append( R )
                                 self.button_loadshp.configure( text = "Unload polygon")
                                 self.button_plotshp.configure( state=ACTIVE )
@@ -1045,7 +1044,11 @@ class pixelGUI:
                 DIV = self.openfilelist[selection][3]
                 stretchfactor = 0.95 # the default value
                 stretchfactor = float( self.stretchfactor_string.get() )
-                print("XXX stretchfactor " + self.stretchfactor_string.get()+"  "+str(stretchfactor))
+                if stretchfactor > 1:
+                    stretchfactor = 1
+                elif stretchfactor < 0:
+                    stretchfactor = 0.95
+                self.printlog("displayfile_fun: using stretch = "+str(stretchfactor)+".\n")
                 plotmode = self.plotmode_string.get()
                 fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, stretchfactor=stretchfactor )   
                 # add figure to figurelist

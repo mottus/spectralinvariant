@@ -1,5 +1,5 @@
 """
-Copyright (C) 2017,2018,2022  Matti Mõttus 
+Copyright (C) 2017,2018  Matti Mõttus 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -122,8 +122,6 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     """
 
     functionname = "plot_hyperspectral(): "  # used in messaging
-
-    print("XXX plot_hyperspectral(): " + str(stretchfactor))
 
     if hypdata is None:
         hypdata = spectral.open_image(hypfilename)
@@ -385,7 +383,7 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
         outputcommand = lambda x: print(x,end='',flush=True)
     
-    # we wand a 2-d matrix
+    # we want a 2-d matrix
     if hypdata_band.ndim > 2:
         hypdata_band = np.squeeze( hypdata_band )
         if hypdata_band.ndim > 2:
