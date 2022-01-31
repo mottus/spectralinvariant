@@ -1,5 +1,5 @@
 """
-Copyright (C) 2017,2018  Matti Mõttus 
+Copyright (C) 2017,2018,2022  Matti Mõttus 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -104,7 +104,7 @@ def envi_isfloat( hypfilename, hypdata=None ):
         # data type not given. Output undetermined
         return None
         
-def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, plotmode='default', plotbands=None, fig_hypdata=None ):
+def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, plotmode='default', plotbands=None, fig_hypdata=None, stretchfactor=0.95 ):
     """
     Create a figure with hyperspectral image and return handle
     hypfilename: the name + full path to Envi hdr file
@@ -118,9 +118,12 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
             was slow because of hsv->rgb conversion, but not anymore as is done by imshow()
     plotbands = list [r,g,b], if not set, guessed from metadata and elsewhere
     fig_hypdata: figure handle to use and return
+    stretchfactor: the upper percentile to draw as white
     """
 
     functionname = "plot_hyperspectral(): "  # used in messaging
+
+    print("XXX plot_hyperspectral(): " + str(stretchfactor))
 
     if hypdata is None:
         hypdata = spectral.open_image(hypfilename)
@@ -242,14 +245,16 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
         else:
             hypdata_rgb = hypdata.read_bands([i_r]).astype('float32')
     if plot_rgb:
-        fig_hypdata = plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+        fig_hypdata = plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short,
+            fig_hypdata=fig_hypdata, stretchfactor=stretchfactor, outputcommand=outputcommand )
     else: 
-        fig_hypdata = plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short, falsecolor=falsecolor, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+        fig_hypdata = plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short,
+            falsecolor=falsecolor, fig_hypdata=fig_hypdata, stretchfactor=stretchfactor, outputcommand=outputcommand )
     
     return fig_hypdata
 
 
-def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None, outputcommand=None):
+def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
     """
     Create a figure with a single band from hypersectral image and return handle
     hypfilename: the name + full path to Envi hdr file
@@ -257,6 +262,7 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         alternatively, it can be the metadata dictionary.
     hypdata_map: 3D np.ndarray-like object, e.g. the memory map of hypdata file handle
     fig_hypdata: figure handle to use and return
+    stretchfactor: the upper percentile to draw as white
     outputcommand: the optional print command for redirecting output
     returns figure handle
     """
@@ -299,16 +305,19 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         " band " + str(bandnumber) + " min " + str(hypdata_i.min()) + " max " + str(hypdata_i.max()) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
     
     # the actual work in a separate function
-    plot_hypdatamatrix_singleband( hypdata_i, plottitle=filename_short, falsecolor=False, fig_hypdata=fig_hypdata, outputcommand=outputcommand )
+    plot_hypdatamatrix_singleband( hypdata_i, plottitle=filename_short,
+        falsecolor=False, fig_hypdata=fig_hypdata, stretchfactor=stretchfactor,
+        outputcommand=outputcommand )
 
     return fig_hypdata
 
 
-def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, outputcommand=None):
+def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
     in: hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
+        stretchfactor: the upper percentile to draw as white
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
@@ -326,10 +335,10 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, outputcomma
 
     if np.where(ii)[0].size < 200:
         datascaling = hypdata_rgb.max()
-        datascaling /= 0.95
+        datascaling /= stretchfactor
         outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
     elif np.ptp(hypdata_rgb[ii]) > 0:
-        datascaling = np.percentile(hypdata_rgb[ii], 98)
+        datascaling = np.percentile(hypdata_rgb[ii], stretchfactor*100 )
     else:
         datascaling = 1.0 # no scaling
 
@@ -359,12 +368,13 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, outputcomma
     outputcommand(" done.\n")
     return fig_hypdata
     
-def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False, fig_hypdata=None, outputcommand=None):
+def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False, fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
     """ Plot a 2D matrix using imshow()
         the actual plotting work for plotting a single-band hyperspectral data matrix
     in: hypdata_band: 1-band numpy matrix
         plottitle: string with the plot title
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
+        stretchfactor: the upper percentile to draw as white
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
@@ -387,10 +397,10 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
 
     if np.where(ii)[0].size < 200:
         datascaling = hypdata_band.max()
-        datascaling /= 0.95
+        datascaling /= stretchfactor
         outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
     elif np.ptp(hypdata_band[ii]) > 0:
-        datascaling = np.percentile(hypdata_band[ii], 98)
+        datascaling = np.percentile(hypdata_band[ii], stretchfactor*100 )
     else:
         datascaling = 1.0 # no scaling
 
@@ -631,7 +641,7 @@ def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=Non
     in:
         hypdata = the ENVI (Spectral pyhton) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
         subset = integers [ xmin, ymin, xmax, ymax ]
-            if subset is larger than image, pixels are filled in with DIV (default=0)
+            if subset is larger than image, subset is shrunk
             the included range is min:max (i.e., max itself will be excluded)
         hypdata_map = the raster handle of the input file. If given, hypdata is not reopened
     interleave: 'bil', 'bip, or 'bsq'
@@ -702,10 +712,11 @@ def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=Non
             hypdata.metadata['interleave'] = interleave
 
         # the indices to subset the original data
+        #shrink the subset if needed
         imin = max(xmin, 0)
-        imax = min(xmax, imaxx)
+        imax = min(xmax, imaxx) 
         jmin = max(ymin, 0)
-        jmax = min(ymax, imaxy)
+        jmax = min(ymax, imaxy) 
         # offset in new data
         if xmin < 0:
             i0 = -xmin
@@ -717,10 +728,10 @@ def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=Non
             j0 = 0
         # [i0,j0] is the location of the [0,0] pixel of original image in the subset image
 
-        localprintcommand(functionname + " new image size: %ix%i, existing data %ix%i, offset %i,%i.\n" %
+        localprintcommand(functionname + " new image size: requested %ix%i, final %ix%i, offset %i,%i.\n" %
                           (xmax - xmin, ymax - ymin, imax - imin, jmax - jmin, i0, j0))
         localprintcommand(functionname + " creating file " + outfilename)
-        outdata = envi.create_image(outfilename, metadata=metadata, interleave=interleave, ext='')
+        outdata = envi.create_image(outfilename, metadata=metadata, interleave=interleave, ext='', force=True )
         localprintcommand(" and saving data ... ")
         outdata_map = outdata.open_memmap(writable=True)
         if fill_black:
@@ -828,6 +839,7 @@ def figure2image(fig_hypdata, hypdata, hypdata_map, outfilename, interleave="bil
     # imaxx = hypdata_map.shape[1] 
     # imaxy = hypdata_map.shape[0]
 
+    localprintcommand("figure2image(): No pixels in the zoomed area. Aborting.\n")
     if xmin >= xmax or ymin >= ymax:
         localprintcommand("figure2image(): No pixels in the zoomed area. Aborting.\n")
     else:
@@ -1370,3 +1382,8 @@ def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, chec
         fieldtype = 'as vector' if vectorfield else ''
         localprintcommand( functionname +" Added field <{}> {} to {}.\n"
             .format( fieldname, fieldtype, hdrfile ) )
+
+
+
+
+

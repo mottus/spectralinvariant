@@ -48,6 +48,10 @@ class pixelGUI:
         self.plotlinestyles = ( '-', ':' , '-.', '--' )
         self.plotlinecolors =  ( 'r', 'b', 'g', 'c', 'm', 'y', 'k', 'w' )
         
+        # the brightness stretch scale factor, colors above stretchfactor are set to 1
+        self.stretchfactor_string = StringVar()
+        self.stretchfactor_string.set( "0.95" )
+        
         self.catch_figure = None # The figure handle from which clicks are being caught
         self.catch_figure_listno = -1 # the number of figure in figurelist where clicks are captured
         self.hypdata_ciglock = False # cig lock for fig_hypdata so only one function can catch clicks from pyplot
@@ -120,12 +124,16 @@ class pixelGUI:
         self.scrollbar_files_v['command'] = self.listbox_files.yview
         self.scrollbar_files_h['command'] = self.listbox_files.xview
         self.label_files = Label( self.frame_files, width=bw, text="RASTER FILES")
-        self.button_displayfile = Button( self.frame_files, width=bw, text='Display', command=self.displayfile_fun, state=DISABLED )
+        self.button_deletefile = Button( self.frame_files, width=bw, text='Remove from list', command=self.deletefiles_fun, state=DISABLED )
         self.option_plotmode = OptionMenu( self.frame_files, self.plotmode_string, *plotmode_list )
         self.option_plotmode['width'] = ow
-
-        self.button_deletefile = Button( self.frame_files, width=bw, text='Remove from list', command=self.deletefiles_fun, state=DISABLED )
+        self.label_stretchfactor = Label( self.frame_files, width=bw, text="stretch factor")
+        self.entry_stretchfactor = Entry( self.frame_files, textvariable=self.stretchfactor_string )
+        self.button_displayfile = Button( self.frame_files, width=bw, text='Display', command=self.displayfile_fun, state=DISABLED )
+        
         self.button_displayfile.pack( side='bottom' )
+        self.entry_stretchfactor.pack( side='bottom' )
+        self.label_stretchfactor.pack( side='bottom' )
         self.option_plotmode.pack( side='bottom' )
         self.button_deletefile.pack( side='bottom' )
         self.label_files.pack( side='top' )
@@ -1035,9 +1043,11 @@ class pixelGUI:
                 hypdata = self.openfilelist[selection][1]
                 hypdata_map = self.openfilelist[selection][2]
                 DIV = self.openfilelist[selection][3]
-                
+                stretchfactor = 0.95 # the default value
+                stretchfactor = float( self.stretchfactor_string.get() )
+                print("XXX stretchfactor " + self.stretchfactor_string.get()+"  "+str(stretchfactor))
                 plotmode = self.plotmode_string.get()
-                fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode )           
+                fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, stretchfactor=stretchfactor )   
                 # add figure to figurelist
                 # self.figurelist = [] # each list element should be a list: [ number, type, figurehandle, name, filename_full, DataIgnoreValue ]
                 ff = [ fig_hypdata.number, 'hyp', fig_hypdata, filename_short, hypfilename, DIV ]
