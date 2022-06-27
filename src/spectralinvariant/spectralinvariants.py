@@ -90,6 +90,50 @@ def p(hypdata, refspectrum):
     return (p_out, rho_out, DASF_out, R_out)
 
 
+def lsq(hypdata, refspectrum):
+    """Least squares regression for calculating spectral invariants.
+
+    Calculate p (by fitting a line). Based on p_forpixel()
+    Assumes that the input data is already spectrally subset.
+
+    Parameters
+    ----------
+    hypdata : ndarray
+        Hyperspectral reflectancedata.
+    refspectrum : ndarray
+        Reference spectrum. Has to be the same length as hypdata
+
+    Returns
+    -------
+    p_out : ndarray
+        Least squares slope.
+    rho_out : ndarray
+        Least squares Intercept.
+    DASF_out : ndarray
+        DASF.
+    R_out : ndarray
+        Pearson's correlation coefficient.
+    """
+    axis = 0
+    if len(hypdata.shape) > 1:
+        axis = 2
+        
+    y_DASF = hypdata / refspectrum
+
+    n = hypdata.shape[axis]
+    Sx = hypdata.sum(axis=axis)
+    Sxx = (hypdata * hypdata).sum(axis=axis) - Sx * Sx / n
+    Sy = y_DASF.sum(axis=axis)
+    Syy = (y_DASF * y_DASF).sum(axis=axis) - Sy * Sy / n
+    Sxy = (hypdata * y_DASF).sum(axis=axis) - Sx * Sy / n
+    p_out = Sxy / Sxx  # p = slope
+    rho_out = (Sy - p_out * Sx) / n  # rho = intercept
+    DASF_out = rho_out / (1 - p_out)  # DASF
+    R_out = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
+
+    return (p_out, rho_out, DASF_out, R_out)
+
+
 def referencealbedo_prospectparams():
     """
     Returns the PROSPECT parameters required for creating the  reference albedo
