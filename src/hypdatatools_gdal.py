@@ -888,7 +888,7 @@ def vector_rasterize_like( shpfile, rasterfile, shpfield=None, layernumber=0, dt
         shpfile: file to rasterize
         rasterfile: the sample raster used to get geometry from
         shpfield: (str) name of the field in shapefile to get the raster levels from. If none, a constant value of one is used to create a mask
-        layernumber: which layer is shpfile to use
+        layernumber: which layer in shpfile to use
         dtype: python data type to for raster. If None, determined based on the values in shpfield
             dtype is converted to gdal type using GDAL_FIELD_TYPES_MAP defined at the beginning of this file
         RasterizeOptions: a list that will be passed to GDAL RasterizeLayers -- papszOptions, like ["ALL_TOUCHED=TRUE"]

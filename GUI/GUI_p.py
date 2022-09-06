@@ -9,17 +9,8 @@ import threading
 import os
 import time
 import sys
-# AIROBEST_dir = 'hyperspectral\\AIROBEST'
-# if not AIROBEST_dir in sys.path:
-#     sys.path.append(AIROBEST_dir)
-# sys.path.append("C:\\Users\\MMATTIM\\OneDrive - Teknologian Tutkimuskeskus VTT\\koodid\\python\\hyperspectral\\AIROBEST")
-# sys.path.append("hyperspectral\\AIROBEST")
-
-# Avoid wildcard imports such as the one below:
-#from spectralinvariant.hypdatatools_algorithms import *
-# Instead, import only what you need:
 from spectralinvariant.hypdatatools_algorithms import p_processing
-from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, p
+from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, p, pC
 
 # GUI for running p-computations
     
@@ -108,7 +99,6 @@ class pGUI:
             # intially, when loading the hyperspectral handles are set to None; they are assigned when file is opened for e.g. plotting
             # the list will contain only one element as only one file is opened in this program
 
-        
         self.specdatadir="C:\\data\\koodid\\idl\\" # location of (leaf) sppectrum files, initial suggestion in file dialog
         self.hypdatadir="D:\\mmattim\\wrk\\hyytiala-D\\" # location of hyperspectral data, initial suggestion in file dialog
         
@@ -124,12 +114,10 @@ class pGUI:
         self.reference_loaded = False # flag
         self.hypdata_loaded = False # flag
         
-        self.hypdata_ciglock = False # cig lock for fig_hypdata so only one function can catch clicks from pyplot
-        self.catch_cid = -1 # connection id for pyplot mouse click
-        
         self.master = master
         master.title("GUI for calculating p")
-        self.hypdata_ciglock = False
+        
+        self.hypdata_ciglock = False # cig lock for fig_hypdata so only one function can catch clicks from pyplot
         self.catch_cid = -1 # connection id for pyplot mouse click
         self.fig_pplot = None
         self.fig_spectrum = None 
@@ -141,7 +129,7 @@ class pGUI:
         self.scrollbar = Scrollbar(self.frame_listbox, orient='vertical') 
         self.listbox = Listbox(self.frame_listbox, exportselection=False, yscrollcommand=self.scrollbar.set )
         self.scrollbar['command'] = self.listbox.yview
-        self.button_plotref = Button(self.frame_listbox, text="Plot", width=20, command=self.buttonplotref )
+        self.button_plotref = Button(self.frame_listbox, text="Plot", width=20, command=self.plotrefspectrum2 )
         self.button_plotref.pack( side='bottom' )
         self.scrollbar.pack( side='right', fill='y' )
         self.listbox.pack( side='top' )
@@ -162,6 +150,7 @@ class pGUI:
         self.button_datafile = Button( self.frame_buttons, text='set datafile', width=bw, command=self.buttondatafile )
         self.button_spectrumfile = Button( self.frame_buttons, text='set spectrum file', width=bw, command=self.buttonspectrumfile )
         self.button_p = Button( self.frame_buttons, text='p for pixel', width=bw, command=self.p_pixel, state=DISABLED )
+        self.button_pC = Button( self.frame_buttons, text='p+C for pixel', width=bw, command=self.pC_pixel, state=DISABLED )
         self.button_clearpoints = Button( self.frame_buttons, text='Clear points', width=bw, command=self.clearpoints, state=DISABLED )
         self.button_run = Button( self.frame_buttons, text='Run', width=bw, command=self.buttonrun, state=DISABLED )
         self.progressbar = ttk.Progressbar( self.frame_buttons, orient='horizontal', maximum=1, value=0, variable=self.progressvar_p, mode='determinate' )
@@ -170,6 +159,7 @@ class pGUI:
         self.button_datafile.pack( side='top' )
         self.button_spectrumfile.pack( side='top' )
         self.button_p.pack( side='top' )
+        self.button_pC.pack( side='top' )
         self.button_clearpoints.pack( side='top' )
         self.button_run.pack( side='top' )
         self.button_quit.pack( side='top' )
@@ -192,6 +182,7 @@ class pGUI:
         if self.reference_loaded and self.hypdata_loaded:
             self.button_run.configure( state=ACTIVE )
             self.button_p.configure( state=ACTIVE )
+            self.button_pC.configure( state=ACTIVE )
         print("Thread exit caught")
 
     def buttonquit(self):
@@ -239,6 +230,7 @@ class pGUI:
                 if self.hypdata_loaded:
                     self.button_run.configure( state=ACTIVE )
                     self.button_p.configure( state=ACTIVE )
+                    self.button_pC.configure( state=ACTIVE )
             else:
                 # choose the first element
                 self.listbox.selection_set(0)
@@ -257,27 +249,6 @@ class pGUI:
             self.listbox.insert( END , self.refspecname )
             self.use_refspec_file = False # whether to load reference spectra from file
             
-    def buttonplotref( self ):
-        """
-        plot a reference spectrum
-        this function clears the plot as, potentially, the selection has changed
-        """
-        # load the spectra if needed
-        if self.use_refspec_file:
-            leafspectra = np.loadtxt(self.filename1)
-            self.refspec = leafspectra[:, self.listbox.curselection()[0]+1 ] # 1st column is wavelength, hence +1
-            self.refspecname = self.refspectranames[ self.listbox.curselection()[0]+1  ]
-        
-        if self.fig_refspec == None:
-            self.fig_refspec = plt.figure()
-        self.fig_refspec.clf()
-        self.ax_refspec = self.fig_refspec.add_subplot(1, 1, 1) # handle for the axes in refspec
-        self.ax_refspec.plot( self.wl_spec, self.refspec,'r-')
-        self.ax_refspec.set_xlabel( 'Wavelength (nm)' ) # XXX, the units should still be checked
-        self.ax_refspec.set_ylabel( 'reference spectrum: ' + self.refspecname )
-        self.fig_refspec.canvas.draw()
-        self.fig_refspec.show() 
-
     def buttondatafile( self ):
         """
         get data file name and load metadata
@@ -289,6 +260,7 @@ class pGUI:
         self.button_datafile.configure()
         self.button_run.configure( state=DISABLED )
         self.button_p.configure( state=DISABLED )
+        self.button_pC.configure( state=DISABLED )
         self.filename2 = ""
         
         self.filename2 =  filedialog.askopenfilename(initialdir = self.hypdatadir, title = "Hyperspectal data file", filetypes = (("ENVI header files","*.hdr"),("all files","*.*")))
@@ -321,7 +293,8 @@ class pGUI:
                 # clear listbox and load the spectral bands in the hyperspectral data file
                 self.listbox_wl.delete( 0, END )
                 for item in self.wl_hyp:
-                    self.listbox_wl.insert( END , str(item) )
+                    # limit width to max 6 symbols, this should include max 2 decimals
+                    self.listbox_wl.insert( END , str(item)[0:6] )
                 
                 # set the initial selection    
                 listboxselection_wl = np.where( np.logical_and(self.wl_hyp > 709,self.wl_hyp<791) )[0]
@@ -334,6 +307,7 @@ class pGUI:
 
                 self.button_run.configure( state=ACTIVE )
                 self.button_p.configure( state=ACTIVE )
+                self.button_pC.configure( state=ACTIVE )
                 self.plotrefspectrum2()
             else:
                 print("Cannot load "+self.filename2)
@@ -384,25 +358,41 @@ class pGUI:
 
     def plotrefspectrum2( self ):
         """
-        replot reference spectrum plot and add new data to reference spectrum plot
-        plot the reference spectrum at wavelengths of hyperspectral data (with different color)
+        (re)plot reference spectrum plot and add new data to it.
+                
+        PLots the reference spectrum, plus the wavelength range of hyperspectral data
+        (with different color), and the selected wavelengths with symbols.
         """
-        # first, replot as selection may have changed
-        self.buttonplotref()
-        
-        # load the reference spectrum if needed
+        if self.hypdata_loaded:
+            print("XXX hypdata loaded")
+        else:
+            print("XXX hypdata NOT loaded")
+        # load the spectra if needed
         if self.use_refspec_file:
             leafspectra = np.loadtxt(self.filename1)
             self.refspec = leafspectra[:, self.listbox.curselection()[0]+1 ] # 1st column is wavelength, hence +1
-
-        # interpolate reference spectrum to hyperspectral wavelengths
-        refspec_hyp = np.interp( self.wl_hyp, self.wl_spec, self.refspec )
-        self.ax_refspec.plot( self.wl_hyp, refspec_hyp, 'b-' )
-        # create a subset of reference data (interpolated to hyperspectral bands)
-        refspec_hyp_subset = refspec_hyp[ np.array(self.listbox_wl.curselection()) ] # the reference spectrum subset to be used in calculations of p and DASF 
-        # ??? tuples cannot be used to subset np.arrays?
-        # plot the actual used hyperspectral bands as symbols)
-        self.ax_refspec.plot( self.wl_hyp[ np.array(self.listbox_wl.curselection()) ], refspec_hyp_subset , 'go' )
+            self.refspecname = self.refspectranames[ self.listbox.curselection()[0]+1  ]
+        
+        if self.fig_refspec == None:
+            self.fig_refspec = plt.figure()
+        self.fig_refspec.clf()
+        self.ax_refspec = self.fig_refspec.add_subplot(1, 1, 1) # handle for the axes in refspec
+        self.ax_refspec.plot( self.wl_spec, self.refspec,'r-')
+        self.ax_refspec.set_xlabel( 'Wavelength (nm)' ) # XXX, the units should still be checked
+        self.ax_refspec.set_ylabel( 'reference spectrum: ' + self.refspecname )
+        
+        if self.hypdata_loaded:
+            # interpolate reference spectrum to hyperspectral wavelengths
+            refspec_hyp = np.interp( self.wl_hyp, self.wl_spec, self.refspec )
+            self.ax_refspec.plot( self.wl_hyp, refspec_hyp, 'b-' )
+            # create a subset of reference data (interpolated to hyperspectral bands)
+            refspec_hyp_subset = refspec_hyp[ np.array(self.listbox_wl.curselection()) ] # the reference spectrum subset to be used in calculations of p and DASF 
+            # ??? tuples cannot be used to subset np.arrays?
+            # plot the actual used hyperspectral bands as symbols)
+            self.ax_refspec.plot( self.wl_hyp[ np.array(self.listbox_wl.curselection()) ], refspec_hyp_subset , 'go' )
+        
+        self.fig_refspec.canvas.draw()
+        self.fig_refspec.show()
         
     def clearpoints( self ):
         """
@@ -482,7 +472,7 @@ class pGUI:
                     refspecno = self.listbox.curselection()
                     self.refspec = leafspectra[ :, refspecno[0]+1 ] # first column is wl, hence the "+1" 
                     
-                # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
+                # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. 
                 refspec_hyp = np.interp( self.wl_hyp, self.wl_spec, self.refspec )
                 
                 # subset of reference data (interpolated to hyperspectral bands)
@@ -516,6 +506,112 @@ class pGUI:
             self.button_p.configure( text='p for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
  
+
+    def pC_pixel( self, event=None ):
+        """ Calculate p, DASF, intercept and the constant component C; plot the spectrum and p-plot for a pixel.
+        
+        CURRENTLY FITS INCORRECTLY
+        
+        Can be run to initiate and cancel pixel picking, and also to calculate p. Based on p_pixel()
+        """
+        if self.button_pC.cget('text') == 'p+C for pixel':
+            # initiate click collection
+            if not self.hypdata_ciglock:
+                if self.fig_hypdata.number not in plt.get_fignums():
+                    print("pC_pixel(): hyperspectral data window closed. Trying to re-create")
+                    self.plothypdata()
+                self.hypdata_ciglock = True # lock the cig for fig_hypdata so no other function can interfere
+                self.button_pC.configure( text='CLICK IN IMAGE', background='red' )
+                self.catch_cid = self.fig_hypdata.canvas.mpl_connect('button_press_event',self.pC_pixel)
+            else:
+                print("pC_pixel(): hypdata_ciglock set to true, cannot access the figure.")
+        elif event == None:
+            # button was clicked, but we were waiting for a click in figure fig_hypdata
+            # probably, the user wants to cancel
+            print("pC_pixel: canceling pixel selection")
+            self.fig_hypdata.canvas.mpl_disconnect(self.catch_cid)
+            self.catch_cid = -1
+            self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
+            self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
+        
+        else: # assume click was caught in the plot window
+            print("pC_pixel(): clicked "+str(event.xdata)+','+str(event.ydata))
+            self.fig_hypdata.canvas.mpl_disconnect(self.catch_cid)
+            self.catch_cid = -1
+            
+            x = int(round(event.xdata))
+            y = int(round(event.ydata))
+            
+            reflectance = self.hypdata_map[y,x,:]
+            if int(self.hypdata.metadata['data type']) in (1,2,3,12,13):
+                # these are integer data codes. assume it's reflectance*10,000
+                reflectance = ( self.hypdata_map[y,x,:].astype('float32') )/10000
+
+            # plot spectrum
+            if self.fig_spectrum == None:
+                self.fig_spectrum = plt.figure()
+            self.fig_spectrum.clf()
+            self.ax_spectrum = self.fig_spectrum.add_subplot(1, 1, 1) # handle for the axes in fig_spec
+            self.ax_spectrum.plot( self.wl_hyp, self.hypdata_map[y,x,:], 'r-' )
+            self.ax_spectrum.set_xlabel( 'Wavelength (nm)' )
+            self.ax_spectrum.set_ylabel( 'Value' )
+            self.ax_spectrum.set_title(str(x)+','+str(y))   
+            self.fig_spectrum.canvas.draw()
+            self.fig_spectrum.show()                     
+            # mark the spot
+            self.fig_hypdata.axes[0].plot( x, y, 'ro' )
+            self.button_clearpoints.configure( state=ACTIVE )
+            # display the figure
+            self.fig_hypdata.canvas.draw()
+            # run p calculations
+            
+            listboxselection_wl = self.listbox_wl.curselection()
+            if len(listboxselection_wl) < 3:
+                print("pC_pixel(): too few wavelengths selected: ", len(listboxselection) )
+            else: # all set!
+                # read reference spetra (if needed) and interpolate to hyperspectral bands 
+                if self.use_refspec_file:
+                    leafspectra = np.loadtxt(self.filename1)        
+                    # first column in leafspectra is wavelengths
+                    self.wl_spec = leafspectra[:,0]
+                    # which spectra should we use?
+                    refspecno = self.listbox.curselection()
+                    self.refspec = leafspectra[ :, refspecno[0]+1 ] # first column is wl, hence the "+1" 
+                    
+                # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. 
+                refspec_hyp = np.interp( self.wl_hyp, self.wl_spec, self.refspec )
+                
+                # subset of reference data (interpolated to hyperspectral bands)
+                ii = np.array(listboxselection_wl) 
+                refspec_hyp_subset = refspec_hyp[ ii ] # the reference spectrum subset to be used in calculations of p and DASF
+                BRF_subset = reflectance[ii] # convert to reflectance units
+
+                pvec = pC( BRF_subset, refspec_hyp_subset, verbose=True )
+                # p_values:output, ndarray of length 5
+                # 0:slope 1:intercept 2: DASF 3:R 4:C
+                                
+                #plot
+                if self.fig_pplot == None:
+                    self.fig_pplot = plt.figure()
+                self.fig_pplot.clf()
+                self.ax_pplot = self.fig_pplot.add_subplot(1,1,1)
+                self.ax_pplot.plot( BRF_subset-pvec[4], (BRF_subset-pvec[4])/refspec_hyp_subset, 'ro' )
+                
+                gx = np.linspace( BRF_subset.min()-pvec[4], BRF_subset.max()-pvec[4], 3 )
+                gy = pvec[0]*gx + pvec[1]
+                
+                self.ax_pplot.plot( gx, gy, 'g-')
+                self.ax_pplot.set_xlabel( "BRF-C" )
+                self.ax_pplot.set_ylabel( "(BRF-C)/w" )
+                self.ax_pplot.set_title(str(x)+','+str(y))
+                self.fig_pplot.canvas.draw()
+                self.fig_pplot.show()
+                
+                print( "p=%6.3f, intercept=%6.3f, DASF=%6.3f, R=%5.2f, C=%6.3f" % tuple(pvec) )
+                        
+            # finish and reset
+            self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
+            self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
 
     def buttonrun( self ):
         """
@@ -584,6 +680,7 @@ class pGUI:
                 self.button_datafile.configure( state=DISABLED )
                 self.button_spectrumfile.configure( state=DISABLED )
                 self.button_p.configure( state=DISABLED )
+                self.button_pC.configure( state=DISABLED )
                 self.button_run.configure( text='Stop' )
                 self.progressvar_p.set(0) 
                 self.thread1.start()

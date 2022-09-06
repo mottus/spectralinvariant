@@ -9,17 +9,23 @@ Functions for applying the spectral invariants theory to hyper- and multispectra
 Utilized by e.g. hypdatatools_algorithms
 """
 import numpy as np
-# import matplotlib.pyplot as plt
-# import os
 import spectralinvariant.prospect as prospect
+from numpy.linalg import solve
 
 
 def p_forpixel(hypdata, refspectrum, p_values):
     """ the actual calculation of p (fitting a line).
+
     Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument
-    p_values:output, ndarray of length 4
-      0:slope 1:intercept 2: DASF 3:R
-    Note: nothing returned, use p() to get something back.
+
+    Args:
+        hypdata: a ndarray with spectrum
+        refspectrum: the reference spectrum with the same wavelengths
+        p_values: output, ndarray of length 4
+            0:slope 1:intercept 2: DASF 3:R
+
+    Returns:
+        nothing, use p() to get something back.
     """
     # possible implementation (in Scilab notation)
     #   Sxx       = sum(x^2)-sum(x)^2/n
@@ -44,11 +50,16 @@ def p_forpixel(hypdata, refspectrum, p_values):
 
 
 def p_forpixel_old(hypdata, refspectrum, p_values):
-    """ the actual calculation of p (fitting a line). Several options possible,
-       based on different functions available in numpy.
-       All include some overhead (computation of unneeded quantities)
-    p_values:output, ndarray of length 4
-      0:slope 1:intercept 2: DASF 3:R
+    """ the actual calculation of p (fitting a line).
+
+    Several options possible, based on different functions available in numpy.
+    All include some overhead (computation of unneeded quantities)
+
+    Args:
+        hypdata: a ndarray with spectrum
+        refspectrum: the reference spectrum with the same wavelengths
+        p_values: output, ndarray of length 4
+            0:slope 1:intercept 2: DASF 3:R
     """
     y_DASF = hypdata / refspectrum
 
@@ -65,13 +76,17 @@ def p_forpixel_old(hypdata, refspectrum, p_values):
     p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
 
 def p(hypdata, refspectrum):
-    """
-    Calculate p (by fitting a line). Based on p_forpixel()
+    """ Calculate p (by fitting a line).
+
+    Based on p_forpixel()
     Assumes that the input data is already spectrally subset
 
-    :param hypdata: hyperspectral reflectance data as np.array
-    :param refspectrum: the reference spectrum, has to be same length as hypdata
-    :return:   ndarray of length 4: 0:slope 1:intercept 2: DASF 3:R
+    Args:
+        hypdata: hyperspectral reflectance data as np.array
+        refspectrum: the reference spectrum, has to be same length as hypdata
+
+    Returns:
+        ndarray of length 4: 0:slope 1:intercept 2: DASF 3:R
     """
 
     y_DASF = hypdata / refspectrum
@@ -89,26 +104,78 @@ def p(hypdata, refspectrum):
 
     return (p_out, rho_out, DASF_out, R_out)
 
+def pC(BRF,w, verbose=False):
+    """ Fit the p-equation with a constant reflectance component.
+
+    Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
+    Three equations are needed for the three parmaters, selected as the first, the last, and the
+    location of the minimum BRF/w. The function assumes that BRF and w are appropriate subsets,
+    i.e., correspond to the wavelngths used in fitting
+
+        DOES NOT WORK CORRECTLY
+
+    Args:
+        BRF: hypdata, hyperspectral reflectance data as np.array
+        w: refspectrum, the reference spectrum, has to be same length as BRF
+        verbose: whether to print output on band selection
+
+    Returns:
+        ndarray of length 5: 0:slope 1:intercept 2: DASF 3:R 4:C
+    """
+
+    y_DASF = BRF / w
+    i_min = np.argmin(y_DASF)
+    # if sufficiently "red" wavelengths are included, the minimum should work,
+    #   otherwise just use  the m
+    if i_min == 0:
+        if verbose:
+            print("pC(): using a central wavlength")
+        i_min = int( len(BRF)/2 )
+    else:
+        if verbose:
+            print("pC(): using wavelength of min(BRF/w), w="+str(w[i_min])[0:6])
+    # the coefficients for the three equations
+    # x[0]=p, x[1]=rho_primed, x[2]=C
+    #  rho_primed = rho-pC
+    eq1_lhs = np.array([ BRF[0], 1, 1/w[0] ])
+    eq2_lhs = np.array([ BRF[i_min], 1, 1/w[i_min] ])
+    eq3_lhs = np.array([ BRF[-1], 1, 1/w[-1] ])
+    # the system of equations: lhs*x=rhs
+    lhs = np.stack( [eq1_lhs, eq2_lhs, eq3_lhs] )
+    rhs = np.array( [y_DASF[0], y_DASF[i_min], y_DASF[-1] ] )
+
+    x = np.linalg.solve( lhs, rhs )
+    p = x[0]
+    C = x[2]
+    rho = x[1] + p*C
+    DASF = rho/(1-p)
+    # correlation measures the linearity after subtracting C from BRF
+    R = np.corrcoef( (BRF-C)/w, (BRF-C) )[0,1]
+    return np.array([ p, rho, DASF, R, C ])
 
 def referencealbedo_prospectparams():
-    """
-    Returns the PROSPECT parameters required for creating the  reference albedo
-    based on Knyazikhin et al. (2013), PNAS, section "SI Text 4" (Supporting Information)
+    """Returns the PROSPECT parameters required for creating the  reference albedo.
+
+    Based on Knyazikhin et al. (2013), PNAS, section "SI Text 4" (Supporting Information)
     all prospect versions in prospect have four positional arguments N,Cab,Cw,Cm
 
-    :return: list of 4 values corresponding to the prospect positional parameters
+    Returns:
+        list of 4 values corresponding to the prospect positional parameters
     """
     return (1.2, 16, 0.005, 0.002)
 
 def referencealbedo( wl=None, model="PROSPECTCp" ):
-    """
-    Generate the NON-TRANSFORMED reference leaf albedo using prospect5
-    see also the TRANSFORMED albedo generated by referencealbedo_transformed()
+    """ Generate the NON-TRANSFORMED reference leaf albedo using prospect5.
+
+    See also the TRANSFORMED albedo generated by referencealbedo_transformed()
     See Knyazikhin et al. (2013), PNAS, SI Text 4 for model parameters
 
-    :param wl: np.array, input wavelengths. If not set, the whole PROSPECT range is used
-    :param model: str, model name, defaults to "PROSPECT5"
-    :return: np.array, leaf albedo (refl+trans)
+    Args:
+        wl: np.array, input wavelengths. If not set, the whole PROSPECT range is used
+        model: str, model name, defaults to "PROSPECT5"
+
+    Returns:
+        np.array, leaf albedo (refl+trans)
     """
     # possible options in prospect.py
     # prospect_Cp(N,Cab,Cw,Cm,Car,Cbrown,Anth,Cp,Ccl), the old PROSPECT (1996)
@@ -143,13 +210,16 @@ def referencealbedo( wl=None, model="PROSPECTCp" ):
     return refalbedo
 
 def referencealbedo_transformed( wl=None, model="PROSPECTCp"):
-    """
-    Returns the *TRANSFORMED* reference albedo based on the selected PROSPECT model
+    """Returns the *TRANSFORMED* reference albedo based on the selected PROSPECT model.
+
     Transformation is based on the paper by Lewis & Disney (2007) in RSE
 
-    :param wl: the wavelengths used. If None, output with RPOSPECT wavelengths
-    :param model: str with the flavor of PROSPECT to be used; see referencealbedo() for details
-    :return: ndarray with the albedo values
+    Args:
+        wl: the wavelengths used. If None, output with RPOSPECT wavelengths
+        model: str with the flavor of PROSPECT to be used; see referencealbedo() for details
+
+    Returns:
+        ndarray with the albedo values
     """
 
     # start by getting the non-transformed albedo for teh whole wavelength range
@@ -179,27 +249,30 @@ def referencealbedo_transformed( wl=None, model="PROSPECTCp"):
     return refalbedo_tr
 
 def leafalbedo_LD(Cab,Cw,Cm,Car=0,Cbrown=0,Canth=0,Cp=0,Ccl=0, model="PROSPECTCp", transformed=False, correctFresnel=True ):
-    """
-    Implements the Lewis and Disney (2007, RSE) p-based approximation to leaf spectral albedo
-    the default value is the PROSPECT published in 1996 cited by Lewis & Disney (2007)
+    """ Implements the Lewis and Disney (2007, RSE) p-based approximation to leaf spectral albedo.
+
+    The default value is the PROSPECT published in 1996 cited by Lewis & Disney (2007)
     p varies somewhat with wavelength (or, technically, the leaf wax refractive index)
     input params are the same as for PROSPECT
 
-    :param Cab: Leaf Chlorophyll a+b content [ug/cm2],
-    :param Cw: Leaf Equivalent Water content [cm] (or [g/cm2] for fresh leaves)
-    :param Cm: Leaf dry Mass per Area [g/cm2]
-    :param Car: Leaf Carotenoids content [ug/cm2]
-    :param Cbrown: Fraction of brown leaves
-    :param Canth: Leaf Anthocyanins content [ug/cm2]
-    :param Cp: Leaf protein content [g/cm2]
-    :param Ccl: Leaf cellulose and lignin content [g/cm2]
-    :param model: the PROPSECT flavor to use, see code for options
-    :param transformed: whether to return the "transformed" albedo
-        transformed albedo is defined by Lewis & Disney as the probability of a photon being
-        scattered from the leaf given that it interacts with internal leaf constituents
-    :param correctFresnel: Whether to use a more accurate expression for the surface reflection
-        than the approximation by Lewis and Disney
-    :return: np.array of leaf albedo (length: full prospect range)
+    Args:
+        Cab: Leaf Chlorophyll a+b content [ug/cm2],
+        Cw: Leaf Equivalent Water content [cm] (or [g/cm2] for fresh leaves)
+        Cm: Leaf dry Mass per Area [g/cm2]
+        Car: Leaf Carotenoids content [ug/cm2]
+        Cbrown: Fraction of brown leaves
+        Canth: Leaf Anthocyanins content [ug/cm2]
+        Cp: Leaf protein content [g/cm2]
+        Ccl: Leaf cellulose and lignin content [g/cm2]
+        model: the PROPSECT flavor to use, see code for options
+        transformed: whether to return the "transformed" albedo
+            transformed albedo is defined by Lewis & Disney as the probability of a photon being
+            scattered from the leaf given that it interacts with internal leaf constituents
+        correctFresnel: Whether to use a more accurate expression for the surface reflection
+            than the approximation by Lewis and Disney
+
+    Returns:
+        np.array of leaf albedo (length: full prospect range)
     """
 
     # load the model component spectra and refractive index
@@ -277,13 +350,15 @@ def leafalbedo_LD(Cab,Cw,Cm,Car=0,Cbrown=0,Canth=0,Cp=0,Ccl=0, model="PROSPECTCp
         return w
 
 def fresnel_general( n_wax, theta, polratio=1):
-    """
-    Calculate the Fresnel (specular) reflectance at a surface with a given spectrally variable refractive index
+    """ Calculate the Fresnel (specular) reflectance at a surface with a given spectrally variable refractive index
 
-    :param n_wax: np.array of wax refraction index
-    :param theta: floating-point, incidence angle in radians
-    :param polratio: the ratio of parallel to cross polarization
-    :return: np.array of reflectance factor, same length as n_wax
+    Args:
+        n_wax: np.array of wax refraction index
+        theta: floating-point, incidence angle in radians
+        polratio: the ratio of parallel to cross polarization
+
+    Returns:
+        np.array of reflectance factor, same length as n_wax
     """
 
     if theta==0:
@@ -302,33 +377,41 @@ def fresnel_general( n_wax, theta, polratio=1):
     return r
 
 def fresnel_normal( n_wax ):
-    """
-    Calculate the Fresnel (specular) reflectance at normal incidence
+    """ Calculate the Fresnel (specular) reflectance at normal incidence.
 
-    :param n_wax: np.array of wax refraction index
-    :return: np.array of reflectance factor, same length as n_wax
+    Args:
+        n_wax: np.array of wax refraction index
+
+    Returns:
+        np.array of reflectance factor, same length as n_wax
     """
     return ( (1-n_wax)/(1+n_wax) )**2
 
 
 def reference_wavelengths():
-    """
-    Returns the full wavelength range used for calculating the reference albedo.
+    """ Returns the full wavelength range used for calculating the reference albedo.
+
     That is, the wavelength range for the PROSPECT model.
     A wrapper for prospect_wavelengths() function to allow the user avoid importing the prospect module directly
-    :return: ndarray of wavelengths in nanometers
+
+    Returns:
+        ndarray of wavelengths in nanometers
     """
     return prospect.prospect_wavelengths()
 
 def transform_albedo( albedo, refalbedo, wl=None ):
-    """
-    Transforms the albedo, i.e., forces it to cross referencealbedo at referencealbedo=1
+    """Transforms the albedo, i.e., forces it to cross referencealbedo at referencealbedo=1.
+
+    Details:
     M.A. Schull et al. / Journal of Quantitative Spectroscopy & Radiative Transfer 112 (2011) 736–750
         see Appendix A
 
-    :param albedo:
-    :param refalbedo:
-    :return: np.array transformed albedo
+    Args:
+        albedo: TBW
+        refalbedo: TBW
+
+    Returns:
+        np.array of the transformed albedo
     """
 
     # perform a very simple linear regression
