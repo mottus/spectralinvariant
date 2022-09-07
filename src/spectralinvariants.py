@@ -104,19 +104,20 @@ def p(hypdata, refspectrum):
 
     return (p_out, rho_out, DASF_out, R_out)
 
-def pC(BRF,w, verbose=False):
+def pC(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
     """ Fit the p-equation with a constant reflectance component.
 
     Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
     Three equations are needed for the three parmaters, selected as the first, the last, and the
     location of the minimum BRF/w. The function assumes that BRF and w are appropriate subsets,
-    i.e., correspond to the wavelngths used in fitting
+    i.e., correspond to the wavelngths used in fitting, and are at least of length 3.
 
-        DOES NOT WORK CORRECTLY
 
     Args:
         BRF: hypdata, hyperspectral reflectance data as np.array
         w: refspectrum, the reference spectrum, has to be same length as BRF
+        wl: wavelengths of the data in BRF and w. If given, used for selecting wavelengths [nm]
+        wl_fit: three wavelengths used for fitting (BRF-C)/w [nm]
         verbose: whether to print output on band selection
 
     Returns:
@@ -124,25 +125,50 @@ def pC(BRF,w, verbose=False):
     """
 
     y_DASF = BRF / w
-    i_min = np.argmin(y_DASF)
-    # if sufficiently "red" wavelengths are included, the minimum should work,
-    #   otherwise just use  the m
-    if i_min == 0:
-        if verbose:
-            print("pC(): using a central wavlength")
-        i_min = int( len(BRF)/2 )
+
+    i_2 = np.argmin(y_DASF)
+    # if wavelength info given, use standard wavelengths
+    # otherwise, use first, last and sth from the middle (e.g., with minimum BRF/w)
+    #   alternatively, selection based on w could be considered in the future
+    if wl is not None:
+        i_1 = np.argmin( np.abs(wl-wl_fit[0]) )
+        i_2 = np.argmin( np.abs(wl-wl_fit[1]) )
+        i_3 = np.argmin( np.abs(wl-wl_fit[2]) )
+        if i_2 < 1:
+            i_2 = 1
+        if i_1 == i_2:
+            i_1 = 0
+        if i_3 == i_2:
+            i_3 = i_3 +1
+            if i_3 == len(wl):
+                i_3 = i_3 - 1
+                i_2 = i_2 - 1
+                if i_1 == i_2:
+                    i_1 = i_1 - 1
     else:
-        if verbose:
-            print("pC(): using wavelength of min(BRF/w), w="+str(w[i_min])[0:6])
+        i_1 = 0
+        i_3 = len(wl)-1
+        i_2 = argmin( y_DASF )
+        if i_2==i_1 or i_2==i_3:
+            i_2 = int( len(BRF)/2 )
+
+    if verbose:
+        print("pC():n using albedos {:5.2f},{:5.2f},{:5.2f}"
+            .format(w[i_1],w[i_2],w[i_3]), end="")
+        if wl is not None:
+            print(", wl={:6.1f},{:6.1f},{:6.1f}"
+            .format(wl[i_1],wl[i_2],wl[i_3]))
+        else:
+            print("\n")
     # the coefficients for the three equations
     # x[0]=p, x[1]=rho_primed, x[2]=C
     #  rho_primed = rho-pC
-    eq1_lhs = np.array([ BRF[0], 1, 1/w[0] ])
-    eq2_lhs = np.array([ BRF[i_min], 1, 1/w[i_min] ])
-    eq3_lhs = np.array([ BRF[-1], 1, 1/w[-1] ])
+    eq1_lhs = np.array([ BRF[i_1], 1, 1/w[i_1] ])
+    eq2_lhs = np.array([ BRF[i_2], 1, 1/w[i_2] ])
+    eq3_lhs = np.array([ BRF[i_3], 1, 1/w[i_3] ])
     # the system of equations: lhs*x=rhs
     lhs = np.stack( [eq1_lhs, eq2_lhs, eq3_lhs] )
-    rhs = np.array( [y_DASF[0], y_DASF[i_min], y_DASF[-1] ] )
+    rhs = np.array( [y_DASF[i_1], y_DASF[i_2], y_DASF[i_3] ] )
 
     x = np.linalg.solve( lhs, rhs )
     p = x[0]

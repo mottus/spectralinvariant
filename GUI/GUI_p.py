@@ -363,10 +363,6 @@ class pGUI:
         PLots the reference spectrum, plus the wavelength range of hyperspectral data
         (with different color), and the selected wavelengths with symbols.
         """
-        if self.hypdata_loaded:
-            print("XXX hypdata loaded")
-        else:
-            print("XXX hypdata NOT loaded")
         # load the spectra if needed
         if self.use_refspec_file:
             leafspectra = np.loadtxt(self.filename1)
@@ -437,9 +433,11 @@ class pGUI:
             y = int(round(event.ydata))
             
             reflectance = self.hypdata_map[y,x,:]
+            hypdata_scaled = False
             if int(self.hypdata.metadata['data type']) in (1,2,3,12,13):
                 # these are integer data codes. assume it's reflectance*10,000
                 reflectance = ( self.hypdata_map[y,x,:].astype('float32') )/10000
+                hypdata_scaled = True
 
             # plot spectrum
             if self.fig_spectrum == None:
@@ -449,9 +447,7 @@ class pGUI:
             self.ax_spectrum.plot( self.wl_hyp, self.hypdata_map[y,x,:], 'r-' )
             self.ax_spectrum.set_xlabel( 'Wavelength (nm)' )
             self.ax_spectrum.set_ylabel( 'Value' )
-            self.ax_spectrum.set_title(str(x)+','+str(y))   
-            self.fig_spectrum.canvas.draw()
-            self.fig_spectrum.show()                     
+            self.ax_spectrum.set_title(str(x)+','+str(y))                     
             # mark the spot
             self.fig_hypdata.axes[0].plot( x, y, 'rx' )
             self.button_clearpoints.configure( state=ACTIVE )
@@ -460,6 +456,7 @@ class pGUI:
             # run p calculations
             
             listboxselection_wl = self.listbox_wl.curselection()
+            p_fitted = False
             if len(listboxselection_wl) < 2:
                 print("p_pixel(): too few wavelengths selected: ", len(listboxselection) )
             else: # all set!
@@ -479,7 +476,8 @@ class pGUI:
                 ii = np.array(listboxselection_wl) 
                 refspec_hyp_subset = refspec_hyp[ ii ] # the reference spectrum subset to be used in calculations of p and DASF
                 BRF_subset = reflectance[ii] # convert to reflectance units
-
+                wl_subset = self.wl_hyp[ii]
+                
                 pvec = p( BRF_subset, refspec_hyp_subset )
                 # p_values:output, ndarray of length 4
                 # 0:slope 1:intercept 2: DASF 3:R
@@ -501,7 +499,17 @@ class pGUI:
                 self.fig_pplot.show()
                 
                 print( "p=%6.3f, intercept=%6.3f, DASF=%6.3f, R=%5.2f" % tuple(pvec) )
-                        
+                p_fitted = True
+            # finish the specrtum plot: add fitted spectra
+            if p_fitted:
+                w = refspec_hyp_subset
+                BRF_subset_fitted = pvec[1]*w/(1-pvec[0]*w)
+                if hypdata_scaled:
+                    BRF_subset_fitted *= 10000
+                self.ax_spectrum.plot( wl_subset, BRF_subset_fitted, 'go')
+            self.fig_spectrum.canvas.draw()
+            self.fig_spectrum.show()
+            
             # finish and reset
             self.button_p.configure( text='p for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
@@ -543,9 +551,11 @@ class pGUI:
             y = int(round(event.ydata))
             
             reflectance = self.hypdata_map[y,x,:]
+            hypdata_scaled = False
             if int(self.hypdata.metadata['data type']) in (1,2,3,12,13):
                 # these are integer data codes. assume it's reflectance*10,000
                 reflectance = ( self.hypdata_map[y,x,:].astype('float32') )/10000
+                hypdata_scaled = True
 
             # plot spectrum
             if self.fig_spectrum == None:
@@ -556,15 +566,14 @@ class pGUI:
             self.ax_spectrum.set_xlabel( 'Wavelength (nm)' )
             self.ax_spectrum.set_ylabel( 'Value' )
             self.ax_spectrum.set_title(str(x)+','+str(y))   
-            self.fig_spectrum.canvas.draw()
-            self.fig_spectrum.show()                     
             # mark the spot
             self.fig_hypdata.axes[0].plot( x, y, 'ro' )
             self.button_clearpoints.configure( state=ACTIVE )
             # display the figure
             self.fig_hypdata.canvas.draw()
             # run p calculations
-            
+
+            p_fitted = False
             listboxselection_wl = self.listbox_wl.curselection()
             if len(listboxselection_wl) < 3:
                 print("pC_pixel(): too few wavelengths selected: ", len(listboxselection) )
@@ -577,16 +586,17 @@ class pGUI:
                     # which spectra should we use?
                     refspecno = self.listbox.curselection()
                     self.refspec = leafspectra[ :, refspecno[0]+1 ] # first column is wl, hence the "+1" 
-                    
+                # interpolate reference spectrum to image wavelengths
                 # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. 
                 refspec_hyp = np.interp( self.wl_hyp, self.wl_spec, self.refspec )
                 
                 # subset of reference data (interpolated to hyperspectral bands)
                 ii = np.array(listboxselection_wl) 
                 refspec_hyp_subset = refspec_hyp[ ii ] # the reference spectrum subset to be used in calculations of p and DASF
-                BRF_subset = reflectance[ii] # convert to reflectance units
+                BRF_subset = reflectance[ii] 
+                wl_subset = self.wl_hyp[ii]
 
-                pvec = pC( BRF_subset, refspec_hyp_subset, verbose=True )
+                pvec = pC( BRF_subset, refspec_hyp_subset, wl=wl_subset, verbose=True )
                 # p_values:output, ndarray of length 5
                 # 0:slope 1:intercept 2: DASF 3:R 4:C
                                 
@@ -608,7 +618,17 @@ class pGUI:
                 self.fig_pplot.show()
                 
                 print( "p=%6.3f, intercept=%6.3f, DASF=%6.3f, R=%5.2f, C=%6.3f" % tuple(pvec) )
-                        
+                p_fitted = True
+            # finish the specrtum plot: add fitted spectra
+            if p_fitted:
+                w = refspec_hyp_subset
+                BRF_subset_fitted = pvec[1]*w/(1-pvec[0]*w)+pvec[4]
+                if hypdata_scaled:
+                    BRF_subset_fitted *= 10000
+                self.ax_spectrum.plot( wl_subset, BRF_subset_fitted, 'go')
+            self.fig_spectrum.canvas.draw()
+            self.fig_spectrum.show()                     
+
             # finish and reset
             self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
