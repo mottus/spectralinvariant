@@ -517,9 +517,7 @@ class pGUI:
 
     def pC_pixel( self, event=None ):
         """ Calculate p, DASF, intercept and the constant component C; plot the spectrum and p-plot for a pixel.
-        
-        CURRENTLY FITS INCORRECTLY
-        
+                
         Can be run to initiate and cancel pixel picking, and also to calculate p. Based on p_pixel()
         """
         if self.button_pC.cget('text') == 'p+C for pixel':

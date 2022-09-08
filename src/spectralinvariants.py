@@ -126,7 +126,6 @@ def pC(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
 
     y_DASF = BRF / w
 
-    i_2 = np.argmin(y_DASF)
     # if wavelength info given, use standard wavelengths
     # otherwise, use first, last and sth from the middle (e.g., with minimum BRF/w)
     #   alternatively, selection based on w could be considered in the future
@@ -153,7 +152,7 @@ def pC(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
             i_2 = int( len(BRF)/2 )
 
     if verbose:
-        print("pC():n using albedos {:5.2f},{:5.2f},{:5.2f}"
+        print("pC(): using ref. albedos {:5.2f},{:5.2f},{:5.2f}"
             .format(w[i_1],w[i_2],w[i_3]), end="")
         if wl is not None:
             print(", wl={:6.1f},{:6.1f},{:6.1f}"
