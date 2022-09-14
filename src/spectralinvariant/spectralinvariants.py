@@ -222,7 +222,7 @@ def referencealbedo_transformed( wl=None, model="PROSPECTCp"):
         refalbedo_tr = np.interp(wl, reference_wavelengths(), refalbedo_tr)
     return refalbedo_tr
 
-def leafalbedo_LD(Cab,Cw,Cm,Car=0,Cbrown=0,Canth=0,Cp=0,Ccl=0, model="PROSPECTCp", transformed=False, correctFresnel=True ):
+def leafalbedo_LD(Cab,Cw,Cm,Car=0,Cbrown=0,Canth=0,Cp=0,Ccl=0, N=None, model="PROSPECTCp", transformed=False, correctFresnel=True ):
     """
     Implements the Lewis and Disney (2007, RSE) p-based approximation to leaf spectral albedo
     the default value is the PROSPECT published in 1996 cited by Lewis & Disney (2007)
