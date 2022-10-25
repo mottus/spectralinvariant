@@ -15,6 +15,7 @@ from numpy.linalg import solve
 
 def p_forpixel(hypdata, refspectrum, p_values):
     """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function by Olli instead!
 
     Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument
 
@@ -48,9 +49,44 @@ def p_forpixel(hypdata, refspectrum, p_values):
     p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
     p_values[3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
 
+def p_forimage(hypdata, refspectrum, i_ref=None ):
+    """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function by Olli instead!
+
+    Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument.
+    Input is a spectral image (np.ndarray), ouput 3-dim np.ndarray
+
+    Args:
+        hypdata: a spectral image, np.ndarray with spectrum along dimension #2
+        refspectrum: the reference spectrum with the same wavelengths
+        i_ref: the index along the spectral direction (#2) for susetting the fitting interval
+            if None, whole reference spectrum is used
+
+    Returns:
+        p_values: output, ndarray with dimension #2 having length 4
+            0:slope 1:intercept 2: DASF 3:R
+    """
+    if i_ref is None:
+        i_ref = range(len(refspectrum))
+    hd = hypdata[:,:,i_ref]
+    y_DASF = hd / refspectrum[i_ref]
+
+    n = hd.shape[2]
+    Sx = hd.sum(axis=2)
+    Sxx = (hd * hd).sum(axis=2) - Sx * Sx / n
+    Sy = y_DASF.sum(axis=2)
+    Syy = (y_DASF * y_DASF).sum(axis=2) - Sy * Sy / n
+    Sxy = (hd * y_DASF).sum(axis=2) - Sx * Sy / n
+
+    p_values = np.empty( (hd.shape[0], hd.shape[1], 4) )
+    p_values[:,:,0] = Sxy / Sxx  # p = slope
+    p_values[:,:,1] = (Sy - p_values[:,:,0] * Sx) / n  # rho = intercept
+    p_values[:,:,2] = p_values[:,:,1] / (1 - p_values[:,:,0])  # DASF
+    p_values[:,:,3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
 
 def p_forpixel_old(hypdata, refspectrum, p_values):
     """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function by Olli instead!
 
     Several options possible, based on different functions available in numpy.
     All include some overhead (computation of unneeded quantities)
@@ -77,6 +113,7 @@ def p_forpixel_old(hypdata, refspectrum, p_values):
 
 def p(hypdata, refspectrum):
     """ Calculate p (by fitting a line).
+        DEPRECATED, please use the similar newer function by Olli instead!
 
     Based on p_forpixel()
     Assumes that the input data is already spectrally subset
@@ -106,6 +143,7 @@ def p(hypdata, refspectrum):
 
 def pC(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
     """ Fit the p-equation with a constant reflectance component.
+        DEPRECATED, please use the similar newer function by Olli instead!
 
     Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
     Three equations are needed for the three parmaters, selected as the first, the last, and the
