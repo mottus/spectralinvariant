@@ -75,6 +75,7 @@ def p_forpixel_old(hypdata, refspectrum, p_values):
     p_values[3] = np.corrcoef(hypdata, y_DASF)[0][1]
     p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
 
+
 def p(hypdata, refspectrum):
     """ Calculate p (by fitting a line).
 
@@ -88,15 +89,22 @@ def p(hypdata, refspectrum):
     Returns:
         ndarray of length 4: 0:slope 1:intercept 2: DASF 3:R
     """
-
+    if len(hypdata.shape) == 1:
+        axis=0
+    elif len(hypdata.shape) == 2:
+        axis=1
+    elif len(hypdata.shape) == 3:
+        axis=2
+    else:
+        raise Exception('The length of hypdata.shape must be less than 3!')
     y_DASF = hypdata / refspectrum
 
-    n = hypdata.shape[0]
-    Sx = hypdata.sum()
-    Sxx = (hypdata * hypdata).sum() - Sx * Sx / n
-    Sy = y_DASF.sum()
-    Syy = (y_DASF * y_DASF).sum() - Sy * Sy / n
-    Sxy = (hypdata * y_DASF).sum() - Sx * Sy / n
+    n = len(refspectrum)
+    Sx = hypdata.sum(axis=axis)
+    Sxx = (hypdata * hypdata).sum(axis=axis) - Sx * Sx / n
+    Sy = y_DASF.sum(axis=axis)
+    Syy = (y_DASF * y_DASF).sum(axis=axis) - Sy * Sy / n
+    Sxy = (hypdata * y_DASF).sum(axis=axis) - Sx * Sy / n
     p_out = Sxy / Sxx  # p = slope
     rho_out = (Sy - p_out * Sx) / n  # rho = intercept
     DASF_out = rho_out / (1 - p_out)  # DASF
@@ -104,7 +112,65 @@ def p(hypdata, refspectrum):
 
     return (p_out, rho_out, DASF_out, R_out)
 
-def pC(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
+
+def pC(hypdata, refspectrum):
+    """ Calculate rho, p and c.
+
+    Estimates parameters `rho`, `p`, and `c` for :math:`R/S = \rho + p R c/S` by finding the roots of the residual sum of squares (RSS) analytically.
+    Assumes that the input data is already spectrally subset
+
+    Args:
+        hypdata: hyperspectral reflectance data as np.array
+        refspectrum: the reference spectrum, has to be same length as hypdata
+
+    Returns:
+        ndarray of length 4: 0:p 1:rho 2: c 3:RSS
+    """
+
+    if len(hypdata.shape) == 1:
+        axis=0
+    elif len(hypdata.shape) == 2:
+        axis=1
+    elif len(hypdata.shape) == 3:
+        axis=2
+    else:
+        raise Exception('The length of hypdata.shape must be less than 3!')
+    y_DASF = hypdata / refspectrum
+
+    # Calculating the means takes a while... (>150 microseconds on my PC)
+    y_DASF = hypdata / refspectrum
+    
+    YM = np.mean(y_DASF, axis=axis)
+    RM = np.mean(hypdata, axis=axis)
+    YRM = np.mean(y_DASF*hypdata, axis=axis)
+    RM2 = np.mean(hypdata*hypdata, axis=axis)
+    AM = np.mean(1./refspectrum, axis=0)
+    AM2 = np.mean(1./(refspectrum*refspectrum), axis=0)
+    YAM = np.mean(y_DASF/refspectrum, axis=axis)
+
+    # Everything from below here is fast (<10 microseconds on my PC)
+    numeC = RM*RM - RM2
+    C1 = (YM * RM - YRM) / numeC
+    C3 = RM * AM - YM
+    C2 = -C3 / numeC
+
+    c_out = (YM * AM - YAM - C1*C3) / (C2*C3 + AM * AM - AM2)
+    p_out = C1 + C2*c_out
+    rho_out = YM - p_out*RM - c_out*AM
+
+    if len(hypdata.shape) == 1:
+            estimate = rho_out + p_out*hypdata + c_out/refspectrum
+    elif len(hypdata.shape) == 2:
+        estimate = rho_out[:,None] + p_out[:,None]*hypdata + c_out[:,None]/refspectrum
+    else:
+        estimate = rho_out[:,:,None] + p_out[:,:,None]*hypdata + c_out[:,:,None]/refspectrum
+        
+    residual = y_DASF - estimate
+    RSS = np.sum(residual*residual, axis=axis) # Residual sum of squares
+    return (p_out, rho_out, c_out, RSS)
+
+
+def pC_old(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
     """ Fit the p-equation with a constant reflectance component.
 
     Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
