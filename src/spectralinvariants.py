@@ -150,6 +150,35 @@ def p(hypdata, refspectrum):
     return (p_out, rho_out, DASF_out, R_out)
 
 
+def pC_forpixel(hypdata, refspectrum):
+    """Calculate rho, p and c using ordinary linear regression for a single pixel.
+
+    Uses ordinary least squares to minimize the residual sum of squares for the equation :math:`y = X \beta + \epsilon`.
+    Assumes that the input data is already spectrally subset.
+
+    Args:
+        hypdata: hyperspectral reflectance data as np.array
+        refspectrum: the reference spectrum, has to be same length as hypdata
+
+    Returns:
+        ndarray of length 4: 0:p 1:rho 2: c 3:RSS
+    """
+    X = np.array([np.ones(len(refspectrum)), hypdata, 1./refspectrum]) # Matrix of independent variables
+    y = hypdata / refspectrum # Vector of dependent variables
+    C = X.dot(X.T) # Correlation matrix for the regressors
+    r = X.dot(y) # Vector of correlations for y
+    
+    try:
+        beta = np.linalg.inv(C).dot(r)
+    except: # If the matrix C is singular, use the Moore-Penrose pseudoinverse
+        beta = np.linalg.pinv(C).dot(r)
+    
+    y_pred = X.T.dot(beta)
+    residual = y - y_pred
+    RSS = residual.dot(residual)
+    return (beta[1], beta[0], beta[2], RSS)
+
+
 def pC(hypdata, refspectrum):
     """ Calculate rho, p and c.
 
