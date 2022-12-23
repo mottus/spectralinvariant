@@ -13,108 +13,9 @@ import spectralinvariant.prospect as prospect
 from numpy.linalg import solve
 
 
-def p_forpixel(hypdata, refspectrum, p_values):
-    """ the actual calculation of p (fitting a line).
-        DEPRECATED, please use the similar newer function by Olli instead!
-
-    Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument
-
-    Args:
-        hypdata: a ndarray with spectrum
-        refspectrum: the reference spectrum with the same wavelengths
-        p_values: output, ndarray of length 4
-            0:slope 1:intercept 2: DASF 3:R
-
-    Returns:
-        nothing, use p() to get something back.
-    """
-    # possible implementation (in Scilab notation)
-    #   Sxx       = sum(x^2)-sum(x)^2/n
-    #   Syy       = sum(y^2)-sum(y)^2/n
-    #   Sxy       = sum(x.*y)-sum(x)*sum(y)/n
-    #   slope     = Sxy/Sxx
-    #   intercept = mean(y) - slope*mean(x)
-    #   rxy       = Sxy/sqrt(Sxx*Syy) # Correlation coefficient
-
-    y_DASF = hypdata / refspectrum
-
-    n = hypdata.shape[0]
-    Sx = hypdata.sum()
-    Sxx = (hypdata * hypdata).sum() - Sx * Sx / n
-    Sy = y_DASF.sum()
-    Syy = (y_DASF * y_DASF).sum() - Sy * Sy / n
-    Sxy = (hypdata * y_DASF).sum() - Sx * Sy / n
-    p_values[0] = Sxy / Sxx  # p = slope
-    p_values[1] = (Sy - p_values[0] * Sx) / n  # rho = intercept
-    p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
-    p_values[3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
-
-def p_forimage(hypdata, refspectrum, i_ref=None ):
-    """ the actual calculation of p (fitting a line).
-        DEPRECATED, please use the similar newer function by Olli instead!
-
-    Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument.
-    Input is a spectral image (np.ndarray), ouput 3-dim np.ndarray
-
-    Args:
-        hypdata: a spectral image, np.ndarray with spectrum along dimension #2
-        refspectrum: the reference spectrum with the same wavelengths
-        i_ref: the index along the spectral direction (#2) for susetting the fitting interval
-            if None, whole reference spectrum is used
-
-    Returns:
-        p_values: output, ndarray with dimension #2 having length 4
-            0:slope 1:intercept 2: DASF 3:R
-    """
-    if i_ref is None:
-        i_ref = range(len(refspectrum))
-    hd = hypdata[:,:,i_ref]
-    y_DASF = hd / refspectrum[i_ref]
-
-    n = hd.shape[2]
-    Sx = hd.sum(axis=2)
-    Sxx = (hd * hd).sum(axis=2) - Sx * Sx / n
-    Sy = y_DASF.sum(axis=2)
-    Syy = (y_DASF * y_DASF).sum(axis=2) - Sy * Sy / n
-    Sxy = (hd * y_DASF).sum(axis=2) - Sx * Sy / n
-
-    p_values = np.empty( (hd.shape[0], hd.shape[1], 4) )
-    p_values[:,:,0] = Sxy / Sxx  # p = slope
-    p_values[:,:,1] = (Sy - p_values[:,:,0] * Sx) / n  # rho = intercept
-    p_values[:,:,2] = p_values[:,:,1] / (1 - p_values[:,:,0])  # DASF
-    p_values[:,:,3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
-
-def p_forpixel_old(hypdata, refspectrum, p_values):
-    """ the actual calculation of p (fitting a line).
-        DEPRECATED, please use the similar newer function by Olli instead!
-
-    Several options possible, based on different functions available in numpy.
-    All include some overhead (computation of unneeded quantities)
-
-    Args:
-        hypdata: a ndarray with spectrum
-        refspectrum: the reference spectrum with the same wavelengths
-        p_values: output, ndarray of length 4
-            0:slope 1:intercept 2: DASF 3:R
-    """
-    y_DASF = hypdata / refspectrum
-
-    # linear regression with scipy
-    # p_model = stats.linregress( hypdata, y_DASF )
-    # p_values[0] = p_model.slope
-    # p_values[1] = p_model.intercept
-    # p_values[3] = p_model.rvalue
-
-    # linear regression with numpy
-    iph = np.ones_like(hypdata)  # placeholders for linalg.lstsq
-    p_values[0], p_values[1] = np.linalg.lstsq(np.vstack([hypdata, np.ones_like(hypdata)]).T, y_DASF.T)[0]
-    p_values[3] = np.corrcoef(hypdata, y_DASF)[0][1]
-    p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
-
 
 def p(hypdata, refspectrum):
     """ Calculate p (by fitting a line).
-        DEPRECATED, please use the similar newer function by Olli instead!
 
     Based on p_forpixel()
     Assumes that the input data is already spectrally subset
@@ -127,10 +28,13 @@ def p(hypdata, refspectrum):
         ndarray of length 4: 0:slope 1:intercept 2: DASF 3:R
     """
     if len(hypdata.shape) == 1:
+        # single pixel
         axis=0
     elif len(hypdata.shape) == 2:
+        # array of pixels
         axis=1
     elif len(hypdata.shape) == 3:
+        #
         axis=2
     else:
         raise Exception('The length of hypdata.shape must be less than 3!')
@@ -155,6 +59,8 @@ def pC_forpixel(hypdata, refspectrum):
 
     Uses ordinary least squares to minimize the residual sum of squares for the equation :math:`y = X \beta + \epsilon`.
     Assumes that the input data is already spectrally subset.
+    It's not totally clear why this is a function separate from pC(), but it seems
+    computationally somewhat fancier (more efficient?)
 
     Args:
         hypdata: hyperspectral reflectance data as np.array
@@ -167,19 +73,22 @@ def pC_forpixel(hypdata, refspectrum):
     y = hypdata / refspectrum # Vector of dependent variables
     C = X.dot(X.T) # Correlation matrix for the regressors
     r = X.dot(y) # Vector of correlations for y
-    
+
     try:
         beta = np.linalg.inv(C).dot(r)
     except: # If the matrix C is singular, use the Moore-Penrose pseudoinverse
         beta = np.linalg.pinv(C).dot(r)
-    
+
     y_pred = X.T.dot(beta)
     residual = y - y_pred
     RSS = residual.dot(residual)
-    return (beta[1], beta[0], beta[2], RSS)
+    # for compatibility with p, report R2 = 1 - ResidualSumOfSquares/TotalSumOfSquares
+    TSS = np.sum( (y-np.mean(y))**2 )
+    DASF_out = beta[1] / (1 - beta[0])  # DASF
+    return (beta[1], beta[0], DASF_out, 1-RSS/TSS, beta[2])
 
 
-def pC(hypdata, refspectrum):
+def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
     """ Calculate rho, p and c.
 
     Estimates parameters `rho`, `p`, and `c` for :math:`R/S = \rho + p R c/S` by finding the roots of the residual sum of squares (RSS) analytically.
@@ -188,7 +97,8 @@ def pC(hypdata, refspectrum):
     Args:
         hypdata: hyperspectral reflectance data as np.array
         refspectrum: the reference spectrum, has to be same length as hypdata
-
+        wl_fit: not used, for compatibility with pC_old (which has internal band selection)
+        verbose: not used, for compatibility with pC_old (which has internal band selection)
     Returns:
         ndarray of length 4: 0:p 1:rho 2: c 3:RSS
     """
@@ -205,7 +115,7 @@ def pC(hypdata, refspectrum):
 
     # Calculating the means takes a while... (>150 microseconds on my PC)
     y_DASF = hypdata / refspectrum
-    
+
     YM = np.mean(y_DASF, axis=axis)
     RM = np.mean(hypdata, axis=axis)
     YRM = np.mean(y_DASF*hypdata, axis=axis)
@@ -230,89 +140,18 @@ def pC(hypdata, refspectrum):
         estimate = rho_out[:,None] + p_out[:,None]*hypdata + c_out[:,None]/refspectrum
     else:
         estimate = rho_out[:,:,None] + p_out[:,:,None]*hypdata + c_out[:,:,None]/refspectrum
-        
+
     residual = y_DASF - estimate
     RSS = np.sum(residual*residual, axis=axis) # Residual sum of squares
-    return (p_out, rho_out, c_out, RSS)
+    # for compatibility with p, report R2 = 1 - ResidualSumOfSquares/TotalSumOfSquares
+    TSS = np.sum( (y_DASF-np.mean(y_DASF))**2 )
+    DASF_out = rho_out / (1 - p_out)  # DASF
+    return (p_out, rho_out, DASF_out, 1-RSS/TSS, c_out)
 
 
-def pC_old(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
-    """ Fit the p-equation with a constant reflectance component.
-        DEPRECATED, please use the similar newer function by Olli instead!
-
-    Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
-    Three equations are needed for the three parmaters, selected as the first, the last, and the
-    location of the minimum BRF/w. The function assumes that BRF and w are appropriate subsets,
-    i.e., correspond to the wavelngths used in fitting, and are at least of length 3.
-
-
-    Args:
-        BRF: hypdata, hyperspectral reflectance data as np.array
-        w: refspectrum, the reference spectrum, has to be same length as BRF
-        wl: wavelengths of the data in BRF and w. If given, used for selecting wavelengths [nm]
-        wl_fit: three wavelengths used for fitting (BRF-C)/w [nm]
-        verbose: whether to print output on band selection
-
-    Returns:
-        ndarray of length 5: 0:slope 1:intercept 2: DASF 3:R 4:C
-    """
-
-    y_DASF = BRF / w
-
-    # if wavelength info given, use standard wavelengths
-    # otherwise, use first, last and sth from the middle (e.g., with minimum BRF/w)
-    #   alternatively, selection based on w could be considered in the future
-    if wl is not None:
-        i_1 = np.argmin( np.abs(wl-wl_fit[0]) )
-        i_2 = np.argmin( np.abs(wl-wl_fit[1]) )
-        i_3 = np.argmin( np.abs(wl-wl_fit[2]) )
-        if i_2 < 1:
-            i_2 = 1
-        if i_1 == i_2:
-            i_1 = 0
-        if i_3 == i_2:
-            i_3 = i_3 +1
-            if i_3 == len(wl):
-                i_3 = i_3 - 1
-                i_2 = i_2 - 1
-                if i_1 == i_2:
-                    i_1 = i_1 - 1
-    else:
-        i_1 = 0
-        i_3 = len(wl)-1
-        i_2 = argmin( y_DASF )
-        if i_2==i_1 or i_2==i_3:
-            i_2 = int( len(BRF)/2 )
-
-    if verbose:
-        print("pC(): using ref. albedos {:5.2f},{:5.2f},{:5.2f}"
-            .format(w[i_1],w[i_2],w[i_3]), end="")
-        if wl is not None:
-            print(", wl={:6.1f},{:6.1f},{:6.1f}"
-            .format(wl[i_1],wl[i_2],wl[i_3]))
-        else:
-            print("\n")
-    # the coefficients for the three equations
-    # x[0]=p, x[1]=rho_primed, x[2]=C
-    #  rho_primed = rho-pC
-    eq1_lhs = np.array([ BRF[i_1], 1, 1/w[i_1] ])
-    eq2_lhs = np.array([ BRF[i_2], 1, 1/w[i_2] ])
-    eq3_lhs = np.array([ BRF[i_3], 1, 1/w[i_3] ])
-    # the system of equations: lhs*x=rhs
-    lhs = np.stack( [eq1_lhs, eq2_lhs, eq3_lhs] )
-    rhs = np.array( [y_DASF[i_1], y_DASF[i_2], y_DASF[i_3] ] )
-
-    x = np.linalg.solve( lhs, rhs )
-    p = x[0]
-    C = x[2]
-    rho = x[1] + p*C
-    DASF = rho/(1-p)
-    # correlation measures the linearity after subtracting C from BRF
-    R = np.corrcoef( (BRF-C)/w, (BRF-C) )[0,1]
-    return np.array([ p, rho, DASF, R, C ])
 
 def referencealbedo_prospectparams():
-    """Returns the PROSPECT parameters required for creating the  reference albedo.
+    """Returns the PROSPECT parameters required for creating the reference albedo.
 
     Based on Knyazikhin et al. (2013), PNAS, section "SI Text 4" (Supporting Information)
     all prospect versions in prospect have four positional arguments N,Cab,Cw,Cm
@@ -582,3 +421,180 @@ def transform_albedo( albedo, refalbedo, wl=None ):
     Sxy = (hypdata * y_DASF).sum() - Sx * Sy / n
     p_values[0] = Sxy / Sxx  # p = slope
     p_values[1] = (Sy - p_values[0] * Sx) / n  # rho = intercept
+
+# ====== deprecated functions below this line
+
+def p_forpixel(hypdata, refspectrum, p_values):
+    """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function p() instead!
+
+    Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument
+
+    Args:
+        hypdata: a ndarray with spectrum
+        refspectrum: the reference spectrum with the same wavelengths
+        p_values: output, ndarray of length 4
+            0:slope 1:intercept 2: DASF 3:R
+
+    Returns:
+        nothing, use p() to get something back.
+    """
+    # possible implementation (in Scilab notation)
+    #   Sxx       = sum(x^2)-sum(x)^2/n
+    #   Syy       = sum(y^2)-sum(y)^2/n
+    #   Sxy       = sum(x.*y)-sum(x)*sum(y)/n
+    #   slope     = Sxy/Sxx
+    #   intercept = mean(y) - slope*mean(x)
+    #   rxy       = Sxy/sqrt(Sxx*Syy) # Correlation coefficient
+
+    y_DASF = hypdata / refspectrum
+
+    n = hypdata.shape[0]
+    Sx = hypdata.sum()
+    Sxx = (hypdata * hypdata).sum() - Sx * Sx / n
+    Sy = y_DASF.sum()
+    Syy = (y_DASF * y_DASF).sum() - Sy * Sy / n
+    Sxy = (hypdata * y_DASF).sum() - Sx * Sy / n
+    p_values[0] = Sxy / Sxx  # p = slope
+    p_values[1] = (Sy - p_values[0] * Sx) / n  # rho = intercept
+    p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
+    p_values[3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
+
+def p_forimage(hypdata, refspectrum, i_ref=None ):
+    """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function p() instead!
+
+    Implementation from scratch, designed to fill in a 3D raster of p-values given as function argument.
+    Input is a spectral image (np.ndarray), ouput 3-dim np.ndarray
+
+    Args:
+        hypdata: a spectral image, np.ndarray with spectrum along dimension #2
+        refspectrum: the reference spectrum with the same wavelengths
+        i_ref: the index along the spectral direction (#2) for sbusetting the fitting interval
+            if None, whole reference spectrum is used
+
+    Returns:
+        p_values: output, ndarray with dimension #2 having length 4
+            0:slope 1:intercept 2: DASF 3:R
+    """
+    if i_ref is None:
+        i_ref = range(len(refspectrum))
+    hd = hypdata[:,:,i_ref]
+    y_DASF = hd / refspectrum[i_ref]
+
+    n = hd.shape[2]
+    Sx = hd.sum(axis=2)
+    Sxx = (hd * hd).sum(axis=2) - Sx * Sx / n
+    Sy = y_DASF.sum(axis=2)
+    Syy = (y_DASF * y_DASF).sum(axis=2) - Sy * Sy / n
+    Sxy = (hd * y_DASF).sum(axis=2) - Sx * Sy / n
+
+    p_values = np.empty( (hd.shape[0], hd.shape[1], 4) )
+    p_values[:,:,0] = Sxy / Sxx  # p = slope
+    p_values[:,:,1] = (Sy - p_values[:,:,0] * Sx) / n  # rho = intercept
+    p_values[:,:,2] = p_values[:,:,1] / (1 - p_values[:,:,0])  # DASF
+    p_values[:,:,3] = Sxy / np.sqrt(Sxx * Syy)  # R = Pearson's correlation coefficient
+
+def p_forpixel_old(hypdata, refspectrum, p_values):
+    """ the actual calculation of p (fitting a line).
+        DEPRECATED, please use the similar newer function p() instead!
+
+    Several options possible, based on different functions available in numpy.
+    All include some overhead (computation of unneeded quantities)
+
+    Args:
+        hypdata: a ndarray with spectrum
+        refspectrum: the reference spectrum with the same wavelengths
+        p_values: output, ndarray of length 4
+            0:slope 1:intercept 2: DASF 3:R
+    """
+    y_DASF = hypdata / refspectrum
+
+    # linear regression with scipy
+    # p_model = stats.linregress( hypdata, y_DASF )
+    # p_values[0] = p_model.slope
+    # p_values[1] = p_model.intercept
+    # p_values[3] = p_model.rvalue
+
+    # linear regression with numpy
+    iph = np.ones_like(hypdata)  # placeholders for linalg.lstsq
+    p_values[0], p_values[1] = np.linalg.lstsq(np.vstack([hypdata, np.ones_like(hypdata)]).T, y_DASF.T)[0]
+    p_values[3] = np.corrcoef(hypdata, y_DASF)[0][1]
+    p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
+
+def pC_old(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
+    """ Fit the p-equation with a constant reflectance component.
+        DEPRECATED, please use the similar newer function pC() instead!
+
+    Fits to the data the equation BRF/w=pBRF+rho+C/w by solving a system of linear equations.
+    Three equations are needed for the three parmaters, selected as the first, the last, and the
+    location of the minimum BRF/w. The function assumes that BRF and w are appropriate subsets,
+    i.e., correspond to the wavelngths used in fitting, and are at least of length 3.
+
+    NOTE: the slope output here is off by a constant (p*rho)
+
+
+    Args:
+        BRF: hypdata, hyperspectral reflectance data as np.array
+        w: refspectrum, the reference spectrum, has to be same length as BRF
+        wl: wavelengths of the data in BRF and w. If given, used for selecting wavelengths [nm]
+        wl_fit: three wavelengths used for fitting (BRF-C)/w [nm]
+        verbose: whether to print output on band selection
+
+    Returns:
+        ndarray of length 5: 0:slope 1:intercept 2: DASF 3:R 4:C
+    """
+
+    y_DASF = BRF / w
+
+    # if wavelength info given, use standard wavelengths
+    # otherwise, use first, last and sth from the middle (e.g., with minimum BRF/w)
+    #   alternatively, selection based on w could be considered in the future
+    if wl is not None:
+        i_1 = np.argmin( np.abs(wl-wl_fit[0]) )
+        i_2 = np.argmin( np.abs(wl-wl_fit[1]) )
+        i_3 = np.argmin( np.abs(wl-wl_fit[2]) )
+        if i_2 < 1:
+            i_2 = 1
+        if i_1 == i_2:
+            i_1 = 0
+        if i_3 == i_2:
+            i_3 = i_3 +1
+            if i_3 == len(wl):
+                i_3 = i_3 - 1
+                i_2 = i_2 - 1
+                if i_1 == i_2:
+                    i_1 = i_1 - 1
+    else:
+        i_1 = 0
+        i_3 = len(wl)-1
+        i_2 = argmin( y_DASF )
+        if i_2==i_1 or i_2==i_3:
+            i_2 = int( len(BRF)/2 )
+
+    if verbose:
+        print("pC(): using ref. albedos {:5.2f},{:5.2f},{:5.2f}"
+            .format(w[i_1],w[i_2],w[i_3]), end="")
+        if wl is not None:
+            print(", wl={:6.1f},{:6.1f},{:6.1f}"
+            .format(wl[i_1],wl[i_2],wl[i_3]))
+        else:
+            print("\n")
+    # the coefficients for the three equations
+    # x[0]=p, x[1]=rho_primed, x[2]=C
+    #  rho_primed = rho-pC
+    eq1_lhs = np.array([ BRF[i_1], 1, 1/w[i_1] ])
+    eq2_lhs = np.array([ BRF[i_2], 1, 1/w[i_2] ])
+    eq3_lhs = np.array([ BRF[i_3], 1, 1/w[i_3] ])
+    # the system of equations: lhs*x=rhs
+    lhs = np.stack( [eq1_lhs, eq2_lhs, eq3_lhs] )
+    rhs = np.array( [y_DASF[i_1], y_DASF[i_2], y_DASF[i_3] ] )
+
+    x = np.linalg.solve( lhs, rhs )
+    p = x[0]
+    C = x[2]
+    rho = x[1] + p*C # THIS EQ IS PROBABLY INCORRECT
+    DASF = rho/(1-p)
+    # correlation measures the linearity after subtracting C from BRF
+    R = np.corrcoef( (BRF-C)/w, BRF )[0,1]
+    return np.array([ p, rho, DASF, R, C ])

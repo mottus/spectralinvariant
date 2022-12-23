@@ -9,7 +9,7 @@ import threading
 import os
 import time
 import sys
-from spectralinvariant.hypdatatools_algorithms import p_processing
+from spectralinvariant.hypdatatools_algorithms import p_processing, pC_processing
 from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, p, pC
 
 # GUI for running p-computations
@@ -19,7 +19,7 @@ class p_thread( threading.Thread ):
     the thread which will run the process
     """
     def __init__( self, tkroot, filename1, refspecno, wl_p, filename2, filename3, 
-        hypdata, hypdata_map, progressvar, refspec, wl_spec, refspecname ):
+        hypdata, hypdata_map, progressvar, refspec, wl_spec, refspecname, processname ):
         """
         the inputs are
         tkroot: handle for the root window for signaling
@@ -54,13 +54,29 @@ class p_thread( threading.Thread ):
         self.refspec = refspec
         self.wl_spec = wl_spec
         self.refspecname = refspecname
+        self.processname = processname
     
     def run(self):
         """
         a wrapper for running p_processing in a separate thread
         """
         # do the thing
-        p_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
+        print("starting thread for processname "+self.processname)
+        if self.processname == "p":
+            p_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
+                progressvar=self.progressvar, refspec=self.refspec, wl_spec= self.wl_spec, refspecname=self.refspecname )
+        elif self.processname == "pC":
+            pC_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
+                progressvar=self.progressvar, refspec=self.refspec, wl_spec= self.wl_spec, refspecname=self.refspecname )
+        # signal that we have finished
+        self.tkroot.event_generate("<<thread_end>>", when="tail")
+        
+    def runpC(self):
+        """
+        a wrapper for running p_processing with a constant term in a separate thread
+        """
+        # do the thing
+        pC_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
             progressvar=self.progressvar, refspec=self.refspec, wl_spec= self.wl_spec, refspecname=self.refspecname )
         # signal that we have finished
         self.tkroot.event_generate("<<thread_end>>", when="tail")
@@ -77,11 +93,6 @@ class pGUI:
         
         self.filename1 = "" # file for reference spectra
         self.filename2 = "" # hyperspectral data file
-        self.refspecname = "" # name of the loaded reference spectrum
-        # the following two numpy arrays are defined in buttonspectrumfile (and reloaded in buttonloadref)
-        #  (python does not require them to be declared here, it's only for clarity)
-        self.refspec = None
-        self.wl_spec = None
         self.hypdata = None # the spectral.io.bsqfile.BsqFile object
         self.hypdata_map = None # the memmap of hypdata. I am not sure but I think it's best to open hypdata only once and retain the handle
         
@@ -90,6 +101,9 @@ class pGUI:
         self.refspec = referencealbedo_transformed()
         self.refspecname = "Transformed_PROSPECT"
         self.wl_spec = reference_wavelengths()
+        self.reference_loaded = True
+        # the refspec, refspecname and wl_spec numpy arrays are reloaded in buttonloadref()
+
         self.use_refspec_file = False # whether to load reference spectra from file
         
         self.wl_hyp = np.array([]) # wavelengths of hyperspectral, hopefully in nm
@@ -111,7 +125,6 @@ class pGUI:
         self.fig_pplot = None # handle BRF/w vs. BRF figure
         self.ax_pplot = None # handle for the axes in fig_pplot
             
-        self.reference_loaded = False # flag
         self.hypdata_loaded = False # flag
         
         self.master = master
@@ -127,13 +140,13 @@ class pGUI:
         # add a listbox in a frame with a scrollbar for spectra names
         self.frame_listbox = Frame(master)
         self.scrollbar = Scrollbar(self.frame_listbox, orient='vertical') 
-        self.listbox = Listbox(self.frame_listbox, exportselection=False, yscrollcommand=self.scrollbar.set )
-        self.scrollbar['command'] = self.listbox.yview
+        self.listbox_ref = Listbox(self.frame_listbox, exportselection=False, yscrollcommand=self.scrollbar.set )
+        self.scrollbar['command'] = self.listbox_ref.yview
         self.button_plotref = Button(self.frame_listbox, text="Plot", width=20, command=self.plotrefspectrum2 )
         self.button_plotref.pack( side='bottom' )
         self.scrollbar.pack( side='right', fill='y' )
-        self.listbox.pack( side='top' )
-        self.listbox.insert( END , self.refspecname )
+        self.listbox_ref.pack( side='top' )
+        self.listbox_ref.insert( END , self.refspecname )
         
         # add a listbox in a frame with a scrollbar for wavelengths
         self.frame_listbox_wl = Frame(master)
@@ -150,9 +163,10 @@ class pGUI:
         self.button_datafile = Button( self.frame_buttons, text='set datafile', width=bw, command=self.buttondatafile )
         self.button_spectrumfile = Button( self.frame_buttons, text='set spectrum file', width=bw, command=self.buttonspectrumfile )
         self.button_p = Button( self.frame_buttons, text='p for pixel', width=bw, command=self.p_pixel, state=DISABLED )
-        self.button_pC = Button( self.frame_buttons, text='p+C for pixel', width=bw, command=self.pC_pixel, state=DISABLED )
+        self.button_pC = Button( self.frame_buttons, text='p with C for pixel', width=bw, command=self.pC_pixel, state=DISABLED )
         self.button_clearpoints = Button( self.frame_buttons, text='Clear points', width=bw, command=self.clearpoints, state=DISABLED )
-        self.button_run = Button( self.frame_buttons, text='Run', width=bw, command=self.buttonrun, state=DISABLED )
+        self.button_runp = Button( self.frame_buttons, text='Run w/o Const', width=bw, command=self.buttonrun_p, state=DISABLED )
+        self.button_runpC = Button( self.frame_buttons, text='Run with Const', width=bw, command=self.buttonrun_pC, state=DISABLED )
         self.progressbar = ttk.Progressbar( self.frame_buttons, orient='horizontal', maximum=1, value=0, variable=self.progressvar_p, mode='determinate' )
         
         # self.button_datafile.pack(pady=20, padx = 20)
@@ -161,7 +175,8 @@ class pGUI:
         self.button_p.pack( side='top' )
         self.button_pC.pack( side='top' )
         self.button_clearpoints.pack( side='top' )
-        self.button_run.pack( side='top' )
+        self.button_runp.pack( side='top' )
+        self.button_runpC.pack( side='top' )
         self.button_quit.pack( side='top' )
         self.progressbar.pack( side='bottom', fill=X )
 
@@ -178,9 +193,11 @@ class pGUI:
         self.button_quit.configure( state=ACTIVE )
         self.button_datafile.configure( state=ACTIVE )
         self.button_spectrumfile.configure( state=ACTIVE )
-        self.button_run.configure( text='Run' )
+        self.button_runp.configure( text='Run w/o Const' )
+        self.button_runpC.configure( text='Run with Const' )
         if self.reference_loaded and self.hypdata_loaded:
-            self.button_run.configure( state=ACTIVE )
+            self.button_runp.configure( state=ACTIVE )
+            self.button_runpC.configure( state=ACTIVE )
             self.button_p.configure( state=ACTIVE )
             self.button_pC.configure( state=ACTIVE )
         print("Thread exit caught")
@@ -213,9 +230,9 @@ class pGUI:
 
             #  the first (zeroeth) element in self.refspectranames is "wl"
             # clear listbox and load the names of all available spectra
-            self.listbox.delete( 0, END )
+            self.listbox_ref.delete( 0, END )
             for item in self.refspectranames[1:]:
-                self.listbox.insert(END,item)
+                self.listbox_ref.insert(END,item)
                 
             # which spectra should we use by default?
             if "PROSPECT" in self.refspectranames:
@@ -225,15 +242,16 @@ class pGUI:
                 # load and plot reference 
                 leafspectra = np.loadtxt(self.filename1)
                 self.wl_spec = leafspectra[:,0]
-                self.listbox.selection_set( i_P-1 ) # first column is "wl"
+                self.listbox_ref.selection_set( i_P-1 ) # first column is "wl"
               
                 if self.hypdata_loaded:
-                    self.button_run.configure( state=ACTIVE )
+                    self.button_runp.configure( state=ACTIVE )
+                    self.button_runpC.configure( state=ACTIVE )
                     self.button_p.configure( state=ACTIVE )
                     self.button_pC.configure( state=ACTIVE )
             else:
                 # choose the first element
-                self.listbox.selection_set(0)
+                self.listbox_ref.selection_set(0)
                 self.wl_spec = leafspectra[:,0]
                 
             # self.button_plotref.configure( state=ACTIVE )
@@ -245,9 +263,10 @@ class pGUI:
             self.refspec = referencealbedo_transformed()
             self.refspecname = "Transformed_PROSPECT"
             self.wl_spec = reference_wavelengths()
-            self.listbox.delete( 0, END )
-            self.listbox.insert( END , self.refspecname )
+            self.listbox_ref.delete( 0, END )
+            self.listbox_ref.insert( END , self.refspecname )
             self.use_refspec_file = False # whether to load reference spectra from file
+            self.reference_loaded = True
             
     def buttondatafile( self ):
         """
@@ -258,7 +277,8 @@ class pGUI:
         self.openfilelist = []
 #        self.button_datafile.configure( background='SystemButtonFace' )
         self.button_datafile.configure()
-        self.button_run.configure( state=DISABLED )
+        self.button_runp.configure( state=DISABLED )
+        self.button_runpC.configure( state=DISABLED )
         self.button_p.configure( state=DISABLED )
         self.button_pC.configure( state=DISABLED )
         self.filename2 = ""
@@ -305,7 +325,8 @@ class pGUI:
                 self.hypdata_loaded = True
                 self.button_datafile.configure(bg="green")
 
-                self.button_run.configure( state=ACTIVE )
+                self.button_runp.configure( state=ACTIVE )
+                self.button_runpC.configure( state=ACTIVE )
                 self.button_p.configure( state=ACTIVE )
                 self.button_pC.configure( state=ACTIVE )
                 self.plotrefspectrum2()
@@ -366,8 +387,8 @@ class pGUI:
         # load the spectra if needed
         if self.use_refspec_file:
             leafspectra = np.loadtxt(self.filename1)
-            self.refspec = leafspectra[:, self.listbox.curselection()[0]+1 ] # 1st column is wavelength, hence +1
-            self.refspecname = self.refspectranames[ self.listbox.curselection()[0]+1  ]
+            self.refspec = leafspectra[:, self.listbox_ref.curselection()[0]+1 ] # 1st column is wavelength, hence +1
+            self.refspecname = self.refspectranames[ self.listbox_ref.curselection()[0]+1  ]
         
         if self.fig_refspec == None:
             self.fig_refspec = plt.figure()
@@ -466,7 +487,7 @@ class pGUI:
                     # first column in leafspectra is wavelengths
                     self.wl_spec = leafspectra[:,0]
                     # which spectra should we use?
-                    refspecno = self.listbox.curselection()
+                    refspecno = self.listbox_ref.curselection()
                     self.refspec = leafspectra[ :, refspecno[0]+1 ] # first column is wl, hence the "+1" 
                     
                 # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. 
@@ -582,7 +603,7 @@ class pGUI:
                     # first column in leafspectra is wavelengths
                     self.wl_spec = leafspectra[:,0]
                     # which spectra should we use?
-                    refspecno = self.listbox.curselection()
+                    refspecno = self.listbox_ref.curselection()
                     self.refspec = leafspectra[ :, refspecno[0]+1 ] # first column is wl, hence the "+1" 
                 # interpolate reference spectrum to image wavelengths
                 # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. 
@@ -592,35 +613,35 @@ class pGUI:
                 ii = np.array(listboxselection_wl) 
                 refspec_hyp_subset = refspec_hyp[ ii ] # the reference spectrum subset to be used in calculations of p and DASF
                 BRF_subset = reflectance[ii] 
-                wl_subset = self.wl_hyp[ii]
+                wl_subset = self.wl_hyp[ii] 
 
-                pvec = pC( BRF_subset, refspec_hyp_subset, wl=wl_subset, verbose=True )
+                pvec = pC( BRF_subset, refspec_hyp_subset )
                 # p_values:output, ndarray of length 5
-                # 0:slope 1:intercept 2: DASF 3:R 4:C
+                # 0:slope 1:intercept 2: DASF 3:RSS 4:C
                                 
                 #plot
                 if self.fig_pplot == None:
                     self.fig_pplot = plt.figure()
                 self.fig_pplot.clf()
                 self.ax_pplot = self.fig_pplot.add_subplot(1,1,1)
-                self.ax_pplot.plot( BRF_subset-pvec[4], (BRF_subset-pvec[4])/refspec_hyp_subset, 'ro' )
+                self.ax_pplot.plot( BRF_subset, (BRF_subset-pvec[4])/refspec_hyp_subset, 'ro' )
                 
-                gx = np.linspace( BRF_subset.min()-pvec[4], BRF_subset.max()-pvec[4], 3 )
+                gx = np.linspace( BRF_subset.min(), BRF_subset.max(), 3 )
                 gy = pvec[0]*gx + pvec[1]
                 
                 self.ax_pplot.plot( gx, gy, 'g-')
-                self.ax_pplot.set_xlabel( "BRF-C" )
+                self.ax_pplot.set_xlabel( "BRF" )
                 self.ax_pplot.set_ylabel( "(BRF-C)/w" )
                 self.ax_pplot.set_title(str(x)+','+str(y))
                 self.fig_pplot.canvas.draw()
                 self.fig_pplot.show()
                 
-                print( "p=%6.3f, intercept=%6.3f, DASF=%6.3f, R=%5.2f, C=%6.3f" % tuple(pvec) )
+                print( "p=%6.3f, intercept=%6.3f, DASF=%6.3f, R2=%5.2f, C=%6.3f" % tuple(pvec) )
                 p_fitted = True
-            # finish the specrtum plot: add fitted spectra
+            # finish the spectrum plot: add fitted spectra
             if p_fitted:
-                w = refspec_hyp_subset
-                BRF_subset_fitted = pvec[1]*w/(1-pvec[0]*w)+pvec[4]
+                w = refspec_hyp_subset                
+                BRF_subset_fitted = (pvec[1]+pvec[0]*pvec[4])*w/(1-pvec[0]*w)+pvec[4]
                 if hypdata_scaled:
                     BRF_subset_fitted *= 10000
                 self.ax_spectrum.plot( wl_subset, BRF_subset_fitted, 'go')
@@ -631,25 +652,26 @@ class pGUI:
             self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
 
-    def buttonrun( self ):
+    def buttonrun_p( self ):
         """
-        Function to run the computations on the whole image or to stop the running omputations,
-        depending on the state wich is determined from the text on the button
+        Function to run the computations of p w/o non-green component on the whole image 
+        -- or to stop the running omputations, depending on the state which 
+        is determined from the text on the button
         """
            
-        if self.button_run.cget('text')=='Stop':
+        if self.button_runp.cget('text')=='Stop':
             # the thread should be running, stop it
             self.progressvar_p.set(-1) # this signals break
             self.button_quit.configure( state=ACTIVE )
             self.button_datafile.configure( state=ACTIVE )
             self.button_spectrumfile.configure( state=ACTIVE )
-            self.button_run.configure( text='Run', state=DISABLED ) # the button will be enabled once the thread exits
+            self.button_runp.configure( text='Run w/o Const', state=DISABLED ) # the button will be enabled once the thread exits
             print("Break signal caught")
         else:
             # sanity check: do we have selections in both listboxes
             allset = True
             if self.use_refspec_file:
-                listboxselection = self.listbox.curselection()
+                listboxselection = self.listbox_ref.curselection()
                 refspec = None
                 refspecname = None
                 if listboxselection == ():
@@ -689,8 +711,9 @@ class pGUI:
                     self.hypdata_map = None
                 
                 # create thread
-                self.thread1 = p_thread( self.master, self.filename1, listboxselection, listboxselection_wl, self.filename2, filename3, self.hypdata, self.hypdata_map, 
-                    self.progressvar_p, refspec, wl_spec, refspecname )
+                self.thread1 = p_thread( self.master, self.filename1, listboxselection,
+                    listboxselection_wl, self.filename2, filename3, self.hypdata, self.hypdata_map, 
+                    self.progressvar_p, refspec, wl_spec, refspecname, "p" )
                 
                 # prepare GUI and start thread
                 # disable all unnecessary stuff here
@@ -699,7 +722,86 @@ class pGUI:
                 self.button_spectrumfile.configure( state=DISABLED )
                 self.button_p.configure( state=DISABLED )
                 self.button_pC.configure( state=DISABLED )
-                self.button_run.configure( text='Stop' )
+                self.button_runp.configure( text='Stop' )
+                self.button_runpC.configure( state=DISABLED )
+                self.progressvar_p.set(0) 
+                self.thread1.start()
+                
+            else:
+                print("Cannot run.")
+                
+    def buttonrun_pC( self ):
+        """
+        Function to run the computations of p with non-green component on the whole image 
+        -- or to stop the running omputations, depending on the state which 
+        is determined from the text on the button
+        """
+           
+        if self.button_runp.cget('text')=='Stop':
+            # the thread should be running, stop it
+            self.progressvar_p.set(-1) # this signals break
+            self.button_quit.configure( state=ACTIVE )
+            self.button_datafile.configure( state=ACTIVE )
+            self.button_spectrumfile.configure( state=ACTIVE )
+            self.button_runpC.configure( text='Run with Const', state=DISABLED ) # the button will be enabled once the thread exits
+            print("Break signal caught")
+        else:
+            # sanity check: do we have selections in both listboxes
+            allset = True
+            if self.use_refspec_file:
+                listboxselection = self.listbox_ref.curselection()
+                refspec = None
+                refspecname = None
+                if listboxselection == ():
+                    print("No reference spectrum selected")
+                    allset = False
+                else:
+                    listboxselection = listboxselection[0]
+            else:
+                listboxselection = None # self.refspec will be used instead
+                refspec = self.refspec
+                wl_spec = self.wl_spec
+                refspecname = self.refspecname
+            listboxselection_wl = self.listbox_wl.curselection()
+            if len(listboxselection_wl) < 2:
+                print("Too few wavelengths selected: ", len(listboxselection_wl) )
+                allset = False
+            # where to save the new p-data:
+            filename3 =  filedialog.asksaveasfilename(initialdir = self.hypdatadir, title = "p-file name to create",filetypes = (("ENVI hdr files","*.hdr"),("all files","*.*")))
+            if filename3 == '':
+                allset = False
+                
+            if allset:
+                # where to save the new p-data:
+                if filename3[-4:] != ".hdr":
+                    filename3 += ".hdr"
+                # get the handles of the hyperspectral data
+                if self.openfilelist[0][1] != None:
+                    # the file has been opened, this should always be the case
+                    self.filename2 = self.openfilelist[0][0]
+                    self.hypdata = self.openfilelist[0][1]
+                    self.hypdata_map = self.openfilelist[0][2]
+                else:
+                    # this should actually never happen, but still...
+                    print("Warning: filename2 has not been opened. Strange, this should never happen.")
+                    # the file will be opened in p_processing()
+                    self.hypdata = None
+                    self.hypdata_map = None
+                
+                # create thread
+                self.thread1 = p_thread( self.master, self.filename1, listboxselection,
+                    listboxselection_wl, self.filename2, filename3, self.hypdata, self.hypdata_map, 
+                    self.progressvar_p, refspec, wl_spec, refspecname, "pC" )
+                
+                # prepare GUI and start thread
+                # disable all unnecessary stuff here
+                self.button_quit.configure( state=DISABLED )
+                self.button_datafile.configure( state=DISABLED )
+                self.button_spectrumfile.configure( state=DISABLED )
+                self.button_p.configure( state=DISABLED )
+                self.button_pC.configure( state=DISABLED )
+                self.button_runp.configure( state=DISABLED )
+                self.button_runpC.configure( text='Stop' )
                 self.progressvar_p.set(0) 
                 self.thread1.start()
                 

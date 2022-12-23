@@ -21,17 +21,20 @@ import time
 from scipy.optimize import curve_fit, least_squares
 
 
-from spectralinvariant.spectralinvariants import p_forpixel
+from spectralinvariant.spectralinvariants import p,pC,p_forpixel
 from spectralinvariant.hypdatatools_img import get_wavelength
 
-def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
+def p_processing( filename1, refspecno, i_wlp, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
     refspec=None, wl_spec=None, refspecname='RefenceSpectrum' ):
-    """the actual function which does the processing
+    """the function which sets up and calls the processing for computing p, rho and DASF
+    the function is designed to run in a separate thread with feedback on progress, but
+    currently, computation is done in one go for the whole image. At some point, memory 
+    limits may be hit and then the old code in p_processing_old may again be handy.
 
     Args:
       filename1 (str): reference spectrum file name (incl full directory)
       refspecno (int): spectrum in filename1 to use
-      wl_p ([int]): index of wavelengths used in computations 
+      i_wlp ([int]): index of wavelengths used in computations 
       filename2 (str): the hyperspectraldata file which is used as input
       filename3 (str): the name of the data file to create
     optional inputs:
@@ -40,7 +43,7 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
       file2_datahandle=None : the spectral pyhton handle for hyperspectral data if file is already open
         filename2 is not reopened if the file handle exists (data handle is not checked)
       progressvar: NEEDS TO BE DoubleVar (of tkinter heritage) -- the variable used to mediate processing progress with a value  between 0 and 0.
-        progressvar is also used to signal breaks by setting it to -1
+        progressvar is also used to signal breaks by setting it to -1. NOT USED, included for compatibility. New implementation does not loop over pixels.
       refspec=None: the actual reference spectrum data
         if not None, filename1 and refspecno will not be used
       wl_spec=None: the wavelengths for refspec. Need to be set if refspec is not None
@@ -86,9 +89,9 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
     # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
     refspec_hyp = np.interp( wl_hyp, wl_spec, refspec )
     
-    wl_p = np.array(wl_p) # tuples cannot be apparently used for indexing arrays
+    i_wlp = np.array(i_wlp) # tuples cannot be apparently used for indexing arrays
     # create a subset of reference data (interpolated to hyperspectral bands)
-    refspec_hyp_subset = refspec_hyp[ wl_p ] # the reference spectrum subset to be used in calculations of p and DASF 
+    refspec_hyp_subset = refspec_hyp[ i_wlp ] # the reference spectrum subset to be used in calculations of p and DASF 
 
     # create metadata dictionary for p-file
     pfile_metadata = { 'bands':4, 'lines':hypdata.metadata['lines'], 'samples':hypdata.metadata['lines'],
@@ -97,10 +100,10 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
     # this needs to be synced with the envi.create_image command below
     pfile_metadata['description'] = "Created by python p-script from "+filename2
     pfile_metadata['description'] += "; reference spectrum " + refspecname
-    pfile_metadata['description'] += "; WLs: " + ", ".join(['{:.2f}'.format(x) for x in wl_hyp[wl_p]])
+    pfile_metadata['description'] += "; WLs: " + ", ".join(['{:.2f}'.format(x) for x in wl_hyp[i_wlp]])
     use_DIV = False # Use Data Ignore Value
     DIV = 0
-    DIV_testpixel = wl_p[-1] # the band to check for data ignore value
+    DIV_testpixel = i_wlp[-1] # the band to check for data ignore value
     if 'data ignore value' in hypdata.metadata:
         pfile_metadata['data ignore value']=0 #use always zero for decimal compatibility
         use_DIV = True
@@ -114,9 +117,6 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
     pfile = envi.create_image( filename3, metadata=pfile_metadata, dtype='float32', ext='', shape=hypdata_map.shape[0:2]+(4,) )
     pdata = pfile.open_memmap( writable=True )
     
-    linecount = 1 # count lines for progress bar
-    nlines = hypdata_map.shape[0]
-
     hypdata_factor = 1
     if int(hypdata.metadata['data type']) in (1,2,3,12,13):
         # these are integer data codes. assume it's reflectance*10,000
@@ -126,40 +126,128 @@ def p_processing( filename1, refspecno, wl_p, filename2, filename3, tkroot=None,
     t_0 = time.time()
     t_0p = time.process_time()
 
-    break_signaled = False
-    # iterate through hyperspectral data
-    for hyp_line,p_line in zip(hypdata_map,pdata):
-        if progressvar!=None:
-            if progressvar.get() == -1: # check for user abort at each image line
-                print("p_processing(): Break signaled")
-                break_signaled = True
-                break
-            else:
-                linecount += 1 # for updating the progress bar
-                progressvar.set(linecount/nlines)
-        else:
-            print("#",end='')
-        if not break_signaled:
-            # for hyp_pixel,p_pixel in zip(hyp_line[0:50],p_line[0:50]):
-            for hyp_pixel,p_pixel in zip(hyp_line,p_line):
-                if hyp_pixel[ DIV_testpixel ] != DIV:
-                    hyp_refl_subset = ( hyp_pixel[ wl_p ]*hypdata_factor )
-                    # pectralinvariants.p_forpixel_old( hyp_refl_subset, refspec_hyp_subset, p_pixel )
-                    p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
-                else:
-                    p_pixel.fill(0)
-
-    # outer loop done: for hyp_line,p_line in zip(hypdata_map,pdata):
-    # how long did it take?
+    pdata[:,:,:] = np.stack( p( hypdata_map[ :,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
+    
     t_1 = time.time()
     t_1p = time.process_time()
 
     pdata.flush() # just in case, pdata will (likely?) be closed as function exits 
-    if break_signaled:
-        print("p_processing aborted at %4.2f%%." % (linecount/nlines*100) )
-    else:
-        print(" p_processing done")
+    print(" p_processing done")
     print( "time spent: " + str( round(t_1-t_0) ) + "s, process time: " + str( round(t_1p-t_0p)) + "s" )
+
+def pC_processing( filename1, refspecno, i_wlp, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
+    refspec=None, wl_spec=None, refspecname='RefenceSpectrum' ):
+    """the function which sets up and calls the processing for computing p, rho and C
+    in an approximation where non-green material is present.
+    The function is designed to run in a separate thread with feedback on progress, but
+    currently, computation is done in one go for the whole image. At some point, memory 
+    limits may be hit and then the old code in p_processing_old may again be handy.
+    Based on p_processing()
+
+    Args:
+      filename1 (str): reference spectrum file name (incl full directory)
+      refspecno (int): spectrum in filename1 to use
+      i_wlp ([int]): index of wavelengths used in computations 
+      filename2 (str): the hyperspectraldata file which is used as input
+      filename3 (str): the name of the data file to create
+    optional inputs:
+      tkroot : tkinter root window handle for signaling progress
+      file2_handle=None : the spectral pyhton file handle if file is already open (for metadata)
+      file2_datahandle=None : the spectral pyhton handle for hyperspectral data if file is already open
+        filename2 is not reopened if the file handle exists (data handle is not checked)
+      progressvar: NEEDS TO BE DoubleVar (of tkinter heritage) -- the variable used to mediate processing progress with a value  between 0 and 0.
+        progressvar is also used to signal breaks by setting it to -1. NOT USED, included for compatibility. New implementation does not loop over pixels.
+      refspec=None: the actual reference spectrum data
+        if not None, filename1 and refspecno will not be used
+      wl_spec=None: the wavelengths for refspec. Need to be set if refspec is not None
+      refspecname='RefenceSpectrum': name of the refrence spectrum given in refspec
+    this function can be called separately from the commandline 
+    """
+    
+    if refspec is None:
+        # read reference data and interpolate to hyperspectral bands 
+        leafspectra = np.loadtxt(filename1)        
+        # first column in leafspectra is wavelengths
+        wl_spec = leafspectra[:,0]
+        # which spectra should we use by default?
+        refspec = leafspectra[ :, refspecno+1 ] # first column is wl, hence the "+1" 
+        
+        # get spectrum name from filename1
+        # read first line assuming it contain tab-delimeted column headings
+        with open(filename1) as f:
+            refspectranames = f.readline().strip().split('\t')
+            if refspectranames[0][0] != "#":
+                # names not given on first line
+                refspectranames = list(range(len(refspectranames)))
+        refspecname = refspectranames[ refspecno+1 ] # first column is wl, hence the "+1"
+    
+    if file2_handle==None :
+        # note:checking only the file handle. If file is opened, file2_datahandle is a matrix (and cannot be compared with None)
+        # open hyperspectral data file -- reads only metadata
+        hypdata = spectral.open_image(filename2)
+        # hypdata.metadata is of type dict, use e.g. hypdata.metadata.keys()
+        # e.g., print(hypdata.metadata.keys())
+        # now get a handle for the data itself
+        hypdata_map = hypdata.open_memmap()
+    else:
+        # the file is already open, use the provided handles
+        hypdata = file2_handle
+        hypdata_map = file2_datahandle
+        print(filename2+" is already open, using the provided handles.")
+    
+    wl_hyp = get_wavelength( filename2, hypdata )[0]
+    # NOTE: get_wavelength()[1] returns a flag whether the data could be loaded. This should be checked!
+
+    # interpolate refspec to hyperspectral bands
+    # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
+    refspec_hyp = np.interp( wl_hyp, wl_spec, refspec )
+    
+    i_wlp = np.array(i_wlp) # tuples cannot be apparently used for indexing arrays
+    # create a subset of reference data (interpolated to hyperspectral bands)
+    refspec_hyp_subset = refspec_hyp[ i_wlp ] # the reference spectrum subset to be used in calculations of p and DASF 
+
+    # create metadata dictionary for p-file
+    pfile_metadata = { 'bands':5, 'lines':hypdata.metadata['lines'], 'samples':hypdata.metadata['lines'],
+        'data type':4, 'band names':['p','intercept','DASF','R2','C']}
+    # set data type to 4:float (32-bit); alternative would be 5:double (64-bit)
+    # this needs to be synced with the envi.create_image command below
+    pfile_metadata['description'] = "Created by python p-script from "+filename2
+    pfile_metadata['description'] += "; reference spectrum " + refspecname
+    pfile_metadata['description'] += "; WLs: " + ", ".join(['{:.2f}'.format(x) for x in wl_hyp[i_wlp]])
+    use_DIV = False # Use Data Ignore Value
+    DIV = 0
+    DIV_testpixel = i_wlp[-1] # the band to check for data ignore value
+    if 'data ignore value' in hypdata.metadata:
+        pfile_metadata['data ignore value']=0 #use always zero for decimal compatibility
+        use_DIV = True
+        DIV = pfile_metadata['data ignore value']
+    
+    # check for optional keys to include
+    for i_key in 'x start', 'y start', 'map info', 'coordinate system string':
+        if i_key in hypdata.metadata:
+            pfile_metadata[i_key] = hypdata.metadata[i_key]
+    # create the data and open the file
+    pfile = envi.create_image( filename3, metadata=pfile_metadata, dtype='float32', ext='', shape=hypdata_map.shape[0:2]+(5,) )
+    pdata = pfile.open_memmap( writable=True )
+    
+    hypdata_factor = 1
+    if int(hypdata.metadata['data type']) in (1,2,3,12,13):
+        # these are integer data codes. assume it's reflectance*10,000
+        hypdata_factor = 1.0 / 10000
+    
+    # set up timing
+    t_0 = time.time()
+    t_0p = time.process_time()
+
+    pdata[:,:,:] = np.stack( pC( hypdata_map[ :,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
+    
+    t_1 = time.time()
+    t_1p = time.process_time()
+
+    pdata.flush() # just in case, pdata will (likely?) be closed as function exits 
+    print(" p_processing done")
+    print( "time spent: " + str( round(t_1-t_0) ) + "s, process time: " + str( round(t_1p-t_0p)) + "s" )
+
 
 def W_processing( filename1, filename2, filename3, DASFnumber=0, hypdata=None, hypdata_map=None, DASFdata=None, DASFdata_map=None, progressvar=None ):
     """
@@ -1098,4 +1186,144 @@ def PRI_singlepoint( filename1, filename2, x_h, y_h, N_area, rhonumber=0, hypdat
         print( "Not sufficient green pixels after applying NDVI threshold of " + str(round(NDVIthreshold,3)) )
         print( "Pixels after thresholding = " + str(len(i_good[0])) + ", required " + str(minpixels) )
 
-# 
+#  ======= deprecated functions below this line
+
+def p_processing_old( filename1, refspecno, i_wlp, filename2, filename3, tkroot=None, file2_handle=None, file2_datahandle=None, progressvar=None, 
+    refspec=None, wl_spec=None, refspecname='RefenceSpectrum' ):
+    """the actual function which does the processing
+        
+    Deprecated version. The new p() computes p for the whole image, hence the slow iteration over lines and pixels is unnecessary
+    and a separate thread is redundant
+
+    Args:
+      filename1 (str): reference spectrum file name (incl full directory)
+      refspecno (int): spectrum in filename1 to use
+      i_wlp ([int]): index of wavelengths used in computations 
+      filename2 (str): the hyperspectraldata file which is used as input
+      filename3 (str): the name of the data file to create
+    optional inputs:
+      tkroot : tkinter root window handle for signaling progress
+      file2_handle=None : the spectral pyhton file handle if file is already open (for metadata)
+      file2_datahandle=None : the spectral pyhton handle for hyperspectral data if file is already open
+        filename2 is not reopened if the file handle exists (data handle is not checked)
+      progressvar: NEEDS TO BE DoubleVar (of tkinter heritage) -- the variable used to mediate processing progress with a value  between 0 and 0.
+        progressvar is also used to signal breaks by setting it to -1
+      refspec=None: the actual reference spectrum data
+        if not None, filename1 and refspecno will not be used
+      wl_spec=None: the wavelengths for refspec. Need to be set if refspec is not None
+      refspecname='RefenceSpectrum': name of the refrence spectrum given in refspec
+    this function can be called separately from the commandline 
+    """
+    
+    if refspec is None:
+        # read reference data and interpolate to hyperspectral bands 
+        leafspectra = np.loadtxt(filename1)        
+        # first column in leafspectra is wavelengths
+        wl_spec = leafspectra[:,0]
+        # which spectra should we use by default?
+        refspec = leafspectra[ :, refspecno+1 ] # first column is wl, hence the "+1" 
+        
+        # get spectrum name from filename1
+        # read first line assuming it contain tab-delimeted column headings
+        with open(filename1) as f:
+            refspectranames = f.readline().strip().split('\t')
+            if refspectranames[0][0] != "#":
+                # names not given on first line
+                refspectranames = list(range(len(refspectranames)))
+        refspecname = refspectranames[ refspecno+1 ] # first column is wl, hence the "+1"
+    
+    if file2_handle==None :
+        # note:checking only the file handle. If file is opened, file2_datahandle is a matrix (and cannot be compared with None)
+        # open hyperspectral data file -- reads only metadata
+        hypdata = spectral.open_image(filename2)
+        # hypdata.metadata is of type dict, use e.g. hypdata.metadata.keys()
+        # e.g., print(hypdata.metadata.keys())
+        # now get a handle for the data itself
+        hypdata_map = hypdata.open_memmap()
+    else:
+        # the file is already open, use the provided handles
+        hypdata = file2_handle
+        hypdata_map = file2_datahandle
+        print(filename2+" is already open, using the provided handles.")
+    
+    wl_hyp = get_wavelength( filename2, hypdata )[0]
+    # NOTE: get_wavelength()[1] returns a flag whether the data could be loaded. This should be checked!
+
+    # interpolate refspec to hyperspectral bands
+    # np.interp does not check that the x-coordinate sequence xp is increasing. If xp is not increasing, the results are nonsense. A simple check for increasing is:
+    refspec_hyp = np.interp( wl_hyp, wl_spec, refspec )
+    
+    i_wlp = np.array(i_wlp) # tuples cannot be apparently used for indexing arrays
+    # create a subset of reference data (interpolated to hyperspectral bands)
+    refspec_hyp_subset = refspec_hyp[ i_wlp ] # the reference spectrum subset to be used in calculations of p and DASF 
+
+    # create metadata dictionary for p-file
+    pfile_metadata = { 'bands':4, 'lines':hypdata.metadata['lines'], 'samples':hypdata.metadata['lines'],
+        'data type':4, 'band names':['p','intercept','DASF','R']}
+    # set data type to 4:float (32-bit); alternative would be 5:double (64-bit)
+    # this needs to be synced with the envi.create_image command below
+    pfile_metadata['description'] = "Created by python p-script from "+filename2
+    pfile_metadata['description'] += "; reference spectrum " + refspecname
+    pfile_metadata['description'] += "; WLs: " + ", ".join(['{:.2f}'.format(x) for x in wl_hyp[i_wlp]])
+    use_DIV = False # Use Data Ignore Value
+    DIV = 0
+    DIV_testpixel = i_wlp[-1] # the band to check for data ignore value
+    if 'data ignore value' in hypdata.metadata:
+        pfile_metadata['data ignore value']=0 #use always zero for decimal compatibility
+        use_DIV = True
+        DIV = pfile_metadata['data ignore value']
+    
+    # check for optional keys to include
+    for i_key in 'x start', 'y start', 'map info', 'coordinate system string':
+        if i_key in hypdata.metadata:
+            pfile_metadata[i_key] = hypdata.metadata[i_key]
+    # create the data and open the file
+    pfile = envi.create_image( filename3, metadata=pfile_metadata, dtype='float32', ext='', shape=hypdata_map.shape[0:2]+(4,) )
+    pdata = pfile.open_memmap( writable=True )
+    
+    linecount = 1 # count lines for progress bar
+    nlines = hypdata_map.shape[0]
+
+    hypdata_factor = 1
+    if int(hypdata.metadata['data type']) in (1,2,3,12,13):
+        # these are integer data codes. assume it's reflectance*10,000
+        hypdata_factor = 1.0 / 10000
+    
+    # set up timing
+    t_0 = time.time()
+    t_0p = time.process_time()
+
+    break_signaled = False
+    # iterate through hyperspectral data
+    for hyp_line,p_line in zip(hypdata_map,pdata):
+        if progressvar!=None:
+            if progressvar.get() == -1: # check for user abort at each image line
+                print("p_processing(): Break signaled")
+                break_signaled = True
+                break
+            else:
+                linecount += 1 # for updating the progress bar
+                progressvar.set(linecount/nlines)
+        else:
+            print("#",end='')
+        if not break_signaled:
+            # for hyp_pixel,p_pixel in zip(hyp_line[0:50],p_line[0:50]):
+            for hyp_pixel,p_pixel in zip(hyp_line,p_line):
+                if hyp_pixel[ DIV_testpixel ] != DIV:
+                    hyp_refl_subset = ( hyp_pixel[ i_wlp ]*hypdata_factor )
+                    # pectralinvariants.p_forpixel_old( hyp_refl_subset, refspec_hyp_subset, p_pixel )
+                    p_forpixel( hyp_refl_subset, refspec_hyp_subset, p_pixel )
+                else:
+                    p_pixel.fill(0)
+
+    # outer loop done: for hyp_line,p_line in zip(hypdata_map,pdata):
+    # how long did it take?
+    t_1 = time.time()
+    t_1p = time.process_time()
+
+    pdata.flush() # just in case, pdata will (likely?) be closed as function exits 
+    if break_signaled:
+        print("p_processing aborted at %4.2f%%." % (linecount/nlines*100) )
+    else:
+        print(" p_processing done")
+    print( "time spent: " + str( round(t_1-t_0) ) + "s, process time: " + str( round(t_1p-t_0p)) + "s" )
