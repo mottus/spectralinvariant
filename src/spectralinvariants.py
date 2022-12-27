@@ -58,6 +58,8 @@ def pC_forpixel(hypdata, refspectrum):
     """Calculate rho, p and c using ordinary linear regression for a single pixel.
 
     Uses ordinary least squares to minimize the residual sum of squares for the equation :math:`y = X \beta + \epsilon`.
+    In p-theory, (BRF-C)/w = p*BRF+rho => BRF/w = p*BRF+rho+C/w. By setting y = BRF/w; X = (C, BRF, 1/w),
+        we get in beta the three parameters ( p, rho, C )
     Assumes that the input data is already spectrally subset.
     It's not totally clear why this is a function separate from pC(), but it seems
     computationally somewhat fancier (more efficient?)
@@ -67,7 +69,8 @@ def pC_forpixel(hypdata, refspectrum):
         refspectrum: the reference spectrum, has to be same length as hypdata
 
     Returns:
-        ndarray of length 4: 0:p 1:rho 2: c 3:RSS
+        list of length 4: 0:p 1:rho 2:R2, 3:c
+        XXX the used algorithms (true or pseudoinverse) needs to be reported to the used somehow, maybe via R2?
     """
     X = np.array([np.ones(len(refspectrum)), hypdata, 1./refspectrum]) # Matrix of independent variables
     y = hypdata / refspectrum # Vector of dependent variables
@@ -91,7 +94,8 @@ def pC_forpixel(hypdata, refspectrum):
 def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
     """ Calculate rho, p and c.
 
-    Estimates parameters `rho`, `p`, and `c` for :math:`R/S = \rho + p R c/S` by finding the roots of the residual sum of squares (RSS) analytically.
+    Estimates parameters `rho`, `p`, and `c` for :math:`R/S = \rho + p R + c/S`
+    by finding the roots of the residual sum of squares (RSS) analytically.
     Assumes that the input data is already spectrally subset
 
     Args:
@@ -100,7 +104,7 @@ def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
         wl_fit: not used, for compatibility with pC_old (which has internal band selection)
         verbose: not used, for compatibility with pC_old (which has internal band selection)
     Returns:
-        ndarray of length 4: 0:p 1:rho 2: c 3:RSS
+        list of length 4: 0:p 1:rho 2:R2 3:c
     """
 
     if len(hypdata.shape) == 1:

@@ -310,38 +310,58 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     return fig_hypdata
 
 
-def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
+def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfactor=0.95,
+    stretch_individual=True, ignore_negative=False, outputcommand=None):
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
     in: hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
         stretchfactor: the upper percentile to draw as white
+        stretch_individual: whether to stretch bands individually
+        ignore_negative: whether to set negative values to nan. Alternatively, make all values positive for plotting
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
 
+    axestoapply = None; # this will apply the command along all axis (whole datacube)
+    if stretch_individual:
+        axestoapply = (0,1) # apply along x,y, i.e., separately for each band
+        
     functionname = "plot_hypdatamatrix(): "  # used in messaging
 
     if outputcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
         outputcommand = lambda x: print(x,end='',flush=True)
     outputcommand(" calculating range...")
+    # make a copy not to modify the original rgb
+    hypdata_rgb_plot = hypdata_rgb.copy()
+    if ignore_negative:
+        hypdata_rgb_plot[ np.nonzero(hypdata_rgb_plot<0) ]=np.nan
+    else:
+        # add their most negative value to bands which have negative values 
+        a_min = np.nanmin( hypdata_rgb_plot, axis=(0,1) )
+        if a_min.min()<0:
+            # don't add anything to bans which have no negative values
+            a_min[ np.nonzero(a_min>=0) ] = 0
+            outputcommand(" shifting bands to be positive by "+str(-a_min)+"...")
+            hypdata_rgb_plot = hypdata_rgb_plot - a_min
+            
     # stretch the image: calculate nice scaling. 
-    # currently, the bands are not treated separately.
-    ii = hypdata_rgb > 0
     outputcommand(" calculating range...")
 
-    if np.where(ii)[0].size < 200:
-        datascaling = hypdata_rgb.max()
+    N_notnan = np.count_nonzero( ~np.isnan(hypdata_rgb_plot), axis=axestoapply ).min() 
+    if N_notnan < 200:
+        datascaling = hypdata_rgb_plot.max( axis=axestoapply )
         datascaling /= stretchfactor
-        outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
-    elif np.ptp(hypdata_rgb[ii]) > 0:
-        datascaling = np.percentile(hypdata_rgb[ii], stretchfactor*100 )
+        outputcommand("\n" + functionname + "Too few ("+str(N_notnan)
+            +") pixels with values, not applying histogram.\n")
+    elif ( np.nanmax(hypdata_rgb_plot) - np.nanmin(hypdata_rgb_plot) ) > 0:
+        datascaling = np.nanpercentile(hypdata_rgb_plot, stretchfactor*100, axis=axestoapply )
     else:
         datascaling = 1.0 # no scaling
 
     outputcommand(" scaling by 1/" + str(datascaling) + "...")
-    hypdata_rgb_plot = hypdata_rgb / datascaling
+    hypdata_rgb_plot = hypdata_rgb_plot / datascaling
     # this also forces the hypdata_plot to be a copy -- hypdata_band may be read-only
 
     # percentile alone seems to give not so nice plots
@@ -350,10 +370,10 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfact
 
     if fig_hypdata is None:
         fig_hypdata = plt.figure()  # create a new figure
-        outputcommand( functionname+" Creating new figure.\n")
+        outputcommand( "\n"+functionname+" Creating new figure.\n")
     else:
         fig_hypdata.clf() # clear the figure
-        outputcommand( functionname+"Reusing old figure.\n")
+        outputcommand( "\n"+functionname+"Reusing old figure.\n")
         
     ax0 = fig_hypdata.add_subplot(1, 1, 1)
 
