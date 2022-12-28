@@ -19,8 +19,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.path 
-import gdal
-from osgeo import ogr,osr
+from osgeo import ogr, osr, gdal
 
 from spectralinvariant.hypdatatools_img import *
 
@@ -510,44 +509,6 @@ def extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hy
             spectrumlist.append( [] )
             Nlist.append( 0 )
     return spectrumlist, wl, Nlist
-    
-import gdal
-from osgeo import ogr
-from osgeo import osr
-import sqlite3
-import os
-
-# functions to read data from spatial databases with special focus on geopackage and Metsäkeskus open data
-# two broad groups: read the spatial information (geometries) by opening the files as shapefiles (functins vector_*() )
-#   and red the data tables in geopackage as sqlite3 databases with no spatial information (functions geopackage_*() )
-# + some extras, e.g. a function to subset a list of geometries with a geographic raster
-
-def vector_getfieldnames( filename_in, layernumber=0, localprintcommand=None ):
-    """
-    get the names of fields in a vector file.
-    in: filename, and the number of the layer to get the field names from
-    output: a list of field names
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'vector_getfieldnames(): ' # for messaging
-    
-    # open the file (e.g., geopackage) as shapefile
-    sh_file = ogr.Open( filename_in )
-    # in geopackage, this only opens the spatial layer
-    localprintcommand("File {}: {:d} spatial layer(s).\n".format( filename_in,  sh_file.GetLayerCount() ) )
-    fieldnames = [] # the output list
-    if sh_file.GetLayerCount() > layernumber:
-        sh_layer = sh_file.GetLayerByIndex( layernumber )         
-        # get the field names as instructed at 
-        # https://gis.stackexchange.com/questions/220844/get-field-names-of-shapefiles-using-gdal
-        ldefn = sh_layer.GetLayerDefn()
-        for n in range(ldefn.GetFieldCount()):
-            fdefn = ldefn.GetFieldDefn(n)
-            fieldnames.append(fdefn.name)
-    sh_file.Release()
-    return fieldnames
 
 def vector_getWKT( infile, layernumber=0, localprintcommand=None):
     """
@@ -577,6 +538,35 @@ def vector_getWKT( infile, layernumber=0, localprintcommand=None):
     if release_infile:
         infile.Release()
     return sh_projectionWkt 
+    
+
+def vector_getfieldnames( filename_in, layernumber=0, localprintcommand=None ):
+    """
+    get the names of fields in a vector file.
+    in: filename, and the number of the layer to get the field names from
+    output: a list of field names
+    """
+    if localprintcommand is None:
+        # use a print command with no line feed in the end. The line feeds are given manually when needed.
+        localprintcommand = lambda x: print(x,end='',flush=True)
+    functionname = 'vector_getfieldnames(): ' # for messaging
+    
+    # open the file (e.g., geopackage) as shapefile
+    sh_file = ogr.Open( filename_in )
+    # in geopackage, this only opens the spatial layer
+    localprintcommand("File {}: {:d} spatial layer(s).\n".format( filename_in,  sh_file.GetLayerCount() ) )
+    fieldnames = [] # the output list
+    if sh_file.GetLayerCount() > layernumber:
+        sh_layer = sh_file.GetLayerByIndex( layernumber )         
+        # get the field names as instructed at 
+        # https://gis.stackexchange.com/questions/220844/get-field-names-of-shapefiles-using-gdal
+        ldefn = sh_layer.GetLayerDefn()
+        for n in range(ldefn.GetFieldCount()):
+            fdefn = ldefn.GetFieldDefn(n)
+            fieldnames.append(fdefn.name)
+    sh_file.Release()
+    return fieldnames
+
 
 def vector_getSpatialReference( filename_in, layernumber=0, localprintcommand=None):
     """
@@ -880,10 +870,10 @@ def vector_newfile( geometrylist, featuredict, filename_out=None, layername_out 
     return resulthandle
     
 def vector_rasterize_like( shpfile, rasterfile, shpfield=None, layernumber=0, dtype=None, RasterizeOptions=[], DIV=0, localprintcommand=None ):
-    """
+    """Given a shapefile, rasterizes it in memory so it has the exact same extent as the rasterfile.
+    
     Based on rasterize_shapefile_like() from project rastercube   Author: terrai   File: shputils.py
         https://github.com/terrai/rastercube, MIT License (checked 22.5.2018)
-    Given a shapefile, rasterizes it in memory so it has the exact same extent as the rasterfile.
     in:
         shpfile: file to rasterize
         rasterfile: the sample raster used to get geometry from
@@ -1020,391 +1010,7 @@ def vector_rasterize( shpfile, rasterfile, shpfield=None, layernumber=0, band=1,
         localprintcommand( functionname + "could not load layer #{:d} from file {}."
             .format( layernumber, shape_name ) )
         return False
-    
 
-def geopackage_getdatatables( datasource, localprintcommand=None ):
-    """
-    get the data tables from a geopackage file.
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-    out: a list with table names
-    """
-    
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getdatatables(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    tablelist = []
-    res = c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-
-    for tablename in res:
-        tablelist.append( tablename[0] )
-    if closefile:
-        conn.close()
-    return tablelist
-    
-def geopackage_getfieldnames( datasource, tablename, localprintcommand = None ):
-    """
-    get the field names in a data table of a geopackage (sqlite3) file.
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-        tablename: (str) name of the table to list
-    out: a list with field names
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getfieldnames(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-   
-    tablelist = geopackage_getdatatables( c, localprintcommand=localprintcommand )
-    fieldnames = []
-    if tablename in tablelist:
-        res = c.execute ("PRAGMA table_info({});".format(tablename) )
-        for fi in res:
-            fifn = fi[1]
-            fieldnames.append(fifn)
-            
-    if closefile:
-        conn.close()
-    return fieldnames
-    
-def geopackage_readtable(datasource, tablename, localprintcommand=None):
-    """ import a whole data table from a geopackage into a dictionary
-    
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-        tablename: table name in geoopackage
-    out: a dictionary with data
-        dictionary keys consist column names
-        each dictionary element is a list with a table column
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_readtable(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    # Get all field names from the table
-    field_names = geopackage_getfieldnames(c, tablename, localprintcommand=localprintcommand)
-
-    # Append list of field data to a larger list
-    data = []
-    for j in range(len(field_names)):
-        read_field = geopackage_getvalues(c, tablename, field_names[j], additionalconstraint=None)
-        data.append(read_field)
-
-    # Close the connection to the table
-    if closefile:
-        conn.close()
-
-    # Create dictionary (or dataframe) to which all data from the table are collected
-    Keys = field_names # field names
-    Values = data # field data
-    Dictionary = dict(zip(Keys, Values))
-    
-    #Dataframe = pd.DataFrame.from_dict(Dictionary)
-    #return Dataframe
-    return Dictionary
-
-def geopackage_getuniquevalues( datasource, tablename, fieldnames, additionalconstraint='', localprintcommand=None ):
-    """
-    get the unique values in a field in a data table of a geopackage (sqlite3) file.
-    in: datasource -- either filename, sqlite2.Connection or sqlite3.Cursor
-        tablename: name of the table in which the filed is
-        fieldnames: (list of) name(s) of the field for which the values will be returned
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a list with values; if more than one value was requested, a list of lists is returned
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getuniquevalues(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-
-    # make sure we can loop over fieldnames -- python thinks strings should be iterated over
-    if isinstance(fieldnames, str):
-        fieldnames = [ fieldnames ]
-        unpack = True # unpack the list of lists before returning
-    else:
-        unpack = False
-
-    uniquevalues = []
-    for fieldname in fieldnames:
-        res = c.execute("select distinct {0} from {1} {2} order by {0};"
-            .format( fieldname, tablename, additionalconstraint ) )
-        uniquevalues_i = []
-        for row in res:
-            uniquevalues_i.append(row[0])
-        uniquevalues.append( uniquevalues_i )
-    if unpack:
-        uniquevalues = uniquevalues[0]
-    return uniquevalues
-    
-def geopackage_getvalues( datasource, tablename, fieldnames, additionalconstraint='', localprintcommand=None ):
-    """
-    get the values in a field in a data table of a geopackage (sqlite3) file.
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-        tablename: name of the table in which the filed is
-        fieldnames: (list of) name(s) of the field for which the values will be returned
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a list with values; if more than one value was requested, a list of lists is returned
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getvalues(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    # make sure we can loop over fieldnames -- python thinks strings should be iterated over
-    if isinstance(fieldnames, str):
-        fieldnames = [ fieldnames ]
-        unpack = True # unpack the list of lists before returning
-    else:
-        unpack = False
-    
-    values = []
-    for fieldname in fieldnames:
-        # go thorugh the requested fields one by one
-        res = c.execute("select {0} from {1} {2} ;"
-            .format( fieldname, tablename, additionalconstraint ) )
-        values_i = []
-        for row in res:
-            values_i.append(row[0])
-        values.append( values_i )
-    if unpack:
-        values = values[0]
-    return values
-
-def geopackage_getspecificvalues1( datasource, tablename, fieldname, values_in, fieldname_in, additionalconstraint='', localprintcommand=None ):
-    """
-    get the values in a field in a data table of a geopackage (sqlite3) file for specific data rows
-    the specific data rows are determined by the MANY VALUES in value_in, searched for in fieldname_in
-    in: datasource -- either filename, sqlite3.Connection or sqlite3.Cursor
-        tablename: name of the table in which the field is
-        fieldname: name of the field for which the values will be returned
-        values_in: (list of) the value(s) to search for in fieldname_in
-        fieldname_in: the field to search for value_in
-            fieldname_in == value_in[i] is matched for each output value
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a list with values; if more than one value was requested, a list of lists is returned
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getspecificvalues(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    # make sure we can loop over fieldnames -- python thinks strings should be iterated over
-    if isinstance(values_in, str):
-        values_in = [ values_in ]
-        unpack = True # unpack the list of lists before returning
-    else:
-        unpack = False
-    
-    values = []
-    for value in values_in:
-        # go through the requested values one by one
-        res = c.execute("select {0} from {1} where {2}={3} {4};"
-            .format( fieldname, tablename, fieldname_in, value, additionalconstraint ) )
-        values.append( c.fetchall() )
-        
-    if closefile:
-        conn.close()
-        
-    if unpack:
-        values = values[0]
-    return values
-
-def geopackage_getspecificvalues2( datasource, tablename, fieldnames, value_in, fieldname_in, additionalconstraint='', localprintcommand=None ):
-    """
-    get the values in a field in a data table of a geopackage (sqlite3) file for specific data rows
-    the specific data rows are determined by the SINGLE value in value_in, searched for in fieldname_in
-    in: datasource -- either filename, sqlite3.Connection or Sqlite3.Cursor
-        tablename: name of the table in which the field is
-        fieldnames: (a list of) name(s) of the field(s) for which the values will be returned
-        value_in: (str) the value to search for in fieldname_in 
-        fieldname_in: the field to search for value_in
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a list with values; if values from more than one field was requested, a list of lists is returned
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_getspecificvalues2(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    
-    values = [] # output variable
-    
-    # merge the requested field values into a comma-separated string
-    if isinstance(fieldnames, str):
-        fieldsasstring = fieldnames
-    else:
-        fieldsasstring = ",".join( fieldnames ) 
-        
-    # do the query and fetch results
-    res = c.execute("select {0} from {1} where {2}={3} {4};"
-        .format( fieldsasstring, tablename, fieldname_in, value_in, additionalconstraint ) )
-    outcome = c.fetchall()
-    # rearrange the output list, now it's grouped in outcome by record (row). Regroup by field (column)
-    if len( outcome ) > 0:
-        for i in range( len(outcome[0] ) ):
-            values.append( [ value[i] for value in outcome ] )
-    else:
-        localprintcommand(functionname+" no data with matching criteria found.\n")
-        
-    if closefile:
-        conn.close()
-        
-    # if we only have one field value requested, return list, not list of lists
-    if isinstance(fieldnames, str):
-        values = values[0]
-    return values
-    
-def geopackage_uniquevalues( datasource, tablename, fieldname, additionalconstraint='', localprintcommand=None ):
-    """
-    get all unique values in a field in a data table of a geopackage (sqlite3) file 
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-        tablename: name of the table in which the filed is
-        fieldname: name of the field for which the unique values will be returned
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a dictionary with value:number pairs
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_uniquevalues(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    res = c.execute("select {0} from {1} {2};"
-        .format( fieldname, tablename, additionalconstraint ) )
-    outcome = c.fetchall()
-    uniquevalues = {}
-    for row in outcome:
-        if row[0] in uniquevalues.keys():
-            uniquevalues[ row[0] ] += 1
-        else:
-            uniquevalues[ row[0] ] = 1
-    return uniquevalues
-
-def geopackage_countvalues( datasource, tablename, fieldname, fieldname_in, additionalconstraint='', localprintcommand=None ):
-    """
-    count the number of values and unique values in a field in a data table of a geopackage (sqlite3) file 
-        for each unique value in another field, fieldname_in. Returns only the summary of counts, not the values for each unige value in fieldname_in
-    in: datasource -- either filename, sqlite2.Connection or Sqlite3.Cursor
-        tablename: name of the table in which the filed is
-        fieldname: name of the field for which the counts will be returned
-        fieldname_in: the field to search for value_in
-        additionalconstraint: (optional) a string to add to the sql query, e.g. " where field2 = 34 "
-    out: a dictionary with "count,uniquecount":number pairs
-        "count,uniquecount" are the combinations of values as strings
-    """
-    if localprintcommand is None:
-        # use a print command with no line feed in the end. The line feeds are given manually when needed.
-        localprintcommand = lambda x: print(x,end='',flush=True)
-    functionname = 'geopackage_countvalues(): ' # for messaging
-    
-    # open geopackage as sqlite database if necessary
-    if type(datasource) == str:
-        conn = sqlite3.connect( datasource ) 
-        closefile = True
-    else: 
-        conn = datasource
-        closefile = False
-    # conn is now either sqlite3.Connection or sqlite3.Cursor
-    c = conn.cursor() if type( conn ) == sqlite3.Connection else conn
-    
-    # get unique values in fieldname_in
-    uniquevalues = geopackage_uniquevalues( datasource, tablename, fieldname_in, localprintcommand=localprintcommand )
-    
-    valuedict = {}
-    # loop over the retrieved unique values and perform searches in the database
-    for value_in in uniquevalues:        
-        res = c.execute("select {0} from {1} where {2}={3} {4};"
-            .format( fieldname, tablename, fieldname_in, value_in, additionalconstraint ) )
-        outcome = c.fetchall()
-        # outcome is packed in tuples, but this should not hinder counting and finding unique values
-        n_values = len( outcome )
-        n_unique = len( set(outcome) )
-        stringkey = ",".join( ( str(n_values) , str(n_unique) ) )
-        if stringkey in valuedict.keys():
-            valuedict[ stringkey ] += 1
-        else:
-            valuedict[ stringkey ] = 1
-    return valuedict
-    
 def geometries_subsetbyraster( geometrylist, rasterfile_in, reproject=True, localprintcommand=None ):
     """
     give an index of geometries which are (potentially, based on extents) inside the area of rasterfile
@@ -1488,5 +1094,4 @@ def get_rasterextent_gdal( rasterfile ):
     ymin = min( [ Y00, Y01, Y10, Y11 ] )
     ymax = max( [ Y00, Y01, Y10, Y11 ] )
     return [ xmin, xmax, ymin, ymax ]
-    
-            
+
