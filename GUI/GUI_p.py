@@ -541,7 +541,7 @@ class pGUI:
                 
         Can be run to initiate and cancel pixel picking, and also to calculate p. Based on p_pixel()
         """
-        if self.button_pC.cget('text') == 'p+C for pixel':
+        if self.button_pC.cget('text') == 'p with C for pixel':
             # initiate click collection
             if not self.hypdata_ciglock:
                 if self.fig_hypdata.number not in plt.get_fignums():
@@ -558,7 +558,7 @@ class pGUI:
             print("pC_pixel: canceling pixel selection")
             self.fig_hypdata.canvas.mpl_disconnect(self.catch_cid)
             self.catch_cid = -1
-            self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
+            self.button_pC.configure( text='p with C for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
         
         else: # assume click was caught in the plot window
@@ -649,7 +649,7 @@ class pGUI:
             self.fig_spectrum.show()                     
 
             # finish and reset
-            self.button_pC.configure( text='p+C for pixel', background='SystemButtonFace' )
+            self.button_pC.configure( text='p with C for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
 
     def buttonrun_p( self ):
