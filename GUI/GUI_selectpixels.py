@@ -11,7 +11,6 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.path 
 from osgeo import ogr
-from osgeo import gdal
 from osgeo import osr
 import matplotlib
 import sys
