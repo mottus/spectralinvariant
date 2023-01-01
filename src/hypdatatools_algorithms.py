@@ -238,8 +238,27 @@ def pC_processing( filename1, refspecno, i_wlp, filename2, filename3, tkroot=Non
     # set up timing
     t_0 = time.time()
     t_0p = time.process_time()
-
-    pdata[:,:,:] = np.stack( pC( hypdata_map[ :,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
+    
+    # process in chunks to avoid memory limitations
+    # chunk size given in number of lines to be processed at a time
+    # set it to nRperchunk of spectral reflectance values
+    nRperchunk = 2000*1000000 
+    chunksize = int( nRperchunk/(hypdata_map.shape[2]*hypdata_map.shape[1]) ) # in lines
+    break_signaled = False
+    # iterate through hyperspectral data
+    for hyp_line in range(0, hypdata_map.shape[0], chunksize ):
+        max_line = min( hyp_line+chunksize, hypdata_map.shape[0] )
+        if progressvar!=None:
+            if progressvar.get() == -1: # check for user abort at each image line
+                print("p_processing(): Break signaled")
+                break_signaled = True
+                break
+            else:
+                progressvar.set(hyp_line/hypdata_map.shape[0])
+        else:
+            print("#",end='')
+        if not break_signaled:
+            pdata[hyp_line:max_line,:,:] = np.stack( pC( hypdata_map[ hyp_line:max_line,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
     
     t_1 = time.time()
     t_1p = time.process_time()

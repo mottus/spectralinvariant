@@ -163,7 +163,7 @@ class pGUI:
         self.button_datafile = Button( self.frame_buttons, text='set datafile', width=bw, command=self.buttondatafile )
         self.button_spectrumfile = Button( self.frame_buttons, text='set spectrum file', width=bw, command=self.buttonspectrumfile )
         self.button_p = Button( self.frame_buttons, text='p for pixel', width=bw, command=self.p_pixel, state=DISABLED )
-        self.button_pC = Button( self.frame_buttons, text='p with C for pixel', width=bw, command=self.pC_pixel, state=DISABLED )
+        self.button_pC = Button( self.frame_buttons, text='p with Const for pixel', width=bw, command=self.pC_pixel, state=DISABLED )
         self.button_clearpoints = Button( self.frame_buttons, text='Clear points', width=bw, command=self.clearpoints, state=DISABLED )
         self.button_runp = Button( self.frame_buttons, text='Run w/o Const', width=bw, command=self.buttonrun_p, state=DISABLED )
         self.button_runpC = Button( self.frame_buttons, text='Run with Const', width=bw, command=self.buttonrun_pC, state=DISABLED )
@@ -541,7 +541,7 @@ class pGUI:
                 
         Can be run to initiate and cancel pixel picking, and also to calculate p. Based on p_pixel()
         """
-        if self.button_pC.cget('text') == 'p with C for pixel':
+        if self.button_pC.cget('text') == 'p with Const for pixel':
             # initiate click collection
             if not self.hypdata_ciglock:
                 if self.fig_hypdata.number not in plt.get_fignums():
@@ -558,7 +558,7 @@ class pGUI:
             print("pC_pixel: canceling pixel selection")
             self.fig_hypdata.canvas.mpl_disconnect(self.catch_cid)
             self.catch_cid = -1
-            self.button_pC.configure( text='p with C for pixel', background='SystemButtonFace' )
+            self.button_pC.configure( text='p with Const for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
         
         else: # assume click was caught in the plot window
@@ -649,7 +649,7 @@ class pGUI:
             self.fig_spectrum.show()                     
 
             # finish and reset
-            self.button_pC.configure( text='p with C for pixel', background='SystemButtonFace' )
+            self.button_pC.configure( text='p with Const for pixel', background='SystemButtonFace' )
             self.hypdata_ciglock = False # release lock on cig for fig_hypdata 
 
     def buttonrun_p( self ):
@@ -737,7 +737,7 @@ class pGUI:
         is determined from the text on the button
         """
            
-        if self.button_runp.cget('text')=='Stop':
+        if self.button_runpC.cget('text')=='Stop':
             # the thread should be running, stop it
             self.progressvar_p.set(-1) # this signals break
             self.button_quit.configure( state=ACTIVE )
