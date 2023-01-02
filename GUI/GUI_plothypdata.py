@@ -70,6 +70,40 @@ class disp_GUI:
         self.option_mono.configure( state=DISABLED )
         self.frame_rgb.pack( side='right' )
 
+        self.frame_options = Frame( self.w )
+        self.separatebands = IntVar() # int: if 1, bands are scaled individually, 0 if not
+        self.upclip = StringVar() # String containing upper clipping value
+        self.upclip.set("95")
+        self.upclip_menuvar = StringVar() # string to set and read upclip_optiomemnu
+        self.dnclip = StringVar() # String containing lower clipping value
+        self.dnclip.set("0")
+        self.dnclip_menuvar = StringVar() # string to set and read dnclip_optiomemnu
+        self.clipunits_list = ["percent","value"]
+        self.separatebands_button = Checkbutton( self.frame_options, text="Scale bands individually", variable=self.separatebands )
+        self.separatebands_button.select()
+        self.subframe_upclip = Frame( self.frame_options )
+        self.upclip_label = Label( self.subframe_upclip, width=12, text="Clip upper", justify="right")
+        self.upclip_entry = Entry( self.subframe_upclip, width=7, textvariable=self.upclip )
+        self.upclip_menuvar.set( self.clipunits_list[0] )
+        self.upclip_optionmenu = OptionMenu( self.subframe_upclip, self.upclip_menuvar, *self.clipunits_list )
+        self.upclip_optionmenu.config(width=10)
+        self.upclip_optionmenu.pack( side='right' )
+        self.upclip_entry.pack( side='right' )
+        self.upclip_label.pack( side='left' )
+        self.subframe_dnclip = Frame( self.frame_options )
+        self.dnclip_label = Label( self.subframe_dnclip, width=12, text="Clip lower", justify="right")
+        self.dnclip_entry = Entry( self.subframe_dnclip, width=7, textvariable=self.dnclip )
+        self.dnclip_menuvar.set( self.clipunits_list[1] )
+        self.dnclip_optionmenu = OptionMenu( self.subframe_dnclip, self.dnclip_menuvar, *self.clipunits_list )
+        self.dnclip_optionmenu.config(width=10)
+        self.dnclip_optionmenu.pack( side='right' )
+        self.dnclip_entry.pack( side='right' )
+        self.dnclip_label.pack( side='left' )
+        self.separatebands_button.pack( side='top' )
+        self.subframe_upclip.pack( side='top' )
+        self.subframe_dnclip.pack( side='top' )
+        self.frame_options.pack( side='right' )
+
         self.frame_button = Frame( self.w )
         self.button_quit = Button( self.frame_button, width=bw, text='Quit', command=self.buttonquit )
         self.button_loaddata = Button( self.frame_button, width=bw, text='Load raster file', command=self.loaddatafile )
@@ -201,9 +235,26 @@ class disp_GUI:
         i_g = int( self.greenband_string.get().split(':')[0] )-1
         i_b = int( self.blueband_string.get().split(':')[0] )-1
         
+        if self.upclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+            clip_up = float( self.upclip_entry.get() ) / 100 # convert percent to fraction
+            clip_upvalue = None
+        else: # "value"
+            clip_up = None
+            clip_upvalue = float( self.upclip_entry.get() )
+        
+        if self.dnclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+            clip_low = float( self.dnclip_entry.get() ) / 100 # convert percent to fraction
+            clip_lowvalue = None
+        else: # "value"
+            clip_low = None
+            clip_lowvalue = float( self.dnclip_entry.get() )            
+
         self.printlog( "plotrgb(): bands %3d,%3d,%3d.\n" % ( i_r, i_g, i_b ) )
         
-        self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog, plotbands=[i_r,i_g,i_b]  )
+        print("XXX plotrgb",clip_up, clip_upvalue,clip_low, clip_lowvalue, self.separatebands.get() )
+        self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog,
+            plotbands=[i_r,i_g,i_b], clip_up=clip_up, clip_upvalue=clip_upvalue,
+            clip_low=clip_low, clip_lowvalue=clip_lowvalue, stretch_individual=self.separatebands.get() )
 
             
     def plottrue(self):
@@ -216,7 +267,24 @@ class disp_GUI:
             i_g =  abs(wl_hyp-550).argmin() # green 
             i_b =  abs(wl_hyp-450).argmin() # blue
             self.printlog( "plottrue(): %5.1f,%5.1f,%5.1f nm.\n" % (wl_hyp[i_r], wl_hyp[i_g], wl_hyp[i_b]) )
-            self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog, plotbands=[i_r,i_g,i_b] )
+            
+            if self.upclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+                clip_up = float( self.upclip_entry.get() ) / 100 # convert percent to fraction
+                clip_upvalue = None
+            else: # "value"
+                clip_up = None
+                clip_upvalue = float( self.upclip_entry.get() )
+            
+            if self.dnclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+                clip_low = float( self.dnclip_entry.get() ) / 100 # convert percent to fraction
+                clip_lowvalue = None
+            else: # "value"
+                clip_low = None
+                clip_lowvalue = float( self.dnclip_entry.get() )    
+            
+            self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog, plotbands=[i_r,i_g,i_b],
+                clip_up=clip_up, clip_upvalue=clip_upvalue,
+                clip_low=clip_low, clip_lowvalue=clip_lowvalue, stretch_individual=self.separatebands.get()  )
         else:
             # this should never happen, but just in case
             self.printlog( "plottrue(): No wavelength data available. This should never happen.\n" )
@@ -232,7 +300,24 @@ class disp_GUI:
             i_g =  abs(wl_hyp-680).argmin() # red band
             i_b =  abs(wl_hyp-550).argmin() # green 
             self.printlog( "plotnir(): %5.1f,%5.1f,%5.1f nm.\n" % (wl_hyp[i_r], wl_hyp[i_g], wl_hyp[i_b]) )
-            self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog, plotbands=[i_r,i_g,i_b] )
+            
+            if self.upclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+                clip_up = float( self.upclip_entry.get() ) / 100 # convert percent to fraction
+                clip_upvalue = None
+            else: # "value"
+                clip_up = None
+                clip_upvalue = float( self.upclip_entry.get() )
+            
+            if self.dnclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+                clip_low = float( self.dnclip_entry.get() ) / 100 # convert percent to fraction
+                clip_lowvalue = None
+            else: # "value"
+                clip_low = None
+                clip_lowvalue = float( self.dnclip_entry.get() )    
+            
+            self.fig_hypdata = plot_hyperspectral( self.hypfilename, self.hypdata, self.hypdata_map, self.printlog, plotbands=[i_r,i_g,i_b],
+                clip_up=clip_up, clip_upvalue=clip_upvalue,
+                clip_low=clip_low, clip_lowvalue=clip_lowvalue, stretch_individual=self.separatebands.get() )
         else:
             # this should never happen, but just in case
             self.printlog( "plotnir(): No wavelength data available. This should never happen.\n" )      
@@ -241,7 +326,24 @@ class disp_GUI:
         Plot the data with the band specified in the monochrome option menu
         """
         i_m = int( self.monoband_string.get().split(':')[0] )-1
-        plot_singleband( self.hypfilename, self.hypdata, self.hypdata_map, i_m, outputcommand=self.printlog )
+        
+        if self.upclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+            clip_up = float( self.upclip_entry.get() ) / 100 # convert percent to fraction
+            clip_upvalue = None
+        else: # "value"
+            clip_up = None
+            clip_upvalue = float( self.upclip_entry.get() )
+        
+        if self.dnclip_menuvar.get() == self.clipunits_list[0]: # "percent"
+            clip_low = float( self.dnclip_entry.get() ) / 100 # convert percent to fraction
+            clip_lowvalue = None
+        else: # "value"
+            clip_low = None
+            clip_lowvalue = float( self.dnclip_entry.get() )    
+        
+        plot_singleband( self.hypfilename, self.hypdata, self.hypdata_map, i_m, 
+            clip_up=clip_up, clip_upvalue=clip_upvalue,
+            clip_low=clip_low, clip_lowvalue=clip_lowvalue, outputcommand=self.printlog )
         
             
     def printlog( self , text ):

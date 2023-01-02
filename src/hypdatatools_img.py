@@ -104,7 +104,9 @@ def envi_isfloat( hypfilename, hypdata=None ):
         # data type not given. Output undetermined
         return None
         
-def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, plotmode='default', plotbands=None, fig_hypdata=None, stretchfactor=0.95 ):
+def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, 
+    plotmode='default', plotbands=None, fig_hypdata=None, clip_up=0.95, clip_upvalue=None,
+    clip_low=None, clip_lowvalue=0, stretch_individual=True ):
     """
     Create a figure with hyperspectral image and return handle
     hypfilename: the name + full path to Envi hdr file
@@ -118,7 +120,11 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
             was slow because of hsv->rgb conversion, but not anymore as is done by imshow()
     plotbands = list [r,g,b], if not set, guessed from metadata and elsewhere
     fig_hypdata: figure handle to use and return
-    stretchfactor: the upper percentile to draw as white
+    clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
+    clip_upvalue: the value above which to draw as white
+    clip_low: the percentile below which everything is black, ignored by default (unless set)
+    clip_lowvalue: the value below which everything is black, ignored if clip_low set
+    stretch_individual: whether to stretch bands individually
     """
 
     functionname = "plot_hyperspectral(): "  # used in messaging
@@ -244,15 +250,21 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
             hypdata_rgb = hypdata.read_bands([i_r]).astype('float32')
     if plot_rgb:
         fig_hypdata = plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short,
-            fig_hypdata=fig_hypdata, stretchfactor=stretchfactor, outputcommand=outputcommand )
+            fig_hypdata=fig_hypdata, clip_up=clip_up, clip_upvalue=clip_upvalue, 
+            clip_low=clip_low, clip_lowvalue=clip_lowvalue, stretch_individual=stretch_individual,
+            outputcommand=outputcommand )
     else: 
         fig_hypdata = plot_hypdatamatrix_singleband( hypdata_rgb, plottitle=filename_short,
-            falsecolor=falsecolor, fig_hypdata=fig_hypdata, stretchfactor=stretchfactor, outputcommand=outputcommand )
-    
+            falsecolor=falsecolor, fig_hypdata=fig_hypdata, clip_up=clip_up, clip_upvalue=clip_upvalue, 
+            clip_low=clip_low, clip_lowvalue=clip_lowvalue, stretch_individual=stretch_individual,
+            outputcommand=outputcommand )
+
     return fig_hypdata
 
 
-def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
+def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None,
+    clip_up=0.95, clip_upvalue=None, clip_low=None, clip_lowvalue=0,
+    outputcommand=None):
     """
     Create a figure with a single band from hypersectral image and return handle
     hypfilename: the name + full path to Envi hdr file
@@ -260,7 +272,10 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         alternatively, it can be the metadata dictionary.
     hypdata_map: 3D np.ndarray-like object, e.g. the memory map of hypdata file handle
     fig_hypdata: figure handle to use and return
-    stretchfactor: the upper percentile to draw as white
+    clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
+    clip_upvalue: the value above which to draw as white
+    clip_low: the percentile below which everything is black, ignored by default (unless set)
+    clip_lowvalue: the value below which everything is black, ignored if clip_low set
     outputcommand: the optional print command for redirecting output
     returns figure handle
     """
@@ -300,29 +315,34 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
         hypdata_i = np.squeeze(hypdata.read_bands([bandnumber]).astype('float32'))
 
     outputcommand( functionname + filename_short + " dimensions " + hypdata_map_shape+
-        " band " + str(bandnumber) + " min " + str(hypdata_i.min()) + " max " + str(hypdata_i.max()) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
+        " band " + str(bandnumber) + " min " + str(np.nanmin(hypdata_i)) + " max " + str(np.nanmax(hypdata_i)) + "\n") #shape[0]==lines, shape[1]==pixels, shape[2]==bands
     
     # the actual work in a separate function
     plot_hypdatamatrix_singleband( hypdata_i, plottitle=filename_short,
-        falsecolor=False, fig_hypdata=fig_hypdata, stretchfactor=stretchfactor,
-        outputcommand=outputcommand )
+        falsecolor=False, fig_hypdata=fig_hypdata, clip_up=clip_up, clip_upvalue=clip_upvalue, 
+        clip_low=clip_low, clip_lowvalue=clip_lowvalue, outputcommand=outputcommand )
 
     return fig_hypdata
 
 
-def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfactor=0.95,
-    stretch_individual=True, ignore_negative=False, outputcommand=None):
+def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
+    clip_up=0.95, clip_upvalue=None, clip_low=None, clip_lowvalue=0, stretch_individual=True,
+    outputcommand=None):
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
     in: hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
-        stretchfactor: the upper percentile to draw as white
+        clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
+        clip_upvalue: the value above which to draw as white
+        clip_low: the percentile below which everything is black, ignored by default (unless set)
+        clip_lowvalue: the value below which everything is black, ignored if clip_low set
         stretch_individual: whether to stretch bands individually
-        ignore_negative: whether to set negative values to nan. Alternatively, make all values positive for plotting
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
 
+    print("XXX plot_hypdatamatrix",clip_up, clip_upvalue,clip_low, clip_lowvalue, stretch_individual )
+    
     axestoapply = None; # this will apply the command along all axis (whole datacube)
     if stretch_individual:
         axestoapply = (0,1) # apply along x,y, i.e., separately for each band
@@ -335,45 +355,57 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfact
     outputcommand(" calculating range...")
     # make a copy not to modify the original rgb
     hypdata_rgb_plot = hypdata_rgb.copy()
-    if ignore_negative:
-        hypdata_rgb_plot[ np.nonzero(hypdata_rgb_plot<0) ]=np.nan
-    else:
+    
+    # stretch the image: calculate nice scaling if needed
+    outputcommand(" calculating scaling...")
+    N_notnan = None # it will be computed only when needed
+    if clip_low is not None:
+        # scale to the given lowe percentile. Add it to data if it's negative
         # add their most negative value to bands which have negative values 
-        a_min = np.nanmin( hypdata_rgb_plot, axis=(0,1) )
-        if a_min.min()<0:
-            # don't add anything to bans which have no negative values
-            a_min[ np.nonzero(a_min>=0) ] = 0
-            outputcommand(" shifting bands to be positive by "+str(-a_min)+"...")
-            hypdata_rgb_plot = hypdata_rgb_plot - a_min
-            
-    # stretch the image: calculate nice scaling. 
-    outputcommand(" calculating range...")
+        N_notnan = np.array( np.count_nonzero( ~np.isnan(hypdata_rgb_plot), axis=axestoapply ) ).min() 
+        if N_notnan < 200:
+            outputcommand("\n" + functionname + "Too few ("+str(N_notnan)
+                +") pixels with values, not applying histogram.\n")
+            datamin = np.nanmin( hypdata_rgb_plot, axis=axestoapply )
+            datamax = np.nanmax( hypdata_rgb_plot, axis=axestoapply )
+            clip_lowvalue = datamin + clip_low*(datamax-datamin)
+        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+            clip_lowvalue = np.nanpercentile(hypdata_rgb_plot, clip_low*100, axis=axestoapply )
+        else:
+            outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
+            clip_lowvalue = 0 
 
-    N_notnan = np.count_nonzero( ~np.isnan(hypdata_rgb_plot), axis=axestoapply ).min() 
-    if N_notnan < 200:
-        datascaling = hypdata_rgb_plot.max( axis=axestoapply )
-        datascaling /= stretchfactor
-        outputcommand("\n" + functionname + "Too few ("+str(N_notnan)
-            +") pixels with values, not applying histogram.\n")
-    elif ( np.nanmax(hypdata_rgb_plot) - np.nanmin(hypdata_rgb_plot) ) > 0:
-        datascaling = np.nanpercentile(hypdata_rgb_plot, stretchfactor*100, axis=axestoapply )
+    if clip_upvalue is None:
+        if N_notnan is None:
+            # not computed yet, compute!
+            N_notnan = np.array( np.count_nonzero( ~np.isnan(hypdata_rgb_plot), axis=axestoapply ) ).min() 
+        if N_notnan < 200:
+            outputcommand("\n" + functionname + "Too few ("+str(N_notnan)
+                +") pixels with values, not applying histogram.\n")
+            datamin = np.nanmin(hypdata_rgb_plot, axis=axestoapply )
+            datamax = np.nanmax(hypdata_rgb_plot, axis=axestoapply )
+            datascaling = datamin + clip_up*(datamax-datamin)
+        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+            datascaling = np.nanpercentile(hypdata_rgb_plot, clip_up*100, axis=axestoapply )
+        else:
+            outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
+            datascaling = 1.0 
     else:
-        datascaling = 1.0 # no scaling
+        datascaling = clip_upvalue
+        
+    outputcommand(" scaling between " + str(clip_lowvalue) + " and " + str(datascaling) + "...")
+    hypdata_rgb_plot = (hypdata_rgb_plot-clip_lowvalue) / (datascaling-clip_lowvalue)
 
-    outputcommand(" scaling by 1/" + str(datascaling) + "...")
-    hypdata_rgb_plot = hypdata_rgb_plot / datascaling
-    # this also forces the hypdata_plot to be a copy -- hypdata_band may be read-only
-
-    # percentile alone seems to give not so nice plots
+    # scaling alone seems to give not so nice plots
     hypdata_rgb_plot[hypdata_rgb_plot > 1] = 1
     hypdata_rgb_plot[hypdata_rgb_plot < 0] = 0
 
     if fig_hypdata is None:
         fig_hypdata = plt.figure()  # create a new figure
-        outputcommand( "\n"+functionname+" Creating new figure.\n")
+        outputcommand( " creating new figure...")
     else:
         fig_hypdata.clf() # clear the figure
-        outputcommand( "\n"+functionname+"Reusing old figure.\n")
+        outputcommand( " reusing old figure...")
         
     ax0 = fig_hypdata.add_subplot(1, 1, 1)
 
@@ -386,18 +418,24 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None, stretchfact
     outputcommand(" done.\n")
     return fig_hypdata
     
-def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False, fig_hypdata=None, stretchfactor=0.95, outputcommand=None):
+def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False, fig_hypdata=None,
+    clip_up=0.95, clip_upvalue=None, clip_low=None, clip_lowvalue=0,
+    outputcommand=None ):
     """ Plot a 2D matrix using imshow()
         the actual plotting work for plotting a single-band hyperspectral data matrix
     in: hypdata_band: 1-band numpy matrix
         plottitle: string with the plot title
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
-        stretchfactor: the upper percentile to draw as white
+        clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
+        clip_upvalue: the value above which to draw as white
+        clip_low: the percentile below which everything is black, ignored by default (unless set)
+        clip_lowvalue: the value below which everything is black, ignored if clip_low set
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
 
     functionname = "plot_hypdatamatrix_singleband(): "  # used in messaging
+    print("XXX plot_hypdatamatrix_singleband",clip_up, clip_upvalue,clip_low, clip_lowvalue )
 
     if outputcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
@@ -409,21 +447,41 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
         if hypdata_band.ndim > 2:
             hypdata_band = hypdata_band[:,:,0]
 
-    outputcommand(functionname +" calculating range...")
-    # stretch bands to get nice scaling
-    ii = hypdata_band > 0
-
-    if np.where(ii)[0].size < 200:
-        datascaling = hypdata_band.max()
-        datascaling /= stretchfactor
-        outputcommand("\n" + functionname + "Too few pixels with values, not applying histogram.\n")
-    elif np.ptp(hypdata_band[ii]) > 0:
-        datascaling = np.percentile(hypdata_band[ii], stretchfactor*100 )
+    # stretch the image: calculate nice scaling if needed
+    outputcommand(functionname + " calculating scaling...")
+    N_notnan = None # it will be computed only when needed
+    if clip_low is not None:
+        # scale to the given lowe percentile. Add it to data if it's negative
+        # add their most negative value to bands which have negative values 
+        N_notnan = np.count_nonzero( ~np.isnan(hypdata_band) )
+        if N_notnan < 200:
+            outputcommand("\nToo few ("+str(N_notnan)
+                +") pixels with values, not applying histogram.\n")
+            datamin = np.nanmin(hypdata_band)
+            datamax = np.nanmax(hypdata_band)
+            clip_lowvalue = datamin + clip_low*(datamax-datamin)
+        elif ( np.nanmax(hypdata_band) - np.nanmin(hypdata_band) ) > 0:
+            clip_lowvalue = np.nanpercentile(hypdata_band, clip_low*100 )
+        else:
+            outputcommand("\nAll pixels have the same value, no scaling.\n")
+            clip_lowvalue = 0 
+            
+    if clip_upvalue is None:
+        ii = hypdata_band > 0
+        if np.where(ii)[0].size < 200:
+            datascaling = hypdata_band.max()
+            datascaling /= clip_up
+            outputcommand("\nToo few pixels with values, not applying histogram.\n")
+        elif np.ptp(hypdata_band[ii]) > 0:
+            datascaling = np.percentile(hypdata_band[ii], clip_up*100 )
+        else:
+            outputcommand("\n" + functionname + "All pixels are the same, no scaling.\n")
+            datascaling = 1.0 
     else:
-        datascaling = 1.0 # no scaling
+        datascaling = clip_upvalue
 
-    outputcommand(" scaling by 1/" + str(datascaling) + "...\n")
-    hypdata_plot =  hypdata_band / datascaling 
+    outputcommand(" scaling between " + str(clip_lowvalue) + " and " + str(datascaling) + "...")
+    hypdata_plot = (hypdata_band-clip_lowvalue) / (datascaling-clip_lowvalue)
     # this also forces the hypdata_plot to be a copy -- hypdata_band may be read-only
 
     # percentile alone seems to give not so nice plots
@@ -432,17 +490,17 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
 
     if fig_hypdata is None:
         fig_hypdata = plt.figure()  # create a new figure
-        outputcommand( functionname+" Creating new figure.\n")
+        outputcommand( " creating new figure...")
     else:
         fig_hypdata.clf() # clear the figure
-        outputcommand( functionname+"Reusing old figure.\n")
+        outputcommand( " reusing old figure...")
 
     ax0 = fig_hypdata.add_subplot(1, 1, 1)   
 #    if falsecolor:
 #        outputcommand(" ... converting from HSV (SLOW!!!)...")
 #        hypdata_hsv = np.stack([hypdata_plot, np.ones_like(hypdata_plot), np.ones_like(hypdata_plot)], axis=-1)
 #        hypdata_plot = matplotlib.colors.hsv_to_rgb(hypdata_hsv)
-    outputcommand(" ... displaying...")
+    outputcommand(" displaying...")
     if falsecolor:
         ax0.imshow(hypdata_plot)  # ax0 is fig_hypdata.axes[0]
     else:
