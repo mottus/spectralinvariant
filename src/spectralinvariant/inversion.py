@@ -428,7 +428,7 @@ def minimize_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0
     try:
         ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
     except:
-        ans = 1
+        ans = -1.0
     return ans
 
 
@@ -466,6 +466,6 @@ def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, 
     try:
         ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
     except:
-        ans = 1.0
+        ans = -1.0
     return ans
 
