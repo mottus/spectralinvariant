@@ -22,6 +22,14 @@ from math import sqrt, exp
 
 class PROSPECT_D:
     """PROSPECT radiative transfer model version D class
+    
+    Taken from enmapbox in 2018, distributed under GPL v3. Copyright (C): unspecified authors
+    This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License.
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+    Modified by Matti Mõttus and Olli Ihalainen.
+    NOTE: input parameter order harmonized between all model versions -- it is not the same as was in enmapbox
 
     Attributes
     ----------
@@ -32,25 +40,25 @@ class PROSPECT_D:
     n : ndarray
         Refractive index
     kCab : ndarray
-        Specific absorption coefficient of chlorophylls a+b
+        Specific absorption coefficient of chlorophylls a+b.
     kw : ndarray
-        Specific absorption coefficient of the leaf water content
+        Specific absorption coefficient of the leaf water content.
     km : ndarray
-        Specific absorption coefficient of the dry mass per area
+        Specific absorption coefficient of the dry mass per area.
     kCar : ndarray
-        Specific absorption coefficient of carotenoids
+        Specific absorption coefficient of carotenoids.
     kbrown : ndarray
-        Specific absorption coefficient of fraction of brown leaves
+        Specific absorption coefficient of fraction of brown leaves.
     kanth : ndarray
-        Specific absorption coefficient of anthocyanins
+        Specific absorption coefficient of anthocyanins.
     kp : ndarray
-        Specific absorption coefficient of proteins
+        Specific absorption coefficient of proteins.
     kcl : ndarray
-        Specific absorption coefficient of cellulose and lignin
+        Specific absorption coefficient of cellulose and lignin.
     tav90n : ndarray
-        XXX
+        Transmissivity of a dielectric plane surface, averaged over all directions of incidence and over all polarizations.
     t12 : ndarray
-        XXX
+        Transmissivity from medium 1 to medium 2
 
 
     Methods
@@ -175,7 +183,7 @@ class PROSPECT_D:
         Cp : float
             Leaf protein content [g/cm2]. Defaults to None. (not used in PROSPECT-D).
         Ccl : float
-            Leaf cellulose, hemicellulose, and lignin content [g/cm2]. Defaults to None (not used in PROSPECT-D)
+            Leaf cellulose, hemicellulose, and lignin content [g/cm2]. Defaults to None (not used in PROSPECT-D).
 
         """
         if N is not None: self.N=N
@@ -216,7 +224,7 @@ class PROSPECT_D:
         Cp : float
             Leaf protein content [g/cm2]. Defaults to 0. (not used in PROSPECT-D).
         Ccl : float
-            Leaf cellulose, hemicellulose, and lignin content [g/cm2]. Defaults to 0 (not used in PROSPECT-D)
+            Leaf cellulose, hemicellulose, and lignin content [g/cm2]. Defaults to 0 (not used in PROSPECT-D).
 
         Returns
         -------
@@ -225,7 +233,8 @@ class PROSPECT_D:
 
         To do
         -----
-        - Write a C extension of the Swamee and Ohija approximation for exp1 to improve computational speed
+        - Write a C extension of the Swamee & Ohija approximation for exp1 to improve computational speed
+        - Handle runtime warnings etc., especially in the `vb` variable
         """
         if N is None: N=self.N
         if Cab is None: Cab=self.Cab
@@ -236,8 +245,9 @@ class PROSPECT_D:
         if Canth is None: Canth=self.Canth
         if Cp is None: Cp=self.Cp
         if Ccl is None: Ccl=self.Ccl
+
         k = (Cab*self.kCab + Car*self.kCar + Canth*self.kanth + Cbrown*self.kbrown + Cw*self.kw + Cm*self.km) / N
-        
+
         # ind_k0 = np.where(k==0)
         # if not len(ind_k0[0])==0: k[ind_k0] = np.finfo(float).eps
         trans = (1. - k)*np.exp(-k) + (k*k)*exp1(k) # The exp1 function takes most of the computation time in this function...
@@ -273,7 +283,8 @@ class PROSPECT_D:
         # vb[ind_vb_le] = np.sqrt(beta[ind_vb_le]*(va[ind_vb_le] - r90[ind_vb_le])/(1e-14))
         # vb[ind_vb_gt] = np.sqrt(beta[ind_vb_gt]*(va[ind_vb_gt] - r90[ind_vb_gt]) / (va[ind_vb_gt]*(beta[ind_vb_gt] - r90[ind_vb_gt])))
         vb = np.sqrt(beta*(va - r90) / (va * (beta - r90))) # This will sometimes produce invalid values (negative square root or division by zero)
-        
+
+
         vbNN = vb**(N-1)
         vbNNinv = 1. / vbNN
         vainv = 1. / va
