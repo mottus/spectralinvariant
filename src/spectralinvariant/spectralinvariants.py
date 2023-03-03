@@ -57,12 +57,11 @@ def p(hypdata, refspectrum):
 def pC_forpixel(hypdata, refspectrum):
     """Calculate rho, p and c using ordinary linear regression for a single pixel.
 
+    Mostly used for inversion as this function works faster for single pixels than pC().
     Uses ordinary least squares to minimize the residual sum of squares for the equation :math:`y = X \beta + \epsilon`.
     In p-theory, (BRF-C)/w = p*BRF+rho => BRF/w = p*BRF+rho+C/w. By setting y = BRF/w; X = (C, BRF, 1/w),
         we get in beta the three parameters ( p, rho, C )
     Assumes that the input data is already spectrally subset.
-    It's not totally clear why this is a function separate from pC(), but it seems
-    computationally somewhat fancier (more efficient?)
 
     Args:
         hypdata: hyperspectral reflectance data as np.array
@@ -88,7 +87,7 @@ def pC_forpixel(hypdata, refspectrum):
     # for compatibility with p, report R2 = 1 - ResidualSumOfSquares/TotalSumOfSquares
     TSS = np.sum( (y-np.mean(y))**2 )
     DASF_out = beta[1] / (1 - beta[0])  # DASF
-    return (beta[1], beta[0], DASF_out, 1-RSS/TSS, beta[2])
+    return (beta[1], beta[0], DASF_out, 1.-RSS/TSS, beta[2])
 
 
 def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
