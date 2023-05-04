@@ -301,6 +301,8 @@ class PROSPECT_D:
 def pc_fast(hypdata, refspectrum):
     """Solves three spectral invariant parameters p, rho, and C using linear regression for a single pixel
 
+    A more basic, cleaned-up version of pC_forpixel() in spectralinvariant.py
+    
      Parameters
     ----------
     hypdata : ndarray

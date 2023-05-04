@@ -21,23 +21,17 @@ def p(hypdata, refspectrum):
     Assumes that the input data is already spectrally subset
 
     Args:
-        hypdata: hyperspectral reflectance data as np.array
-        refspectrum: the reference spectrum, has to be same length as hypdata
+        hypdata: hyperspectral reflectance (point, vector, or image) as np.ndarray
+        refspectrum: the reference spectrum, has to be same length as
+            the last dimension of hypdata
 
     Returns:
         ndarray of length 4: 0:slope 1:intercept 2: DASF 3:R
     """
-    if len(hypdata.shape) == 1:
-        # single pixel
-        axis=0
-    elif len(hypdata.shape) == 2:
-        # array of pixels
-        axis=1
-    elif len(hypdata.shape) == 3:
-        #
-        axis=2
-    else:
-        raise Exception('The length of hypdata.shape must be less than 3!')
+
+    axis=len(hypdata.shape)-1 # number of spectral axis
+    # for single pixel, axis=0; for image, axis=2
+
     y_DASF = hypdata / refspectrum
 
     n = len(refspectrum)
@@ -99,21 +93,17 @@ def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
 
     Args:
         hypdata: hyperspectral reflectance data as np.array
-        refspectrum: the reference spectrum, has to be same length as hypdata
+        refspectrum: the reference spectrum, has to be same length as the last dimension of hypdata
         wl_fit: not used, for compatibility with pC_old (which has internal band selection)
         verbose: not used, for compatibility with pC_old (which has internal band selection)
     Returns:
         list of length 4: 0:p 1:rho 2:R2 3:c
     """
 
-    if len(hypdata.shape) == 1:
-        axis=0
-    elif len(hypdata.shape) == 2:
-        axis=1
-    elif len(hypdata.shape) == 3:
-        axis=2
-    else:
-        raise Exception('The length of hypdata.shape must be less than 3!')
+
+    axis=len(hypdata.shape)-1 # number of spectral axis
+    # for single pixel, axis=0; for image, axis=2
+
     y_DASF = hypdata / refspectrum
 
     # Calculating the means takes a while... (>150 microseconds on my PC)

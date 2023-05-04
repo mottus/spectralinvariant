@@ -1,5 +1,6 @@
 """
 This example shows how to use the spectral invariant theory to retrieve the true leaf reflectance from a Top-of-Canopy (TOC) reflectance hyperspectral image using the method from Ihalainen et al (2023).
+Originally created by Olli Ihalainen (2023)
 
 Note that unlike in the paper, we do not apply a sunlit fraction mask in this example.
 """
@@ -15,18 +16,7 @@ from spectral import envi
 from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golden_cab
 
 # The PROSPECT model and the inversion function will sometimes encounter division by zero or negative square roots. Let's ignore these warnings for now, although it is not a good idea to do so in general.
-np.seterr(all="ignore") 
-
-def get_prospect_params(fname):
-    """Reads the PROSPECT parameters from the spectra.txt file
-    """
-    with open(fname, 'r') as f:
-        lines = f.readlines()
-
-    values = findall(r'[-+]?([0-9]*\.[0-9]+|[0-9]+)', lines[1])
-    values = np.array(values).astype('float')
-    N, Cab, Cw, Cm, Car, Cbrown, Anth, Cp, Ccl = values
-    return N, Cab, Cw, Cm, Car, Cbrown, Anth, Cp, Ccl
+np.seterr(all="ignore")
 
 
 def find_nearest(array, value):
@@ -35,23 +25,17 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-
-def load_hypdata(fpath, fname):
-    """Loads a hyperspectral image from an ENVI file
-    """
-    img = envi.open(fpath / fname)
-    wls = np.array(img.metadata["wavelength"], dtype='float')
-    image = img.open_memmap()
-    return wls, image / 10000.
-
-
 def main():
     """Applies illumination condition correction to a (synthetic) hyperspectral image
     """
     # Load the synthetic data
     fname = f'homog_leaves_prospectD74_nosoil_dirglob_vza0_sza30_saa0'
     fpath = Path(f'../data/{fname}')
-    wls, image = load_hypdata(fpath, fname+'_T.hdr')
+
+    img = envi.open(fpath/(fname+'_T.hdr'))
+    wls = np.array(img.metadata["wavelength"], dtype='float')
+    image = img.open_memmap() / 10000.
+
 
     # Select the red green and blue channels for plotting RGB images
     red = find_nearest(wls, 600)
@@ -71,7 +55,14 @@ def main():
     reflectance = spectra[:,1] # Use index 0 for wavelengths, 2 for leaf transmittance, 3 for forest floor reflectance, and 4 for direct-to-global irradiance ratio
 
     # The following PROSPECT parameters were used in creating the synthetic data. These are not really needed in this example but they're nice to have
-    N, Cab, Cw, Cm, Car, Cbrown, Anth, Cp, Ccl = get_prospect_params(fpath / 'spectra.txt')
+    # they are stored in a comment in the 'spectra.txt' file
+    # to read it, ignore non-numerical symbols, assumes that the parameters are on the second line
+    # ordered as N, Cab, Cw, Cm, Car, Cbrown, Anth, Cp, Ccl
+    with open( fpath / 'spectra.txt', 'r') as f:
+        lines = f.readlines()
+    values = findall(r'[-+]?([0-9]*\.[0-9]+|[0-9]+)', lines[1])
+    values = np.array(values).astype('float')
+    N, Cab, Cw, Cm, Car, Cbrown, Anth, Cp, Ccl = values
 
     # Create an instance of the PROSPECT class with the input values specified specified by Ihalainen et al. (2023)
     # d = PROSPECT_D(N=1.5, Car=1.0, Cw=0.0, Cm=0.0)
@@ -84,7 +75,7 @@ def main():
 
     # List of the available optimization methods for `minimize_cab()`. SLSQP is the fastest, but not quite as accurate as, e.g., Nelder-Mead or Powell.
     methods = ['Nelder-Mead', 'L-BFGS-B', 'TNC', 'SLSQP', 'Powell', 'trust-constr']
-    
+
     # Here's how you use the inversion functions `minimize_cab` for a single pixel using
     pixel = image_subset[60,60]
     # Inversion using scipy.minimize (Includes various methods)
@@ -136,7 +127,7 @@ def main():
     # Calculate the inversion image and get the median spectra from the image
     inverted_image = (image - cs[:,:,None]) / (rhos[:,:,None] + ps[:,:,None] * image)
     inverted_median = np.nanmedian(inverted_image, axis=(0,1))
-    
+
 
     ########################
     ### Plot the results ###
@@ -170,7 +161,7 @@ def main():
     ax.set_title(r'$\rho$')
     cb = fig.colorbar(im, ax=ax)
     ax.axis('off')
-    
+
     ax = axes[1,2]
     im = ax.imshow(ps, cmap='cividis', vmin=0.5, vmax=1.5)
     ax.set_title(r'$p$')

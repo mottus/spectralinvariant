@@ -340,8 +340,6 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     inout: fig_hypdata: figure handle to use and return
     out: returns figure handle
     """
-
-    print("XXX plot_hypdatamatrix",clip_up, clip_upvalue,clip_low, clip_lowvalue, stretch_individual )
     
     axestoapply = None; # this will apply the command along all axis (whole datacube)
     if stretch_individual:
@@ -435,7 +433,6 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
     """
 
     functionname = "plot_hypdatamatrix_singleband(): "  # used in messaging
-    print("XXX plot_hypdatamatrix_singleband",clip_up, clip_upvalue,clip_low, clip_lowvalue )
 
     if outputcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
