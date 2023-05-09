@@ -76,7 +76,7 @@ def main():
     # List of the available optimization methods for `minimize_cab()`. SLSQP is the fastest, but not quite as accurate as, e.g., Nelder-Mead or Powell.
     methods = ['Nelder-Mead', 'L-BFGS-B', 'TNC', 'SLSQP', 'Powell', 'trust-constr']
 
-    # Here's how you use the inversion functions `minimize_cab` for a single pixel using
+    # Here's how you use the inversion functions `minimize_cab` for a single pixel
     pixel = image_subset[60,60]
     # Inversion using scipy.minimize (Includes various methods)
     for method in methods:
@@ -97,7 +97,6 @@ def main():
 
     stop = time()
     print(f'Finished! The inversion took {(stop - start):.2f} seconds.')
-
 
     # Define a numpy array for the results and initialize arrays for the spectral invariant parameters (the inversion output only produces Cab values - the spectral invariants need to be computed separately)
     cabs = np.array(inversion_results)
