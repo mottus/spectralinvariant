@@ -367,7 +367,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
             datamin = np.nanmin( hypdata_rgb_plot, axis=axestoapply )
             datamax = np.nanmax( hypdata_rgb_plot, axis=axestoapply )
             clip_lowvalue = datamin + clip_low*(datamax-datamin)
-        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply) ) ).min() > 0:
             clip_lowvalue = np.nanpercentile(hypdata_rgb_plot, clip_low*100, axis=axestoapply )
         else:
             outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
@@ -383,7 +383,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
             datamin = np.nanmin(hypdata_rgb_plot, axis=axestoapply )
             datamax = np.nanmax(hypdata_rgb_plot, axis=axestoapply )
             datascaling = datamin + clip_up*(datamax-datamin)
-        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+        elif np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply) ).min()  > 0:
             datascaling = np.nanpercentile(hypdata_rgb_plot, clip_up*100, axis=axestoapply )
         else:
             outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
@@ -619,7 +619,7 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
     """ Create a new envi raster of the same size and geometry as the input file (envifile)
     
     Args:
-        envifile = the ENVI (Spectral pyhton) raster to use as the example
+        envifile = the ENVI (Spectral python) raster to use as the example
         outfilename = the filename to create
         Nlayers: number of layers in the output file
         outtype = output file data type according to ENVI
@@ -712,7 +712,7 @@ def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=Non
     """
     subset the raster by local image coordinates (starting with 0,0)
     in:
-        hypdata = the ENVI (Spectral pyhton) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
+        hypdata = the ENVI (Spectral python) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
         subset = integers [ xmin, ymin, xmax, ymax ]
             if subset is larger than image, subset is shrunk
             the included range is min:max (i.e., max itself will be excluded)
