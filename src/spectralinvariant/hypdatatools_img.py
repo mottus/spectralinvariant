@@ -1393,7 +1393,7 @@ def envi_endiannesscode( aisa1_map ):
     Therefore, this function is largely redundant -- but keep it just in case.
     typical use would be metadata['byte order'] = envi_endiannesscode( aisa1_map )
     
-    determine byte order to be save in header:
+    determine byte order to be saved in header:
     #   Byte order=0 is least significant  byte first (LSF) [==little-endian] 
     #      data (DEC and MS-DOS systems).
     #   Byte order=1 is most significant byte first (MSF) [==big-endian] data 
