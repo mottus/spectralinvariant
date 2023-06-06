@@ -614,7 +614,7 @@ def zoomtoimage(fig_hypdata, hypdata_map):
         fig_hypdata.canvas.draw()
 
 
-def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=None, fill_black=False, force=True,
+def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='bsq', fill_black=False, force=True,
                        description=None, localprintcommand=None):
     """ Create a new envi raster of the same size and geometry as the input file (envifile)
     
@@ -635,8 +635,7 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
                 13=32-bit unsigned long integer;
                 14=64-bit signed long integer; 
                 15=64-bit unsigned long integer.
-        interleave = 'bil', 'bip, or 'bsq'
-            if None, set to bsq
+        interleave = 'bil', 'bip, or 'bsq' (default bsq)
         fill_black = whether to fill the new file with zeros (DIVs) 
         force = whether to overwrite existing file
         description: what to write in the description header field
@@ -679,11 +678,8 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
         description = 'A new raster based on the geometry of ' + hypdata.filename
     if 'description' in metadata:
         description = description + ' : ' + metadata['description']
+        
     metadata['description'] = description
-
-    if interleave is None:
-        # interleave = hypdata.metadata['interleave']
-        interleave = 'bsq'
     metadata['interleave'] = interleave
 
     localprintcommand(functionname + " creating file " + outfilename)
