@@ -109,6 +109,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     clip_low=None, clip_lowvalue=0, stretch_individual=True ):
     """
     Create a figure with hyperspectral image and return handle
+       before using, check if SPy.imshow() could be used instead
     hypfilename: the name + full path to Envi hdr file
     hypdata is a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -267,6 +268,7 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     outputcommand=None):
     """
     Create a figure with a single band from hypersectral image and return handle
+        before using, check if SPy.imshow() could be used instead
     hypfilename: the name + full path to Envi hdr file
     hypdata: a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -330,6 +332,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     outputcommand=None):
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
+            before using, check if SPy.imshow() could be used instead
     in: hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
         clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
@@ -421,6 +424,7 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
     outputcommand=None ):
     """ Plot a 2D matrix using imshow()
         the actual plotting work for plotting a single-band hyperspectral data matrix
+            before using, check if SPy.imshow() could be used instead
     in: hypdata_band: 1-band numpy matrix
         plottitle: string with the plot title
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
