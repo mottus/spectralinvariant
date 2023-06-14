@@ -615,14 +615,14 @@ def zoomtoimage(fig_hypdata, hypdata_map):
 
 
 def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='bsq', fill_black=False, force=True,
-                       description=None, localprintcommand=None, metadata_keys=[]):
+                       description=None, metadata_keys_copy=[], localprintcommand=None):
     """ Create a new envi raster of the same size and geometry as the input file (envifile)
     
     Args:
-        envifile = the ENVI (Spectral python) raster to use as the example
-        outfilename = the filename to create
+        envifile: the ENVI (Spectral python) raster to use as the example
+        outfilename: the filename to create
         Nlayers: number of layers in the output file
-        outtype = output file data type according to ENVI
+        outtype: output file data type according to ENVI
             ENVI data types
                 1=8-bit byte;
                 2=16-bit signed integer;
@@ -635,12 +635,12 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
                 13=32-bit unsigned long integer;
                 14=64-bit signed long integer; 
                 15=64-bit unsigned long integer.
-        interleave = 'bil', 'bip, or 'bsq' (default bsq)
-        fill_black = whether to fill the new file with zeros (DIVs) 
-        force = whether to overwrite existing file
+        interleave: 'bil', 'bip, or 'bsq' (default bsq)
+        fill_black: whether to fill the new file with zeros (DIVs) 
+        force: whether to overwrite existing file
         description: what to write in the description header field
-        metadata_keys = to fill the new raster file manually with additional metadata (key value pairs) as the original image.
-        For e.g., metadata_keys = ['default bands', 'z plot titles', 'band names', 'wavelength', 'fwhm'] 
+        metadata_keys_copy: which metadata keys to copy from the metadata of the original image in addition to the default keys
+            see code for default keys, originally they included ['map info', 'coordinate system string', 'sensor type']
 
     Returns:
         outfilehandle. To write to that raster, use outdata_map = outdata.open_memmap( writable=True )
@@ -666,9 +666,15 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
         hypdata = envifile
 
     default_metadata_keys = ['map info', 'coordinate system string', 'sensor type']
-    for key in default_metadata_keys + metadata_keys:
-        if key in hypdata.metadata.keys():
+    
+    # make sure no key is added twice: store processed keys in the set 'seen'
+    seen = set()
+    for key in default_metadata_keys + metadata_keys_copy:
+        key_lower = str(key).lower()
+        # assume that SPy converts the keys it reads to lowercase automatically
+        if key_lower in hypdata.metadata.keys() and key_lower not in seen:
             metadata[key] = hypdata.metadata[key]
+            seen.add(key)
 
     metadata['lines'] = hypdata.nrows
     metadata['samples'] = hypdata.ncols
