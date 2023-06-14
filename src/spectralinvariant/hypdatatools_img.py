@@ -619,7 +619,7 @@ def zoomtoimage(fig_hypdata, hypdata_map):
 
 
 def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='bsq', fill_black=False, force=True,
-                       description=None, metadata_keys_copy=[], localprintcommand=None):
+                       description=None, metadata_keys_copy=[], metadata_add=None, localprintcommand=None):
     """ Create a new envi raster of the same size and geometry as the input file (envifile)
     
     Args:
@@ -645,6 +645,7 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
         description: what to write in the description header field
         metadata_keys_copy: which metadata keys to copy from the metadata of the original image in addition to the default keys
             see code for default keys, originally they included ['map info', 'coordinate system string', 'sensor type']
+        metadata_add: new metadata to be added at file creation, must be a dict
 
     Returns:
         outfilehandle. To write to that raster, use outdata_map = outdata.open_memmap( writable=True )
@@ -694,6 +695,9 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
         
     metadata['description'] = description
     metadata['interleave'] = interleave
+    
+    if type(metadata_add) is dict:
+        metadata.update( metadata_add )
 
     localprintcommand(functionname + " creating file " + outfilename)
 
