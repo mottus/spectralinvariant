@@ -672,14 +672,11 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
 
     default_metadata_keys = ['map info', 'coordinate system string', 'sensor type']
     
-    # make sure no key is added twice: store processed keys in the set 'seen'
-    seen = set()
     for key in default_metadata_keys + metadata_keys_copy:
         key_lower = str(key).lower()
         # assume that SPy converts the keys it reads to lowercase automatically
         if key_lower in hypdata.metadata.keys() and key_lower not in seen:
             metadata[key] = hypdata.metadata[key]
-            seen.add(key)
 
     metadata['lines'] = hypdata.nrows
     metadata['samples'] = hypdata.ncols
