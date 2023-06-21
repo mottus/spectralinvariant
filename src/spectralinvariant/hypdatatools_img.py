@@ -675,7 +675,7 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
     for key in default_metadata_keys + metadata_keys_copy:
         key_lower = str(key).lower()
         # assume that SPy converts the keys it reads to lowercase automatically
-        if key_lower in hypdata.metadata.keys() 
+        if key_lower in hypdata.metadata.keys():
             metadata[key_lower] = hypdata.metadata[key_lower]
 
     metadata['lines'] = hypdata.nrows
