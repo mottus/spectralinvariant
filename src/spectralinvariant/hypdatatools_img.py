@@ -564,9 +564,9 @@ def avg_spectrum(hypfilename, coordlist, DIV=-1, hypdata=None, hypdata_map=None)
         # open the file if not open yet. This only gives access to metadata.                
         hypdata = spectral.open_image(hypfilename)
         # open the file as memmap to get the actual hyperspectral data
-        hypdata_map = hypdata.open_memmap()  # open as BIL
+        hypdata_map = hypdata.open_memmap()  # open as BIP
 
-    hypdata_sub = hypdata_map[coordlist]
+    hypdata_sub = hypdata_map[coordlist[0],coordlist[1],:]
     if DIV != -1:
         # look for no data values
         hypdata_sub_min = np.min(hypdata_sub, axis=1)
@@ -1363,17 +1363,21 @@ def envihdr2datafile( hdrfilename, localprintcommand=None ):
     # for envi files: gdal wants the name of the data file, not hdr
     hdrfilename_split = os.path.splitext( hdrfilename )
     
-    if hdrfilename_split[1] == ".hdr":
+    if hdrfilename_split[1].lower() == ".hdr":
         datafilename = hdrfilename_split[0]
         if not os.path.exists(datafilename):
             # try different extensions, .dat and .bin and .bil and img
             basefilename = datafilename
             
-            extensionlist = [ 'dat', 'bin', 'bil', 'bsq', 'img' ]
+            extensionlist = [ 'dat', 'bin', 'bil', 'bsq', 'bip', 'img' ]
             for extension in extensionlist:
                 datafilename  = basefilename + '.'+ extension
                 if os.path.exists(datafilename):
                     break
+                else:
+                    datafilename  = basefilename + '.'+ extension.upper()
+                    if os.path.exists(datafilename):
+                        break
     if not os.path.exists(datafilename):
         localprintcommand(functionname + "Cannot find the data file corresponding to {}.\n".format(hdrfilename) )
         datafilename = ''
@@ -1391,7 +1395,7 @@ def envifilecomponents( filename_in, localprintcommand=None ):
     functionname = 'envifilecomponents(): ' # for messaging
     
     base_in, extension_in = os.path.splitext( filename_in)
-    if  extension_in == ".hdr" or extension_in == ".HDR":
+    if  extension_in.lower() == ".hdr":
         headerfile = filename_in
         datafile = envihdr2datafile( headerfile, localprintcommand=localprintcommand  )
     else:

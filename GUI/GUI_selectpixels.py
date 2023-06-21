@@ -979,7 +979,7 @@ class pixelGUI:
             selectedfile = os.path.join( self.foldername1, filename1_nameonly )
             for file in os.listdir(self.foldername1): # file name (with extension, without path)
                 filename = os.fsdecode(file) # I do not fully understand why this is necessary. Probably, can be omitted for most files
-                if filename.endswith(".hdr"):
+                if filename.lower().endswith(".hdr"):
                     self.openfilelist.append( [ os.path.join( self.foldername1, filename ), None, None, -1 ] )
             # populate the listbox
             # at the same time, get the list of full names of all files there
@@ -1048,7 +1048,7 @@ class pixelGUI:
                     stretchfactor = 0.95
                 self.printlog("displayfile_fun: using stretch = "+str(stretchfactor)+".\n")
                 plotmode = self.plotmode_string.get()
-                fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, stretchfactor=stretchfactor )   
+                fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, clip_up=stretchfactor )   
                 # add figure to figurelist
                 # self.figurelist = [] # each list element should be a list: [ number, type, figurehandle, name, filename_full, DataIgnoreValue ]
                 ff = [ fig_hypdata.number, 'hyp', fig_hypdata, filename_short, hypfilename, DIV ]
