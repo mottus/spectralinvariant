@@ -37,7 +37,7 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
          
     Result:
         The results of the p() computation i.e. p, rho, DASF and R are stored in seperate column of the outputfile
-        for example, output_file_name[:,:, 0:4]
+        for example, output_file_name[:, :, 0:4]
 
     """
     
@@ -126,7 +126,7 @@ def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
          
     Result:
     The results of the pC() computation i.e. p, rho, DASF,`$R^2$` and C are stored in seperate column of the outputfile
-    for example, output_file_name[:,:, 0:4]
+    for example, output_file_name[:, :, 0:4]
 
     """
     np.seterr(all="ignore")
@@ -198,3 +198,81 @@ def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
 
     print()
     print(f"Process completed.\nComputation time = {round((time()-start_1)/60, 2)} mins.")
+
+
+def chunk_processing_chlorophyll(hypfile_name, file_path, output_filename, chunk_size):
+    """
+    Wraps golden_cab function from inversion.py module to process very large (or any other) file.
+    
+    Args:
+        hypfile_name: ENVI header file,
+        file_path: file path
+        output_filename: file name for storing processed data in .npy format
+        chunk_size: size of each chunk (int value)
+         
+    Result:
+    The results of the golden_cab computation i.e. chlorophyll content is stored as a '.npy' file
+    """
+    np.seterr(all="ignore")
+       
+    file_path = Path(file_path)
+    if (file_path/hypfile_name).exists():
+        print("Valid file name and file path.")
+    else:
+        print("Please check file name and or file path!")
+        
+    # Reading the file as a numpy image
+    img = envi.open(file_path/hypfile_name)
+    
+    wavelength = get_wavelength(f'{str(file_path)}\{hypfile_name}')[0]
+        
+    input_image = img.open_memmap()
+
+    band1_cab = find_nearest(wavelength, 670)
+    band2_cab = find_nearest(wavelength, 720)
+    wavelength_subset = wavelength[band1_cab:band2_cab+1]
+
+    # Creating an instance of the PROSPECT class with the input values specified by Ihalainen et al. (2023)
+    model = PROSPECT_D(N=1.5, Car=1.0, Cw=0.0, Cm=0.0)
+    model.subset(wavelength_subset)
+
+    num_rows, num_cols, num_bands = (input_image[:, :, band1_cab:band2_cab+1]).shape
+    num_idx = num_rows*num_cols
+    input_image_linear = input_image[:, :, band1_cab:band2_cab+1].reshape(num_idx, num_bands)
+
+    # chunk_size = np.round( 0.5e9 / 128).astype(int)
+    # chunk_size = 100
+    chunk_idx = np.arange(0, num_idx, chunk_size)
+    inversion_result = []
+
+    start = time()
+
+    for i in range(len(chunk_idx)): 
+        
+        chunk = input_image_linear[chunk_idx[i]:chunk_idx[i]+chunk_size, :]
+        
+        if np.any(chunk!=0):   
+            float_chunk = chunk.astype('float')            
+            nonzero_indices = float_chunk != 0
+            float_chunk[nonzero_indices] /= 10000 #scale_factor             
+        else:
+            float_chunk = chunk.astype('float')
+            
+        start_1 = time()
+        
+        inversion_result[chunk_idx[i]:chunk_idx[i]+chunk_size] = Parallel(n_jobs=cpu_count())(delayed(golden_cab)(
+        model, pixel, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, bounds=(1., 100.)) for pixel in float_chunk)
+        
+        if i > 0 and i % (chunk_size*10) == 0:
+            print(f'Chunk: {i} / {len(chunk_idx)}.')
+            print(f'computation took: {(time() - start_1):.2f} seconds.')
+            print()
+
+    end = time()
+    print(f'Finished! The inversion took {(end - start)/60:.2f} mins.')
+
+    cabs = np.array(inversion_result)
+    cabs = cabs.reshape(num_rows, num_cols)
+    np.save(output_filename+'.npy', cabs)
+
+
