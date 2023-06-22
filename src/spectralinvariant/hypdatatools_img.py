@@ -1433,7 +1433,7 @@ def envi_endiannesscode( aisa1_map ):
     
 def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, checkifexists=True, localprintcommand=None ):
     """
-    Adds a aline to ENVI header file. This function is in gdal-functions because it depends on envifilecomponents.
+    Adds a aline to ENVI header file
     ENVI file should be closed before rewriting.
     envifilename: string, file name
     fieldname: name of the field to add
