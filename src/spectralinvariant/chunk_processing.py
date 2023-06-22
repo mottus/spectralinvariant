@@ -13,13 +13,7 @@ from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golde
 from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transformed, reference_wavelengths
 from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength
 
-def find_nearest(array, value):
-        """
-        Finds the index of array element closest to a given value
-        Used for finding the wavelengths 
-        """
-        idx = (np.abs(array - value)).argmin()
-        return idx
+
 
 
 def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_idx=None):
@@ -42,24 +36,22 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_
     """
     
     np.seterr(all="ignore")
- 
-    file_path = Path(file_path)
-    if (file_path/hypfile_name).exists():
-        print("Valid file name and file path.")
-    else:
-        print("Please check file name and or file path!")
-        
+    functionname = "chunk_processing_p()"
+    fullfilename = os.path.join(file_path, hypfile_name)
     
-    # Reading the file as a numpy image
-    img = envi.open(file_path/hypfile_name)
+    if not os.path.exists(fullfilename):
+        print(functionname + " ERROR: file "+ fullfilename + "does not exist")
+        return -1
+    
+    img = envi.open( fullfilename )
     
     # wavelength = get_wavelength(f'{str(file_path)}\{hypfile_name}')[0]
-    wavelength = get_wavelength( os.path.join(file_path, hypfile_name) )
+    wavelength = get_wavelength( fullfilename )
     
     if wl_idx is None:
-        b1_p = find_nearest(wavelength, 710)
-        b2 = find_nearest(wavelength, 790)
-        wl_idx = np.arange( b1_p, b2+1 )
+        b1_p = (np.abs( wavelength-710) ).argmin()
+        b2_p = (np.abs( wavelength-790) ).argmin()
+        wl_idx = np.arange( b1_p, b2_p+1 )
 
     input_image = img.open_memmap()
     
@@ -72,7 +64,8 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_
     
     # creating a raster like file using create_raster_like function
     outbandnames = { "band names": ("p" , "intercept", "DASF", "R2") }
-    descriptionstr = "Spectral invariants computed for "+hypfile_name+" "+str()
+    descriptionstr = "Spectral invariants computed for "+hypfile_name+" "\
+        +str( wavelength[wl_idx[0]] )+"-"+str( wavelength[wl_idx[0]] )+" nm"
     outdata = create_raster_like(img, output_filename, description=descriptionstr,
         Nlayers=len(outbandnames["band names"]), interleave='bip', outtype=4, force=True)
     outdata_map = outdata.open_memmap(writable=True)
@@ -80,7 +73,7 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_
     # Preparing inputs for p function (710 >= lambda <= 790)
     # Clipping image and reference spectra in the respective wavelengths 
 
-    wls_p = wavelength[b1_p:b2]        
+    wls_p = wavelength[b1_p:b2_p]        
     ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
     
     # Computing spectral invariants using p() function
@@ -95,7 +88,7 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_
     print(f"chunk size = {chunk_size}")
 
     for i in range(len(line)):
-        chunk = input_image[line[i]:line[i] + chunk_size, :, b1_p:b2+1]
+        chunk = input_image[line[i]:line[i] + chunk_size, :, b1_p:b2_p+1]
 
         float_chunk = chunk.astype('float')
         nonzero_indices = float_chunk != 0
@@ -155,11 +148,11 @@ def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
     outdata_map = outdata.open_memmap(writable=True)
     
     # Preparing inputs for pC function (670 >= lambda <= 790)
+    b1_p = (np.abs( wavelength-670) ).argmin()
+    b2_p = (np.abs( wavelength-790) ).argmin()
 
-    b1_pC = find_nearest(wavelength, 670)
-    b2 = find_nearest(wavelength, 790)
        
-    ref_spectra_pC = np.interp(wavelength[b1_pC:b2+1], reference_wavelengths(), 0.5*referencealbedo_transformed())
+    ref_spectra_pC = np.interp(wavelength[b1_pC:b2_p+1], reference_wavelengths(), 0.5*referencealbedo_transformed())
            
     # Dimensions of the data
     num_rows, num_cols, num_bands = input_image.shape
@@ -174,7 +167,7 @@ def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
     start_1 = time()
     start = start_1
     for i in range(len(line)):
-        chunk = input_image[line[i]:line[i] + chunk_size, :, b1_pC:b2+1]
+        chunk = input_image[line[i]:line[i] + chunk_size, :, b1_pC:b2_p+1]
         
         if np.any(chunk!=0):            
             float_chunk = chunk.astype('float')
@@ -226,9 +219,9 @@ def chunk_processing_chlorophyll(hypfile_name, file_path, output_filename, chunk
     wavelength = get_wavelength(f'{str(file_path)}\{hypfile_name}')[0]
         
     input_image = img.open_memmap()
-
-    band1_cab = find_nearest(wavelength, 670)
-    band2_cab = find_nearest(wavelength, 720)
+    
+    band1_cab = (np.abs( wavelength-670) ).argmin()
+    band2_cab = (np.abs( wavelength-720) ).argmin()
     wavelength_subset = wavelength[band1_cab:band2_cab+1]
 
     # Creating an instance of the PROSPECT class with the input values specified by Ihalainen et al. (2023)

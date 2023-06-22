@@ -1343,7 +1343,7 @@ def resample_hyperspectral(hyp_infile, spectralsensitivitymatrix, out_pixelsize,
 
 def sentinel2_pixelsize():
     """
-    Return a ndarray with the pixel sizes of Sentinel-2 in meters
+    Return an ndarray with the pixel sizes of Sentinel-2 in meters
     """
     #                 B1  B2  B3  B4  B5  B6  B7  B8  B8A B9  B10 B11 B12
     return np.array( (60, 10, 10, 10, 20, 20, 20, 10, 20, 60, 60, 20, 20) )
