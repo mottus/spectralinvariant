@@ -32,13 +32,12 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
     Args:
         hypfile_name: ENVI header file,
         file_path: file path
-        output_filename: file name for processed data
+        output_filename: file name for processed data.  The results of the p() computation i.e. p, rho, DASF and R are stored 
+                as layers in the outputfile
         chunk_size: size of each chunk (int value)
          
     Result:
-        The results of the p() computation i.e. p, rho, DASF and R are stored in seperate column of the outputfile
-        for example, output_file_name[:, :, 0:4]
-
+        None       
     """
     
     np.seterr(all="ignore")
@@ -74,12 +73,10 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
 
     b1_p = find_nearest(wavelength, 710)
     b2 = find_nearest(wavelength, 790)
-
     wls_p = wavelength[b1_p:b2]        
     ref_spectra_p = np.interp(wavelength[b1_p:b2+1], reference_wavelengths(), 0.5*referencealbedo_transformed())
     
     # Computing spectral invariants using p() function
-    
     # Get the dimensions of the data
     num_rows, num_cols, num_bands = input_image.shape
 
