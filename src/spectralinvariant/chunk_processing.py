@@ -2,11 +2,11 @@
 
 from re import findall
 from pathlib import Path
-from os import cpu_count, path
 from time import process_time, time, sleep
 from joblib import Parallel, delayed
 import numpy as np
 import timeit
+import os
 
 from spectral import envi
 from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golden_cab
@@ -22,7 +22,7 @@ def find_nearest(array, value):
         return idx
 
 
-def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
+def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size, wl_idx=None):
     """
     Wraps p() function from hypdatatools_img.py module to process very large (or any other) file.
     The input file is processed by splitting into chunks defined.
@@ -34,7 +34,8 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
         file_path: file path
         output_filename: file name for processed data.  The results of the p() computation i.e. p, rho, DASF and R are stored 
                 as layers in the outputfile
-        chunk_size: size of each chunk (int value)
+        chunk_size: number of spectra in each each chunk (int value) 
+        wl_idx: index of wavelengths used in computations. Defaults to 710-790 nm
          
     Result:
         None       
@@ -52,29 +53,35 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
     # Reading the file as a numpy image
     img = envi.open(file_path/hypfile_name)
     
-    wavelength = get_wavelength(f'{str(file_path)}\{hypfile_name}')[0]
-        
+    # wavelength = get_wavelength(f'{str(file_path)}\{hypfile_name}')[0]
+    wavelength = get_wavelength( os.path.join(file_path, hypfile_name) )
+    
+    if wl_idx is None:
+        b1_p = find_nearest(wavelength, 710)
+        b2 = find_nearest(wavelength, 790)
+        wl_idx = np.arange( b1_p, b2+1 )
+
     input_image = img.open_memmap()
     
     # reading metadata
     bands = bands = input_image.shape[2]
-    interleave_type = img.__dict__['metadata']['interleave']
    
     scale_factor = img.__dict__['scale_factor']
     scale_factor = int(scale_factor)
     
     
     # creating a raster like file using create_raster_like function
-    outdata = create_raster_like(img, output_filename, Nlayers=bands, interleave=interleave_type, outtype=4, force=True)
+    outbandnames = { "band names": ("p" , "intercept", "DASF", "R2") }
+    descriptionstr = "Spectral invariants computed for "+hypfile_name+" "+str()
+    outdata = create_raster_like(img, output_filename, description=descriptionstr,
+        Nlayers=len(outbandnames["band names"]), interleave='bip', outtype=4, force=True)
     outdata_map = outdata.open_memmap(writable=True)
     
     # Preparing inputs for p function (710 >= lambda <= 790)
     # Clipping image and reference spectra in the respective wavelengths 
 
-    b1_p = find_nearest(wavelength, 710)
-    b2 = find_nearest(wavelength, 790)
     wls_p = wavelength[b1_p:b2]        
-    ref_spectra_p = np.interp(wavelength[b1_p:b2+1], reference_wavelengths(), 0.5*referencealbedo_transformed())
+    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
     
     # Computing spectral invariants using p() function
     # Get the dimensions of the data
@@ -96,11 +103,6 @@ def chunk_processing_p(hypfile_name, file_path, output_filename, chunk_size):
         processed_chunk = p(float_chunk[:, :, :], ref_spectra_p)
 
         outdata_map[line[i]:line[i] + chunk_size, :, 0:4] = np.transpose(processed_chunk, (1,2,0))
-
-        if i > 0 and i % 10 == 0:
-            print(f'Line: {line[i]} / {num_cols}\nComputation time = {round((time()-start), 2)} secs.')
-            start = time()
-        else:continue
 
     outdata_map.flush() # writes and saves in the disk
 
