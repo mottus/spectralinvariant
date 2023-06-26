@@ -41,6 +41,7 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
         return -1
     
     img = envi.open( fullfilename )
+    input_image = img.open_memmap()
     
     wavelength = get_wavelength( fullfilename )[0] # get_wavelength returns a tuple
     
@@ -48,13 +49,11 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
         b1_p = (np.abs( wavelength-710) ).argmin()
         b2_p = (np.abs( wavelength-790) ).argmin()
         wl_idx = np.arange( b1_p, b2_p+1 )
-
-    input_image = img.open_memmap()
-    
-    # Reads metadata of input
+        
+    # Read metadata of input
     scale_factor = img.__dict__['scale_factor']
     # scale factor not present or missing 
-    if scale_factor == None or scale_factor <= 1:
+    if scale_factor == None or scale_factor <= 1: # still needs to be defined properly
         scale_factor = 10000
     
     # creating a raster like file using create_raster_like function
@@ -69,14 +68,13 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
     
     outdata_raster = outdata.open_memmap(writable=True)
     
-    # Preparing inputs for p function (710 >= lambda <= 790)
-    # Clipping image and reference spectra in the respective wavelengths 
-    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
-        
     # Dimensions of the data used in result computation
     num_rows, num_cols, num_bands = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].shape
     num_idx = num_rows * num_cols
-    
+
+    # Preparing inputs for p function (710 >= lambda <= 790)
+    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
+            
     # Converts input and output data into 2D shape
     input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
     outdata_raster = outdata_raster.reshape(num_idx, num_output_layers)
@@ -93,7 +91,7 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
     start = process_time()
     
     for i in range(len(chunk)):
-        data = input_image_linear[chunk[i]:chunk[i] + chunk_size, :].astype()
+        data = input_image_linear[chunk[i]:chunk[i] + chunk_size, :].astype('float')
         data /= scale_factor
         
         # Computes spectral invariants using p() function
