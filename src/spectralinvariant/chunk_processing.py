@@ -5,15 +5,12 @@ from pathlib import Path
 from time import process_time, time, sleep
 from joblib import Parallel, delayed
 import numpy as np
-import timeit
 import os
 
 from spectral import envi
 from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golden_cab
 from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transformed, reference_wavelengths
 from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength
-
-
 
 
 def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_size=None, wl_idx=None):
@@ -26,27 +23,26 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
     Args:
         hypfile_name: ENVI header file,
         input_file_path: file path
-        output_filename: file name for processed data.  The results of the p() computation i.e. p, rho, DASF and R are stored 
-                as layers in the outputfile
-        chunk_size: number of spectra in each each chunk (int value) 
+        output_filename: file name for processed data. The results of the p() computation i.e. p, rho, DASF and R 
+                        are stored as layers in the outputfile
+        chunk_size: number of spectra in each each chunk (int value). Defaults value = 3906250
         wl_idx: index of wavelengths used in computations. Defaults to 710-790 nm
          
     Result:
-        None       
+        returns 0 if the compuation is successfull, else -1.       
     """
 
-    
     np.seterr(all="ignore")
     functionname = "chunk_processing_p()"
     fullfilename = os.path.join(input_file_path, hypfile_name)
     
     if not os.path.exists(fullfilename):
-        print(functionname + " ERROR: file "+ fullfilename + "does not exist")
+        print(functionname + " ERROR: file " + fullfilename + "does not exist")
         return -1
     
     img = envi.open( fullfilename )
     
-    wavelength = get_wavelength( fullfilename )
+    wavelength = get_wavelength( fullfilename )[0] # get_wavelength returns a tuple
     
     if wl_idx is None:
         b1_p = (np.abs( wavelength-710) ).argmin()
@@ -55,56 +51,61 @@ def chunk_processing_p(hypfile_name, input_file_path, output_filename, chunk_siz
 
     input_image = img.open_memmap()
     
-    # reading metadata
-    bands = bands = input_image.shape[2]
-   
+    # Reads metadata of input
     scale_factor = img.__dict__['scale_factor']
-    scale_factor = int(scale_factor)
-    
+    # scale factor not present or missing 
+    if scale_factor == None or scale_factor <= 1:
+        scale_factor = 10000
     
     # creating a raster like file using create_raster_like function
-    outbandnames = { "band names": ("p" , "intercept", "DASF", "R2") }
-    descriptionstr = "Spectral invariants computed for "+hypfile_name+" "\
-        +str( wavelength[wl_idx[0]] )+"-"+str( wavelength[wl_idx[0]] )+" nm"
-    outdata = create_raster_like(img, output_filename, description=descriptionstr,
-        Nlayers=len(outbandnames["band names"]), interleave='bip', outtype=4, force=True)
-    outdata_map = outdata.open_memmap(writable=True)
+    output_layer_names = { "layer names": ("p", "intercept", "DASF", "R2") }
+    num_output_layers = len(output_layer_names['layer names'])
+
+    description = "Spectral invariants computed for " + hypfile_name + " "\
+        + str( wavelength[wl_idx[0]] ) + "-" + str( wavelength[wl_idx[-1]] ) + " nm."
+    
+    outdata = create_raster_like(img, output_filename, description=description,
+        Nlayers=num_output_layers, metadata_add=output_layer_names, interleave='bip', outtype=4, force=True)
+    
+    outdata_raster = outdata.open_memmap(writable=True)
     
     # Preparing inputs for p function (710 >= lambda <= 790)
     # Clipping image and reference spectra in the respective wavelengths 
-
-    # wls_p = wavelength[b1_p:b2_p]        
     ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
-    
-    # Computing spectral invariants using p() function
-    # Get the dimensions of the data
-    num_rows, num_cols, num_bands = input_image[:, :, wavelength[wl_idx]].shape
+        
+    # Dimensions of the data used in result computation
+    num_rows, num_cols, num_bands = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].shape
     num_idx = num_rows * num_cols
-    input_image_linear = input_image[:, :, wavelength[wl_idx]].reshape(num_idx, num_bands)
+    
+    # Converts input and output data into 2D shape
+    input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
+    outdata_raster = outdata_raster.reshape(num_idx, num_output_layers)
 
-    # Define the chunk size
-    if chunk_size == None:
-        chunk_size = 100
-
+    # Defines the chunk size
+    if chunk_size == None:        
+        chunk_size = np.round( 0.5e9 / 128).astype(int)
+        
     chunk = range(0, num_idx, chunk_size)
-   
-    start_1 = time()
-    start = start_1
-    print(f"chunk size = {chunk_size}")
-
+    
+    print()
+    print("Please wait! Processing the data ....")
+    
+    start = process_time()
+    
     for i in range(len(chunk)):
-        chunk = input_image_linear[chunk[i]:chunk[i] + chunk_size, :, :]
+        data = input_image_linear[chunk[i]:chunk[i] + chunk_size, :].astype()
+        data /= scale_factor
+        
+        # Computes spectral invariants using p() function
+        processed_chunk = p(data[:, :], ref_spectra_p)
+        outdata_raster[chunk[i]:chunk[i] + chunk_size, :num_output_layers] = np.transpose(processed_chunk, (1, 0))
 
-        float_chunk = chunk.astype('float')
-        float_chunk /= scale_factor
-        processed_chunk = p(float_chunk[:, :, :], ref_spectra_p)
-
-        outdata_map[chunk[i]:chunk[i] + chunk_size, :, 0:4] = np.transpose(processed_chunk, (1,2,0))
-
-    outdata_map.flush() # writes and saves in the disk
+    # Converts the output data back to 3D shape
+    outdata_raster = outdata_raster.reshape(num_rows, num_cols, num_output_layers)
+    outdata_raster.flush() # writes and saves in the disk
 
     print()
-    print(f"Processing the data using p() function completed.\nComputation time = {round((time()-start_1)/60, 2)} mins.")
+    print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
 def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
@@ -198,7 +199,7 @@ def chunk_processing_pC(hypfile_name, file_path, output_filename, chunk_size):
 
 def chunk_processing_chlorophyll(hypfile_name, file_path, output_filename, chunk_size):
     """
-    Wraps golden_cab function from inversion.py module to process very large (or any other) file.
+    Wraps golden_cab function from inversion.py module to compute chlorophyll content from a given hyperspectral data.
     
     Args:
         hypfile_name: ENVI header file,
@@ -249,8 +250,7 @@ def chunk_processing_chlorophyll(hypfile_name, file_path, output_filename, chunk
         
         if np.any(chunk!=0):   
             float_chunk = chunk.astype('float')            
-            nonzero_indices = float_chunk != 0
-            float_chunk[nonzero_indices] /= 10000 #scale_factor             
+            float_chunk /= 10000 #scale_factor             
         else:
             float_chunk = chunk.astype('float')
             
