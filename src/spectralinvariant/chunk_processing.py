@@ -242,7 +242,7 @@ def chunk_processing_chlorophyll(hypfile_name, hypfile_path, output_filename, ch
         scale_factor = 10000.0 # scale factor missing from metadata
 
     # creating a raster like file using create_raster_like function
-    output_layer_names = { "layer names": ("chlorophyll content",) }
+    output_layer_names = { "layer names": ("chlorophyll content",) } # !! not "," == 19
     num_output_layers = len(output_layer_names['layer names'])
 
     description = "Chlorophyll computed for " + hypfile_name + " "\
@@ -258,7 +258,9 @@ def chunk_processing_chlorophyll(hypfile_name, hypfile_path, output_filename, ch
     num_idx = num_rows * num_cols
    
     input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
-    outdata_raster = outdata_raster.reshape(num_rows*num_cols) # converts the raster in 1D array
+    
+    # convert the raster to 1D array
+    outdata_raster = outdata_raster.reshape(num_idx)    
     
     if chunk_size == None:
         chunk_size = np.round( 0.5e9 / 128).astype(int)
@@ -268,10 +270,13 @@ def chunk_processing_chlorophyll(hypfile_name, hypfile_path, output_filename, ch
     # Creating an instance of the PROSPECT class with the input values specified by Ihalainen et al. (2023)
     model = PROSPECT_D(N=1.5, Car=1.0, Cw=0.0, Cm=0.0)
     model.subset(wavelength[wl_idx])
+    
+    print()
+    print("Please wait! Processing the data ....")
+    start = time()
 
-    start = process_time()
-
-    for i in range(len(chunk)):         
+    for i in range(len(chunk)):
+        start1 = time()
         data = input_image_linear[chunk[i]:chunk[i]+chunk_size, :]
         data_float = data.astype('float')            
         data_float /= scale_factor # reflectance scale factor             
@@ -279,10 +284,12 @@ def chunk_processing_chlorophyll(hypfile_name, hypfile_path, output_filename, ch
         #               
         outdata_raster[chunk[i]:chunk[i]+chunk_size] = Parallel(n_jobs=cpu_count())(delayed(golden_cab)(
         model, pixel, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, bounds=(1., 100.)) for pixel in data_float)
-
+        
+        print()
+        print(f'Chunk :{i} / {len(chunk)}\nComputation time = {(time()-start1)/60:.2f} mins.')
     # convert the raster back to 2D shape        
     outdata_raster = outdata_raster.reshape(num_rows, num_cols)
     outdata_raster.flush() # writes and saves in the disk
-    print(f'Cholorphyll map compuation completed!\nCompuation time = {(process_time() - start)/60:.2f} mins.')
-    return 0
+    print()
+    print(f'Cholorphyll map compuation completed!\nCompuation time = {(time() - start)/60:.2f} mins.')
 
