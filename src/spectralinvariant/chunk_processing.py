@@ -292,4 +292,5 @@ def chunk_processing_chlorophyll(hypfile_name, hypfile_path, output_filename, ch
     outdata_raster.flush() # writes and saves in the disk
     print()
     print(f'Cholorphyll map compuation completed!\nCompuation time = {(time() - start)/60:.2f} mins.')
+    return 1
 
