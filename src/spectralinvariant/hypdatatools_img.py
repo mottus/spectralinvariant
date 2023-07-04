@@ -109,6 +109,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     clip_low=None, clip_lowvalue=0, stretch_individual=True ):
     """
     Create a figure with hyperspectral image and return handle
+       before using, check if SPy.imshow() could be used instead
     hypfilename: the name + full path to Envi hdr file
     hypdata is a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -267,6 +268,7 @@ def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None
     outputcommand=None):
     """
     Create a figure with a single band from hypersectral image and return handle
+        before using, check if SPy.imshow() could be used instead
     hypfilename: the name + full path to Envi hdr file
     hypdata: a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -330,6 +332,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     outputcommand=None):
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
+            before using, check if SPy.imshow() could be used instead
     in: hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
         clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
@@ -367,7 +370,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
             datamin = np.nanmin( hypdata_rgb_plot, axis=axestoapply )
             datamax = np.nanmax( hypdata_rgb_plot, axis=axestoapply )
             clip_lowvalue = datamin + clip_low*(datamax-datamin)
-        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply) ) ).min() > 0:
             clip_lowvalue = np.nanpercentile(hypdata_rgb_plot, clip_low*100, axis=axestoapply )
         else:
             outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
@@ -383,7 +386,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
             datamin = np.nanmin(hypdata_rgb_plot, axis=axestoapply )
             datamax = np.nanmax(hypdata_rgb_plot, axis=axestoapply )
             datascaling = datamin + clip_up*(datamax-datamin)
-        elif ( np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply).min() ) ) > 0:
+        elif np.array( np.nanmax(hypdata_rgb_plot, axis=axestoapply) - np.nanmin(hypdata_rgb_plot, axis=axestoapply) ).min()  > 0:
             datascaling = np.nanpercentile(hypdata_rgb_plot, clip_up*100, axis=axestoapply )
         else:
             outputcommand("\n" + functionname + "All pixels have the same value, no scaling.\n")
@@ -421,6 +424,7 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
     outputcommand=None ):
     """ Plot a 2D matrix using imshow()
         the actual plotting work for plotting a single-band hyperspectral data matrix
+            before using, check if SPy.imshow() could be used instead
     in: hypdata_band: 1-band numpy matrix
         plottitle: string with the plot title
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
@@ -560,9 +564,9 @@ def avg_spectrum(hypfilename, coordlist, DIV=-1, hypdata=None, hypdata_map=None)
         # open the file if not open yet. This only gives access to metadata.                
         hypdata = spectral.open_image(hypfilename)
         # open the file as memmap to get the actual hyperspectral data
-        hypdata_map = hypdata.open_memmap()  # open as BIL
+        hypdata_map = hypdata.open_memmap()  # open as BIP
 
-    hypdata_sub = hypdata_map[coordlist]
+    hypdata_sub = hypdata_map[coordlist[0],coordlist[1],:]
     if DIV != -1:
         # look for no data values
         hypdata_sub_min = np.min(hypdata_sub, axis=1)
@@ -614,15 +618,15 @@ def zoomtoimage(fig_hypdata, hypdata_map):
         fig_hypdata.canvas.draw()
 
 
-def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=None, fill_black=False, force=True,
-                       description=None, localprintcommand=None):
+def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='bsq', fill_black=False, force=True,
+                       description=None, metadata_keys_copy=[], metadata_add=None, localprintcommand=None):
     """ Create a new envi raster of the same size and geometry as the input file (envifile)
     
     Args:
-        envifile = the ENVI (Spectral pyhton) raster to use as the example
-        outfilename = the filename to create
+        envifile: the ENVI (Spectral python) raster to use as the example
+        outfilename: the filename to create
         Nlayers: number of layers in the output file
-        outtype = output file data type according to ENVI
+        outtype: output file data type according to ENVI
             ENVI data types
                 1=8-bit byte;
                 2=16-bit signed integer;
@@ -635,12 +639,14 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
                 13=32-bit unsigned long integer;
                 14=64-bit signed long integer; 
                 15=64-bit unsigned long integer.
-        interleave = 'bil', 'bip, or 'bsq'
-            if None, set to bsq
-        fill_black = whether to fill the new file with zeros (DIVs) 
-        force = whether to overwrite existing file
+        interleave: 'bil', 'bip, or 'bsq' (default bsq)
+        fill_black: whether to fill the new file with zeros (DIVs) 
+        force: whether to overwrite existing file
         description: what to write in the description header field
-    
+        metadata_keys_copy: which metadata keys to copy from the metadata of the original image in addition to the default keys
+            see code for default keys, originally they included ['map info', 'coordinate system string', 'sensor type']
+        metadata_add: new metadata to be added at file creation, must be a dict
+
     Returns:
         outfilehandle. To write to that raster, use outdata_map = outdata.open_memmap( writable=True )
     """
@@ -664,9 +670,13 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
         # assume envifile is a Spectral Python file handle
         hypdata = envifile
 
-    for key in ['map info', 'coordinate system string', 'sensor type']:
-        if key in hypdata.metadata.keys():
-            metadata[key] = hypdata.metadata[key]
+    default_metadata_keys = ['map info', 'coordinate system string', 'sensor type']
+    
+    for key in default_metadata_keys + metadata_keys_copy:
+        key_lower = str(key).lower()
+        # assume that SPy converts the keys it reads to lowercase automatically
+        if key_lower in hypdata.metadata.keys():
+            metadata[key_lower] = hypdata.metadata[key_lower]
 
     metadata['lines'] = hypdata.nrows
     metadata['samples'] = hypdata.ncols
@@ -679,12 +689,12 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave=N
         description = 'A new raster based on the geometry of ' + hypdata.filename
     if 'description' in metadata:
         description = description + ' : ' + metadata['description']
+        
     metadata['description'] = description
-
-    if interleave is None:
-        # interleave = hypdata.metadata['interleave']
-        interleave = 'bsq'
     metadata['interleave'] = interleave
+    
+    if type(metadata_add) is dict:
+        metadata.update( metadata_add )
 
     localprintcommand(functionname + " creating file " + outfilename)
 
@@ -712,7 +722,7 @@ def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=Non
     """
     subset the raster by local image coordinates (starting with 0,0)
     in:
-        hypdata = the ENVI (Spectral pyhton) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
+        hypdata = the ENVI (Spectral python) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
         subset = integers [ xmin, ymin, xmax, ymax ]
             if subset is larger than image, subset is shrunk
             the included range is min:max (i.e., max itself will be excluded)
@@ -1333,7 +1343,7 @@ def resample_hyperspectral(hyp_infile, spectralsensitivitymatrix, out_pixelsize,
 
 def sentinel2_pixelsize():
     """
-    Return a ndarray with the pixel sizes of Sentinel-2 in meters
+    Return an ndarray with the pixel sizes of Sentinel-2 in meters
     """
     #                 B1  B2  B3  B4  B5  B6  B7  B8  B8A B9  B10 B11 B12
     return np.array( (60, 10, 10, 10, 20, 20, 20, 10, 20, 60, 60, 20, 20) )
@@ -1353,17 +1363,21 @@ def envihdr2datafile( hdrfilename, localprintcommand=None ):
     # for envi files: gdal wants the name of the data file, not hdr
     hdrfilename_split = os.path.splitext( hdrfilename )
     
-    if hdrfilename_split[1] == ".hdr":
+    if hdrfilename_split[1].lower() == ".hdr":
         datafilename = hdrfilename_split[0]
         if not os.path.exists(datafilename):
             # try different extensions, .dat and .bin and .bil and img
             basefilename = datafilename
             
-            extensionlist = [ 'dat', 'bin', 'bil', 'bsq', 'img' ]
+            extensionlist = [ 'dat', 'bin', 'bil', 'bsq', 'bip', 'img' ]
             for extension in extensionlist:
                 datafilename  = basefilename + '.'+ extension
                 if os.path.exists(datafilename):
                     break
+                else:
+                    datafilename  = basefilename + '.'+ extension.upper()
+                    if os.path.exists(datafilename):
+                        break
     if not os.path.exists(datafilename):
         localprintcommand(functionname + "Cannot find the data file corresponding to {}.\n".format(hdrfilename) )
         datafilename = ''
@@ -1381,7 +1395,7 @@ def envifilecomponents( filename_in, localprintcommand=None ):
     functionname = 'envifilecomponents(): ' # for messaging
     
     base_in, extension_in = os.path.splitext( filename_in)
-    if  extension_in == ".hdr" or extension_in == ".HDR":
+    if  extension_in.lower() == ".hdr":
         headerfile = filename_in
         datafile = envihdr2datafile( headerfile, localprintcommand=localprintcommand  )
     else:
@@ -1397,7 +1411,7 @@ def envi_endiannesscode( aisa1_map ):
     Therefore, this function is largely redundant -- but keep it just in case.
     typical use would be metadata['byte order'] = envi_endiannesscode( aisa1_map )
     
-    determine byte order to be save in header:
+    determine byte order to be saved in header:
     #   Byte order=0 is least significant  byte first (LSF) [==little-endian] 
     #      data (DEC and MS-DOS systems).
     #   Byte order=1 is most significant byte first (MSF) [==big-endian] data 
@@ -1419,7 +1433,7 @@ def envi_endiannesscode( aisa1_map ):
     
 def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, checkifexists=True, localprintcommand=None ):
     """
-    Adds a aline to ENVI header file. This function is in gdal-functions because it depends on envifilecomponents.
+    Adds a aline to ENVI header file
     ENVI file should be closed before rewriting.
     envifilename: string, file name
     fieldname: name of the field to add

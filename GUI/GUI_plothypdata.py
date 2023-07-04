@@ -140,7 +140,7 @@ class disp_GUI:
             self.button_plottrue.configure( state=DISABLED )
 
             # try to have .hdr extension, although this should not be compulsory. No error checking here.
-            if not self.hypfilename.endswith(".hdr"):
+            if not self.hypfilename.lower().endswith(".hdr"):
                 self.hypfilename += '.hdr'
                 
             # open the files and assign handles
