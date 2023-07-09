@@ -222,7 +222,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
     print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
-def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algorithm=1, chunk_size=None, wl_idx=None):
+def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algorithm=None, chunk_size=None, wl_idx=None):
 
     """
     Wraps golden_cab function from inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
@@ -280,7 +280,11 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algo
     except:
         scale_factor = 10000.0 # scale factor missing from metadata
 
-    if inv_algorithm != int(1) or inv_algorithm != int(2):
+    # inversion algorithm selection
+    if inv_algorithm is None:
+        inv_algorithm = int(1)
+    
+    if not (inv_algorithm == int(1) or inv_algorithm == int(2)):
         print(f"{functionname} ERROR: invalid argument passed for 'inv_algorithm' parameter!\nvalid argument = 1 or 2 !")
         return -1
     
