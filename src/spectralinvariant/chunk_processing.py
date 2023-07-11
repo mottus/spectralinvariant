@@ -13,6 +13,12 @@ from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golde
 from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transformed, reference_wavelengths
 from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength
 
+def find_nearest(array, value):
+    """Finds the index of array element closest to a given value
+    Used for selecting specific bands in hyperspectral images
+    """
+    idx = (np.abs(array - value)).argmin()
+    return idx
 
 def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None):
     """
@@ -58,8 +64,8 @@ def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=N
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_p = (np.abs( wavelength-wl_idx[0]) ).argmin()
-    b2_p = (np.abs( wavelength-wl_idx[1]) ).argmin()
+    b1_p = find_nearest(wavelength, wl_idx[0])
+    b2_p = find_nearest(wavelength, wl_idx[1])
     wl_idx = np.arange( b1_p, b2_p+1 )
    
     # Define the chunk size
