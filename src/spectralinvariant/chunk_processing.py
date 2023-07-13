@@ -23,7 +23,7 @@ def find_nearest(array, value):
 def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None):
     """
     Wraps p() function from spectralinvariants.py module to process hyperspectral data.
-    The input file is processed in chunks. A raster of the same spatial dimension with 4 layers is created to store the results in consecutive layers.
+    The input file is processed in chunks. A raster of the same spatial dimension with 4 layers is created to store the results consecutively.
     
     Args:
         hypfile_name: ENVI header file,
@@ -168,8 +168,8 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_pC = (np.abs( wavelength-wl_idx[0]) ).argmin()
-    b2_pC = (np.abs( wavelength-wl_idx[1]) ).argmin()
+    b1_pC = find_nearest(wavelength, wl_idx[0]) 
+    b2_pC = find_nearest(wavelength, wl_idx[1])
     wl_idx = np.arange( b1_pC, b2_pC+1 )
 
     # Read metadata of hypdata
@@ -231,7 +231,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
 def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algorithm=None, chunk_size=None, wl_idx=None):
 
     """
-    Wraps golden_cab function from inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
+    Wraps golden_cab and minimize_cab functions from inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
     A raster of the same spatial dimension is created to store the result.
     
     Args:
@@ -276,8 +276,8 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algo
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_cab = (np.abs( wavelength-wl_idx[0]) ).argmin()
-    b2_cab = (np.abs( wavelength-wl_idx[1]) ).argmin()
+    b1_cab = find_nearest(wavelength, wl_idx[0]) 
+    b2_cab = find_nearest(wavelength, wl_idx[1])
     wl_idx = np.arange( b1_cab, b2_cab+1 )
 
     # Read metadata of hypdata
@@ -404,9 +404,21 @@ def compute_inversion_and_illumination_correction(hypfile_name, hypfile_path, cm
     wavelength = get_wavelength(hyp_fullfilename )[0] # get_wavelength returns a tuple
 
     if wl_idx is None:
-        b1_cab = (np.abs( wavelength-670) ).argmin()
-        b2_cab = (np.abs( wavelength-720) ).argmin()
-        wl_idx = np.arange( b1_cab, b2_cab + 1 )
+        wl_idx = [670, 720]
+
+    # sort the the list in ascending order just to be sure
+    wl_idx.sort()
+
+    # check the values of wl_idx are within the range of wavelength
+    is_wl_idx_valid =  wavelength[0] <= wl_idx[0] and wavelength[-1] >= wl_idx[-1]
+    
+    if not is_wl_idx_valid:
+        print(functionname + " ERROR: wavelength indices do not exist !")
+        return -1
+
+    b1_cab = find_nearest(wavelength, wl_idx[0]) 
+    b2_cab = find_nearest(wavelength, wl_idx[1])
+    wl_idx = np.arange( b1_cab, b2_cab+1 )
 
     # Read metadata of hypdata
     try:
@@ -529,6 +541,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
 
     """
     Wraps pc_fast function from inversion.py module on propspect_D model to compute spectral invariants from a chlorophyll map, produced using inversion algorithm.
+    The result is stored in a raster of the same spatial dimension with 3 layers.
        
     Args:
         hypfile_name: ENVI header file (hyperspectral data),
@@ -536,14 +549,14 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
         cmap_filename: ENVI header file (chlorophyll map of the hypdata created using inversion algorithm)
         cmap_file_path: file path
         
-        output_filename_inv: file name to store the results of pc_fast() computation i.e. p, rho and C.        
+        output_filename_inv: file name to store the results of pc_fast() computation i.e. p, rho and C        
                         
         chunk_size: size of each chunk (int value). Default value = 3906250 pixel
         wl_idx: index of wavelengths used in computations. Defaults to 670-720 nm
          
     Result:
         output file is stored in the current working directory 
-        returns 0 if the compuation is successfull, else -1.
+        returns 0 if the compuation is successfull, else -1
 
     """
     
@@ -585,8 +598,8 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_p = (np.abs( wavelength-wl_idx[0]) ).argmin()
-    b2_p = (np.abs( wavelength-wl_idx[1]) ).argmin()
+    b1_p = find_nearest( wavelength, wl_idx[0] )
+    b2_p = find_nearest( wavelength, wl_idx[1] )
     wl_idx = np.arange( b1_p, b2_p+1 )
 
     # Read metadata of hypdata
