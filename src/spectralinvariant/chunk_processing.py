@@ -800,3 +800,55 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     print(f"{functionname}: process completed!\nProcess completion time = {(time() - start)/60:.2f} mins.")
     
     return 0
+
+def compute_correlation(array1, array2, method=None):
+    """
+    Computes pearson correlation coefficient between two arrays of equal dimension.
+    
+    Args:
+        array1: ndarray
+        array2: ndarray
+        method: integer value 1 or 2 (Default = 1)
+                1 = remove NaN value from an array and corresponding value at the same index position from another array
+                2 = replace NaN values with zeros 
+
+    Result:
+        returns pearson correlation coefficient, array1 and array2 if the computation is successful else -1
+        arrays returned are modified based on the selected method
+    """
+    
+    start = process_time()
+    function_name = "compute_correlation()"
+    
+    # Check the dimension of arrays 
+    if not array1.shape == array2.shape:
+        print(f"{function_name} Error: Dimensions mismatch between the arrays !")
+        return -1
+
+    if method == None:
+        method = int(1)
+
+    if not (method == int(1) or method == int(2)):
+        print(f"{function_name} Error: invalid argument for method\nvalid arguments = 1 or 2 !")
+        return -1
+    
+    # Method 1: Check for NaN values and remove it from both arrays
+    if method == int(1):     
+        mask = ~np.isnan(array1) & ~np.isnan(array2)
+        print("Dimension of the mask ", mask.shape)
+        array1 = array1[mask]
+        array2 = array2[mask]
+
+    # Method 2: Check for NaN values and replace with zero
+    if method == int(2): 
+        array1 = np.where(np.isnan(array1), 0, array1)
+        array2 = np.where(np.isnan(array2), 0, array2)
+
+    # Calculate Pearson correlation coefficient
+    correlation_matrix = np.corrcoef(array1.flatten(), array2.flatten())
+    pearson_correlation = round(correlation_matrix[0, 1], 2)
+
+    print()
+    print(f"{function_name}:  Pearson correlation coefficient = {pearson_correlation}.\nComputation time = {(process_time()-start): .2f} secs.")
+
+    return pearson_correlation, array1, array2
