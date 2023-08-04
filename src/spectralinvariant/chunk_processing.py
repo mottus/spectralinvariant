@@ -228,21 +228,31 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
     print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
-def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algorithm=None, chunk_size=None, wl_idx=None):
+def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None, inv_algorithm=None, inv_method=None, **kwargs):
 
     """
-    Wraps golden_cab and minimize_cab functions from inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
-    A raster of the same spatial dimension is created to store the result.
+    Wraps golden_cab (`scipy.golden`) and minimize_cab (`scipy.minimize`) algorithms implemented in inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
+    A raster of the same spatial dimension as the hyperspectral data is created to store the result.   
     
     Args:
-        hypfile_name: ENVI header file,
-        hypfile_path: file path
-        output_filename: file name for storing chlorophyll map          
-        inv_algorithm: integer value, 1 or 2 to select an inversion algorithm for the computation.
-                        1 = Goldencab, Defaults to 1 (for faster computational time)
-                        2 = Minimizecab (with 'Nelder Mead' method)                        
+        hypfile_name:    ENVI header file,
+        hypfile_path:    file path
+        output_filename: file name for storing chlorophyll map
         chunk_size: size of each chunk (int value). Default value = 3906250 pixels
-        wl_idx: index position of a pair of wavelengths passed as a tuple (or a list). Defaults to 670-720 nm
+        wl_idx: index position of a pair of wavelengths passed as a tuple (or a list). Defaults to 670-720 nm         
+        inv_algorithm:   integer value, 1 or 2 to select an inversion algorithm for the computation.
+                            1 = Goldencab (Default algorithmfor faster computational time)
+                            2 = Minimizecab
+
+        inv_method: integer value between 1 to 6 (to select an optimization method, if inv_algorithm == 2)
+                        1 = Nelder-Mead (Default method)
+                        2 = L-BFGS-B
+                        3 = TNC
+                        4 = SLSQP
+                        5 = Powell
+                        6 = trust-constr                                    
+        
+        **kwargs : dict, keyword arguments for the `scipy.golden` or `scipy.minimize` function
          
     Result:
         output file is stored in the current working directory 
@@ -287,12 +297,37 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algo
         scale_factor = 10000.0 # scale factor missing from metadata
 
     # inversion algorithm selection
+    algorithm = {1:"golden_cab", 2:"minimize_cab"}
     if inv_algorithm is None:
         inv_algorithm = int(1)
     
     if not (inv_algorithm == int(1) or inv_algorithm == int(2)):
         print(f"{functionname} ERROR: invalid argument passed for 'inv_algorithm' parameter!\nvalid argument = 1 or 2 !")
         return -1
+    print(f"Alogrithm : {algorithm[inv_algorithm]}")
+
+    # optimization methods for `scipy.minimize` algorithm
+    optimization = {1:'Nelder-Mead', 2:'L-BFGS-B', 3:'TNC', 4:'SLSQP', 5:'Powell', 6:'trust-constr'}
+
+    if inv_algorithm == 2:
+        if inv_method is None:
+            inv_method = 1
+            opt_method = optimization[inv_method] # Default value
+        elif inv_method in range(1,7):
+            opt_method = optimization[inv_method]
+        else:
+            print(f"{functionname} ERROR: invalid argument passed for 'inv_method' parameter!\nvalid argument = an integer between 1 to 6 !")
+            return -1
+        print(f"Optimization method : {optimization[inv_method]}")
+
+    # setting default values of keyword arguments if the values are not passed
+    g = kwargs.get('gamma', 1.0)
+    p_l = kwargs.get('p_lower', 0.0)
+    p_u = kwargs.get('p_upper' ,1.0) 
+    r_l = kwargs.get('rho_lower', 0.0)
+    r_u = kwargs.get('rho_upper', 2.0)
+    b = kwargs.get('bounds', (1., 100.))
+    ig = kwargs.get('initial_guess', 30.)
     
     if chunk_size == None:
         chunk_size = np.round( 0.5e9 / 128).astype(int)
@@ -328,21 +363,19 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, inv_algo
 
     chunk = np.arange(0, num_idx, chunk_size)
     
-    method_name = 'Nelder-Mead' # should we add more methods ?
-
     start = time()  
     for i in range(len(chunk)):
         start1 = time()
         data = input_image_linear[chunk[i]:chunk[i]+chunk_size, :]
         data_float = data.astype('float')            
-        data_float /= scale_factor # reflectance scale factor             
-
-        if inv_algorithm == int(1):              
+        data_float /= scale_factor # reflectance scale factor
+        
+        if inv_algorithm == int(1):
             outdata_map[chunk[i]:chunk[i]+chunk_size] = Parallel(n_jobs=cpu_count())(delayed(golden_cab)(
-                model, pixel, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, bounds=(1., 100.)) for pixel in data_float)
+                model, pixel, gamma=g, p_lower=p_l, p_upper=p_u, rho_lower=r_l, rho_upper=r_u, bounds=b) for pixel in data_float)
         else:      
             outdata_map[chunk[i]:chunk[i]+chunk_size] = Parallel(n_jobs=cpu_count())(delayed(minimize_cab)(
-                model, pixel, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, initial_guess=30., bounds=[(1., 100.)], method=method_name) for pixel in data_float)
+                model, pixel, method=opt_method, gamma=g, p_lower=p_l, p_upper=p_u, rho_lower=r_l, rho_upper=r_u, initial_guess=ig, bounds=[b]) for pixel in data_float)      
 
         print()
         print(f'Chunk :{i+1} / {len(chunk)}\nComputation time = {(time()-start1)/60:.2f} mins.')
@@ -630,8 +663,8 @@ def compute_correlation(array1, array2, method=None):
                 2 = replace NaN values with zeros 
 
     Result:
-        returns pearson correlation coefficient, array1 and array2 if the computation is successful else -1
-        arrays returned are modified based on the selected method
+        returns pearson correlation coefficient, array1 and array2 if the computation is successful else `False`
+        arrays returned might be modified based on the selected method
     """
     
     start = process_time()
@@ -640,14 +673,14 @@ def compute_correlation(array1, array2, method=None):
     # Check the dimension of arrays 
     if not array1.shape == array2.shape:
         print(f"{function_name} Error: Dimensions mismatch between the arrays !")
-        return -1
+        return False
 
     if method == None:
         method = int(1)
 
     if not (method == int(1) or method == int(2)):
         print(f"{function_name} Error: invalid argument for method\nvalid arguments = 1 or 2 !")
-        return -1
+        return False
     
     # Method 1: Check for NaN values and remove it from both arrays
     if method == int(1):     
