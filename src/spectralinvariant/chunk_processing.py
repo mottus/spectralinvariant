@@ -510,31 +510,26 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     # converting output back to 3D shape        
     outdata_pc_fast = outdata_pc_fast.reshape(num_rows, num_cols, num_output_layers)
     outdata_pc_fast.flush() # writes and saves in the disk
-      
-    print()
+      f
     print(f"{functionname}: process completed!\nProcess completion time = {(time() - start)/60:.2f} mins.")
     
     return 0
 
 def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inversion_filename, inversion_filepath, output_filename, chunk_size=None):
 
-    """
-    Computes illumination corrected leaf spectrum using hypdata and spectral invariants (computed from inversion algorithm i.e. `pc_fast()`).
+    """ Computes illumination corrected leaf spectrum using hypdata and spectral invariants (computed from inversion algorithm i.e. `pc_fast()`).
         
     Args:
         hypfile_name: ENVI header file (hyperspectral data),
         hypfile_path: file path
         inversion_filename: ENVI header file (result of inversion algorithm in the band/layer order of rho, p and c)
         inversion_path: file path
-        
         output_filename: file name for storing results of corrected leaf reflectance.
-                        
         chunk_size: size of each chunk (int value). Default value = 3906250 pixels
          
     Result:
         output file is stored in the current working directory 
         returns 0 if the compuation is successfull, else -1.
-
     """
     
     np.seterr(all="ignore")
@@ -544,8 +539,7 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     inv_fullfilename = os.path.join(inversion_filepath, inversion_filename)
     
     def check_file_exists(full_filename):
-        """
-        Prints error message and returns -1, if the file is not found
+        """ Prints error message and returns -1, if the file is not found
         """
         if not os.path.exists(full_filename):
             print(functionname + " ERROR: file " + full_filename + "does not exist")
@@ -560,9 +554,7 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
-    
     wavelength = get_wavelength(hyp_fullfilename )[0] # get_wavelength returns a tuple
-
   
     # Read metadata of hypdata
     try:
