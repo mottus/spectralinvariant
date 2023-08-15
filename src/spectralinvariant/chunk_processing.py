@@ -415,20 +415,14 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     hyp_fullfilename = os.path.join(hypfile_path, hypfile_name)
     cmap_fullfilename = os.path.join(cmap_file_path, cmap_filename)
     
-    def check_file_exists(full_filename):
-        """
-        Prints error message and returns -1, if the file is not found
-        """
-        if not os.path.exists(full_filename):
-            print(functionname + " ERROR: file " + full_filename + "does not exist")
-            return -1
-
-    check_file_exists(hyp_fullfilename)
-    check_file_exists(cmap_fullfilename)
-    
-    #############################################
-    ###  Reading hypdata and chlorophyll map  ###
-    #############################################
+    if not os.path.exists(hyp_fullfilename):
+        print(functionname + " ERROR: file " + hyp_fullfilename + "does not exist")
+        return -1
+    if not os.path.exists:(cmap_fullfilename):
+        print(functionname + " ERROR: file " + cmap_fullfilename + "does not exist")
+        return -1
+        
+    # Reading hypdata and chlorophyll map  #
     
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
@@ -466,9 +460,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     cab_img = envi.open(cmap_fullfilename )
     cabs = cab_img.open_memmap()   
 
-    #############################################################
-    ###  Creating a raster for saving results from pc_fast()  ###
-    #############################################################        
+    # Creating a raster for saving results from pc_fast()
 
     # First raster for storing results from pc_fast() i.e, p, rho and C. 
     output_band_names = {"band names": ("rho", "p", "C")}
@@ -482,10 +474,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
 
     outdata_pc_fast = outdata_1.open_memmap(writable=True)
     
-   
-    ################################################
-    ###  Reshaping input and output files to 2D  ###
-    ################################################
+    #  Reshaping input and output files to 2D  
 
     input_image_linear = input_image[:, :, :].reshape(num_idx, num_bands)
     input_image_subset_linear = input_image_linear[:, wl_idx[0]:wl_idx[-1]+1]
@@ -498,10 +487,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     model = PROSPECT_D(N=1.5, Car=1.0, Cw=0.0, Cm=0.0)
     model.subset(wavelength[wl_idx])
     
-        
-    #################################
-    ###  Computing rho, p, and C  ###
-    #################################
+    # Computing rho, p, and C
     
     print()
     print("Please wait! computing pc_fast() ....")
@@ -568,9 +554,9 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     check_file_exists(hyp_fullfilename)
     check_file_exists(inv_fullfilename)
     
-    ###############################################
-    ###  Reading hypdata and inversion results  ###
-    ###############################################
+    #
+    #  Reading hypdata and inversion results  #
+    #
     
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
@@ -594,9 +580,9 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     inversion_result = inv_img.open_memmap()
     num_inv_bands = inversion_result.shape[2]
 
-    #####################################################################
-    ###  Creating a raster to save corrected leaf reflectance result  ###
-    #####################################################################        
+    #
+    #  Creating a raster to save corrected leaf reflectance result  #
+    #        
 
     description = "Corrected leaf reflectance for " + hypfile_name + " "\
         + str( wavelength[0] ) + "-" + str( wavelength[-1] ) + " nm."
@@ -606,18 +592,18 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
 
     outdata_LR = outdata.open_memmap(writable=True)
           
-    ################################################
-    ###  Reshaping input and output files to 2D  ###
-    ################################################
+    
+    #  Reshaping input and output files to 2D  #
+    
 
     input_image_linear = input_image.reshape(num_idx, num_bands)
     inversion_result_linear = inversion_result.reshape(num_idx, num_inv_bands)
     
     outdata_LR = outdata_LR.reshape(num_idx, num_bands)
       
-    ################################
-    ###  Computing corrected LR  ###
-    ################################
+    
+    #  Computing corrected LR  #
+    
     
     print()
     print("Please wait! computing corrected leaf reflectance ....")
