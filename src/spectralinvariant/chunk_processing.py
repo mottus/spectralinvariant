@@ -11,36 +11,31 @@ from os import cpu_count
 from spectral import envi
 from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golden_cab
 from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transformed, reference_wavelengths
-from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength
+from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength, get_scalefactor
 
-def find_nearest(array, value):
-    """Finds the index of array element closest to a given value
-    Used for selecting specific bands in hyperspectral images
-    """
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
-def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None):
+def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data", chunk_size=None, wl_range=[710,790]):
     """
     Wraps p() function from spectralinvariants.py module to process hyperspectral data.
     The input file is processed in chunks. A raster of the same spatial dimension with 4 layers is created to store the results consecutively.
     
     Args:
         hypfile_name: ENVI header file,
-        input_file_path: file path
-        output_filename: file name for processed data. The results of the p() computation i.e. p, rho, DASF and R 
-                        are stored as layers in the outputfile
-        chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 pixels
-        wl_idx: index position of a pair of wavelengths passed as a list. Defaults to 710-790 nm. 
+        input_file_path: Envi file path (optional)
+        output_filename: Envi file name (absolute) for processed data: i.e. p, rho, DASF and R 
+            if None, default name in current working directory is used (NOTE: this may change to a more reasonable default!)
+        chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 spectra
+        wl_range: a list with the start and end wavelengths for analyses
          
     Result:
-        output file is stored in the current working directory 
-        returns 0 if the compuation is successfull, else -1.       
+        returns 0 if the compuation is successful, else -1.
     """
 
     np.seterr(all="ignore")
     functionname = "chunk_processing_p()"
-    fullfilename = os.path.join(hypfile_path, hypfile_name)
+    if hypfile_path is None:
+        fullfilename = hypfile_name
+    else:
+        fullfilename = os.path.join(hypfile_path, hypfile_name)
 
     if not os.path.exists(fullfilename):
         print(functionname + " ERROR: file " + fullfilename + "does not exist!")
@@ -49,35 +44,30 @@ def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=N
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength = get_wavelength( fullfilename )[0] # get_wavelength returns a tuple
-
-    if wl_idx is None:
-        wl_idx = [710, 790]
-
-    # sort the the list in ascending order
-    wl_idx.sort()
-
-    # check the values of wl_idx are within the range of wavelength
-    is_wl_idx_valid =  wavelength[0] <= wl_idx[0] and wavelength[-1] >= wl_idx[-1]
-    
-    if not is_wl_idx_valid:
-        print(functionname + " ERROR: wavelength indices do not exist !")
+    wavelength, wl_found = get_wavelength( img )
+    if not wl_found:
+        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
         return -1
 
-    b1_p = find_nearest(wavelength, wl_idx[0])
-    b2_p = find_nearest(wavelength, wl_idx[1])
+    # sort the waelengths in ascending order
+    wl_range.sort()
+
+    # check the values of wl_idx are within the range of wavelength
+    if not ( wavelength[0] <= wl_range[0] and wavelength[-1] >= wl_range[-1] ):
+        print(functionname + " ERROR: wavelength indices do not exist")
+        return -1
+
+    # find the location of the nearest wl in the array
+    b1_p = (np.abs(wavelength - wl_range[0])).argmin() 
+    b2_p = (np.abs(wavelength - wl_range[1])).argmin()
     wl_idx = np.arange( b1_p, b2_p+1 )
    
     # Define the chunk size
     if chunk_size == None:        
         chunk_size = np.round( 0.5e9 / 128).astype(int)
 
-    # Read metadata of input
-    try:
-        scale_factor = img.__dict__['metadata']['reflectance scale factor'].astype(float)        
-    except:
-        scale_factor = 10000.0 # scale factor missing from metadata
-
+    scale_factor = get_scalefactor( img )
+    
     # creating a raster like file using create_raster_like function
     output_band_names = { "band names": ("p", "intercept", "DASF", "R2") }
     num_output_bands = len(output_band_names['band names'])
@@ -124,27 +114,28 @@ def chunk_processing_p(hypfile_name, hypfile_path, output_filename, chunk_size=N
     print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
-def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None):
-    """
-            
-    Wraps pC() function from spectralinvariants.py module to process hyperspectral data.
+def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_data", chunk_size=None, wl_range=[670, 790]):
+    """ Wraps pC() function from spectralinvariants.py module to process hyperspectral data.
+    
     The input file is processed in chunks. A raster of the same spatial dimension with 5 layers is created to store the results produced consecutively.
     
     Args:
         hypfile_name: ENVI header file,
-        input_file_path: file path
-        output_filename: file name for processed data. The results of the pC() computation i.e. p, rho, DASF, R2 and C.
-                        are stored as layers in the outputfile
-        chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 pixels
-        wl_idx: index of wavelengths used in computations. Defaults to 670-790 nm
+        input_file_path: Envi file path (optional)
+        output_filename: Envi file name (absolute) for processed data: i.e. p, rho, DASF, R2 and C 
+            if None, default name in current working directory is used (NOTE: this may change to a more reasonable default!)
+        chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 spectra
+        wl_range: a list with the start and end wavelengths for analyses
          
     Result:
-        returns 0 if the compuation is successfull, else -1.  
-
+        returns 0 if the compuation is successfull, else -1.
     """
     np.seterr(all="ignore")
     functionname = "chunk_processing_pC()"
-    fullfilename = os.path.join(hypfile_path, hypfile_name)
+    if hypfile_path is None:
+        fullfilename = hypfile_name
+    else:
+        fullfilename = os.path.join(hypfile_path, hypfile_name)
 
     if not os.path.exists(fullfilename):
         print(functionname + " ERROR: file " + fullfilename + "does not exist")
@@ -153,30 +144,27 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength = get_wavelength( fullfilename )[0] # get_wavelength returns a tuple
-
-    if wl_idx is None:
-        wl_idx = [670, 790]
+    wavelength, wl_found = get_wavelength( img )
+    if not wl_found:
+        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
+        return -1
 
     # sort the the list in ascending order
-    wl_idx.sort()
+    wl_range.sort()
 
-    # check the values of wl_idx are within the range of wavelength
-    is_wl_idx_valid =  wavelength[0] <= wl_idx[0] and wavelength[-1] >= wl_idx[-1]
+    # check the values of wl_range are within the range of wavelength
+    is_wl_idx_valid =  wavelength[0] <= wl_range[0] and wavelength[-1] >= wl_range[-1]
     
     if not is_wl_idx_valid:
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_pC = find_nearest(wavelength, wl_idx[0]) 
-    b2_pC = find_nearest(wavelength, wl_idx[1])
+    # find the location of the nearest wl in the array
+    b1_pC = (np.abs(wavelength - wl_range[0])).argmin()
+    b2_pC = (np.abs(wavelength - wl_range[1])).argmin()  
     wl_idx = np.arange( b1_pC, b2_pC+1 )
 
-    # Read metadata of hypdata
-    try:
-        scale_factor = img.__dict__['metadata']['reflectance scale factor'].astype(float)        
-    except:
-        scale_factor = 10000.0 # scale factor missing from metadata
+    scale_factor = get_scalefactor( img )
 
     # Defines the chunk size
     if chunk_size == None:        
@@ -228,7 +216,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path, output_filename, chunk_size=
     print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
-def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_idx=None, inv_algorithm=None, inv_method=None, **kwargs):
+def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_range=[670, 720], inv_algorithm=None, inv_method=None, **kwargs):
 
     """
     Wraps golden_cab (`scipy.golden`) and minimize_cab (`scipy.minimize`) algorithms implemented in inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
@@ -239,7 +227,7 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
         hypfile_path:    file path
         output_filename: file name for storing chlorophyll map
         chunk_size: size of each chunk (int value). Default value = 3906250 pixels
-        wl_idx: index position of a pair of wavelengths passed as a tuple (or a list). Defaults to 670-720 nm         
+        wl_range: a list with the start and end wavelengths for analyses
         inv_algorithm:   integer value, 1 or 2 to select an inversion algorithm for the computation.
                             1 = Goldencab (Default algorithmfor faster computational time)
                             2 = Minimizecab
@@ -271,23 +259,24 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength = get_wavelength( fullfilename )[0] # get_wavelength returns a tuple
-
-    if wl_idx is None:
-        wl_idx = [670, 720]
+    wavelength, wl_found = get_wavelength( input_image )
+    if not wl_found:
+        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
+        return -1
 
     # sort the the list in ascending order just to be sure
-    wl_idx.sort()
+    wl_range.sort()
 
-    # check the values of wl_idx are within the range of wavelength
-    is_wl_idx_valid =  wavelength[0] <= wl_idx[0] and wavelength[-1] >= wl_idx[-1]
+    # check the values of wl_range are within the range of wavelength
+    is_wl_idx_valid =  wavelength[0] <= wl_range[0] and wavelength[-1] >= wl_range[-1]
     
     if not is_wl_idx_valid:
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_cab = find_nearest(wavelength, wl_idx[0]) 
-    b2_cab = find_nearest(wavelength, wl_idx[1])
+    # find the location of the nearest wl in the array
+    b1_cab = (np.abs(wavelength - wl_range[0])).argmin()
+    b2_cab = (np.abs(wavelength - wl_range[1])).argmin()
     wl_idx = np.arange( b1_cab, b2_cab+1 )
 
     # Read metadata of hypdata
@@ -387,7 +376,7 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     print(f'Cholorphyll map compuation completed!\nCompuation time = {(time() - start)/60:.2f} mins.')
     return 0
 
-def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap_file_path, output_filename, wl_idx=None):
+def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap_file_path, output_filename, wl_range=[670, 720]):
 
     """
     Wraps pc_fast function from inversion.py module on propspect_D model to compute spectral invariants from a chlorophyll map, produced using inversion algorithm.
@@ -402,7 +391,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
         output_filename_inv: file name to store the results of pc_fast() computation       
                         
         chunk_size: size of each chunk (int value). Default value = 3906250 pixel
-        wl_idx: index of wavelengths used in computations. Defaults to 670-720 nm
+        wl_range: a list with the start and end wavelengths for analyses
          
     Result:
         output file with estimated values of rho, p and c  
@@ -427,23 +416,24 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
     
-    wavelength = get_wavelength(hyp_fullfilename )[0] # get_wavelength returns a tuple
-
-    if wl_idx is None:
-        wl_idx = [670, 720]
+    wavelength, wl_found = get_wavelength( hyp_fullfilename )
+    if not wl_found:
+        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
+        return -1
 
     # sort the the list in ascending order
-    wl_idx.sort()
+    wl_range.sort()
 
     # check the values of wl_idx are within the range of wavelength
-    is_wl_idx_valid =  wavelength[0] <= wl_idx[0] and wavelength[-1] >= wl_idx[-1]
+    is_wl_idx_valid =  wavelength[0] <= wl_range[0] and wavelength[-1] >= wl_range[-1]
     
     if not is_wl_idx_valid:
         print(functionname + " ERROR: wavelength indices do not exist !")
         return -1
 
-    b1_p = find_nearest( wavelength, wl_idx[0] )
-    b2_p = find_nearest( wavelength, wl_idx[1] )
+    # find the location of the nearest wl in the array
+    b1_p = (np.abs(wavelength - wl_range[0])).argmin()
+    b2_p = (np.abs(wavelength - wl_range[1])).argmin()
     wl_idx = np.arange( b1_p, b2_p+1 )
 
     # Read metadata of hypdata
@@ -515,16 +505,19 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     
     return 0
 
-def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inversion_filename, inversion_filepath, output_filename, chunk_size=None):
+def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path=None, inversion_filename="pC_data.hdr",
+    inversion_filepath=None, output_filename="corrected_p", chunk_size=None):
 
     """ Computes illumination corrected leaf spectrum using hypdata and spectral invariants (computed from inversion algorithm i.e. `pc_fast()`).
         
     Args:
-        hypfile_name: ENVI header file (hyperspectral data),
-        hypfile_path: file path
-        inversion_filename: ENVI header file (result of inversion algorithm in the band/layer order of rho, p and c)
-        inversion_path: file path
-        output_filename: file name for storing results of corrected leaf reflectance.
+        hypfile_name: ENVI header file for hyperspectral data
+        hypfile_path: file path for the hyperspectral data (optional)
+        inversion_filename: name of the header for the Envi file containing rho, p and C
+            Defaults to the default file name of chunk_processing_pC() in the current directory
+        inversion_path: path for the inversion files (optional)
+        output_filename: absolute Envi file name for storing results of corrected leaf reflectance
+            NOTE: the default name may change to a more reasonable value in the future
         chunk_size: size of each chunk (int value). Default value = 3906250 pixels
          
     Result:
@@ -535,33 +528,34 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     np.seterr(all="ignore")
     functionname = "compute_illumination_corrected_leaf_spectra()"
     
-    hyp_fullfilename = os.path.join(hypfile_path, hypfile_name)
-    inv_fullfilename = os.path.join(inversion_filepath, inversion_filename)
+    if hypfile_path is None:
+        hyp_fullfilename = hypfile_name
+    else:
+        hyp_fullfilename = os.path.join(hypfile_path, hypfile_name)
+    if not os.path.exists(hyp_fullfilename):
+        print(functionname + " ERROR: file " + hyp_fullfilename + "does not exist")
+        return -1
     
-    def check_file_exists(full_filename):
-        """ Prints error message and returns -1, if the file is not found
-        """
-        if not os.path.exists(full_filename):
-            print(functionname + " ERROR: file " + full_filename + "does not exist")
-            return -1
+    if inversion_filepath is None:
+        inv_fullfilename = inversion_filename
+    else:
+        inv_fullfilename = os.path.join(inversion_filepath, inversion_filename)    
+    if not os.path.exists(inv_fullfilename):
+        print(functionname + " ERROR: file " + inv_fullfilename + "does not exist")
+        return -1
 
-    check_file_exists(hyp_fullfilename)
-    check_file_exists(inv_fullfilename)
-    
-    #
     #  Reading hypdata and inversion results  #
-    #
-    
+
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
-    wavelength = get_wavelength(hyp_fullfilename )[0] # get_wavelength returns a tuple
+
+    wavelength, wl_found = get_wavelength( hyp_fullfilename )
+    if not wl_found:
+        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
+        return -1
   
-    # Read metadata of hypdata
-    try:
-        scale_factor = hyp_img.__dict__['metadata']['reflectance scale factor'].astype(float)        
-    except:
-        scale_factor = 10000.0 # if scale factor missing from hyp metadata
-        s_f = {'reflectance scale factor': 10000.0}
+    scale_factor = get_scalefactor( hyp_img )
+    s_f = {'reflectance scale factor': 10000}
 
     # Dimensions of the hypdata
     num_rows, num_cols, num_bands = input_image[:, :, :].shape
@@ -572,22 +566,18 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     inversion_result = inv_img.open_memmap()
     num_inv_bands = inversion_result.shape[2]
 
-    #
     #  Creating a raster to save corrected leaf reflectance result  #
-    #        
 
     description = "Corrected leaf reflectance for " + hypfile_name + " "\
         + str( wavelength[0] ) + "-" + str( wavelength[-1] ) + " nm."
 
     outdata = create_raster_like(hyp_img, output_filename, Nlayers=num_bands, outtype=4, interleave='bip', force=True, 
-                                 description=description, metadata_keys_copy=['band names', 'wavelength' ], metadata_add=s_f)
+                            description=description, metadata_keys_copy=['band names', 'wavelength' ], metadata_add=s_f)
 
     outdata_LR = outdata.open_memmap(writable=True)
-          
     
     #  Reshaping input and output files to 2D  #
     
-
     input_image_linear = input_image.reshape(num_idx, num_bands)
     inversion_result_linear = inversion_result.reshape(num_idx, num_inv_bands)
     
@@ -595,7 +585,6 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
       
     
     #  Computing corrected LR  #
-    
     
     print()
     print("Please wait! computing corrected leaf reflectance ....")
@@ -629,7 +618,7 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inve
     
     return 0
 
-def compute_correlation(array1, array2, method=None):
+def compute_correlation(array1, array2, method=1):
     """
     Computes pearson correlation coefficient between two arrays of equal dimension.
     
@@ -652,9 +641,6 @@ def compute_correlation(array1, array2, method=None):
     if not array1.shape == array2.shape:
         print(f"{function_name} Error: Dimensions mismatch between the arrays !")
         return False
-
-    if method == None:
-        method = int(1)
 
     if not (method == int(1) or method == int(2)):
         print(f"{function_name} Error: invalid argument for method\nvalid arguments = 1 or 2 !")
