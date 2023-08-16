@@ -492,8 +492,7 @@ def W_processing( filename1, filename2, filename3, DASFnumber=0, hypdata=None, h
     print( "time spent: " + str( round(t_1-t_0) ) + "s, process time: " + str( round(t_1p-t_0p)) + "s" )
 
 def sbs_processing( hypfilename, hypdata=None, hypdata_map=None, paramvector=None, DIV=None, localprintcommand=None, progressvar=None ):
-    """
-    Compute the channel-specific Exemplar Score (ES) values for spectral band subsetting.
+    """ Compute the channel-specific Exemplar Score (ES) values for spectral band subsetting.
         Kang Sun, Xiurui Geng, and Luyan Ji
         Exemplar Component Analysis: A Fast Band Selection Method for Hyperspectral Imagery
         IEEE GEOSCIENCE AND REMOTE SENSING LETTERS, VOL. 12, NO. 5, MAY 2015
@@ -504,7 +503,7 @@ def sbs_processing( hypfilename, hypdata=None, hypdata_map=None, paramvector=Non
     2) sbs_ES() which computes ES values from distancematrix. This is fast and easy and requires no 
         hyperspectral data processing.
     
-    input
+    Args:
         hypfilename: input filename. Not reopened, if hypdata is not None
         hypdata: the spectral python (SPy) file handle. If set, hypfilename is not reopened.
         hypata_map: the data raster which is extracted. If hypdata is set, hypfilename is not reopened.
