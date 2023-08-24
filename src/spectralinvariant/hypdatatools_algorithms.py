@@ -234,12 +234,12 @@ def pC_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, 
     t_0p = time.process_time()
     
     n_rows, n_cols, n_bands = hypdata_map.shape
-    n_params = pfile_map.shape[2]
+    n_params = pfile_map.shape[2]  
     
     # process in chunks to avoid memory limitations
     # chunk size given in number of lines to be processed at a time
     # how many spectra can fit in the memory chunk
-    chunksize_spectra = int( chunksize*1e6 / (hypdata_map.itemsize*n_bands) )
+    chunksize_spectra = int( chunksize*1e6 / (hypdata_map.itemsize*n_params) )
     break_signaled = False
     # iterate through hyperspectral data
 
