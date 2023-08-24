@@ -84,7 +84,7 @@ def get_DIV( hypfilename, hypdata=None ):
     else:
         return None
         
-def get_scalefactor(hypfilename, defaultSF=10000.0, hypdata=None ):
+def get_scalefactor(hypfilename, hypdata=None, defaultSF=10000.0 ):
     """ read the Reflectance Scale Factor from ENVI header
     
     Args:
@@ -105,9 +105,16 @@ def get_scalefactor(hypfilename, defaultSF=10000.0, hypdata=None ):
         hyp_metadata = hypdata.metadata
         
     try:
-        scale_factor = hyp_metadata['reflectance scale factor'].astype(float)        
+        scale_factor = hyp_metadata['reflectance scale factor'].astype(float)
     except: # if scale factor missing from hyp metadata
-        scale_factor = defaultSF
+        # next, check data type
+        try:
+            data_type = int( hypdata.metadata['data type'] )
+        except: # if scale factor missing from hyp metadata
+            return defaultSF
+        if data_type in (1,2,3,12,13):
+            # these are integer data codes. assume it's reflectance*10,000
+            scale_factor = 10000.0
 
     return scale_factor
     

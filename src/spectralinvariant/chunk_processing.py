@@ -14,9 +14,10 @@ from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transfo
 from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength, get_scalefactor
 
 def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data", chunk_size=None, wl_range=[710,790]):
-    """
-    Wraps p() function from spectralinvariants.py module to process hyperspectral data.
-    The input file is processed in chunks. A raster of the same spatial dimension with 4 layers is created to store the results consecutively.
+    """ Wraps p() function from spectralinvariants.py module to process hyperspectral data.
+    
+    Uses the transformed reference leaf albedo. The input file is processed in chunks.
+    A raster of the same spatial dimension with 4 layers is created to store the results consecutively.
     
     Args:
         hypfile_name: ENVI header file,
@@ -72,7 +73,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     output_band_names = { "band names": ("p", "intercept", "DASF", "R2") }
     num_output_bands = len(output_band_names['band names'])
 
-    description = "Spectral invariants computed for " + hypfile_name + " "\
+    description = "Spectral invariants computed with transformed reference leaf albedo for " + hypfile_name + " "\
         + str( wavelength[wl_idx[0]] ) + "-" + str( wavelength[wl_idx[-1]] ) + " nm."
 
     outdata = create_raster_like(img, output_filename, description=description,
@@ -85,7 +86,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     num_idx = num_rows * num_cols
 
     # Preparing inputs for p function (710 >= lambda <= 790)
-    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
+    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), referencealbedo_transformed())
 
     # Converts input and output data into 2D shape
     input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
@@ -117,6 +118,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
 def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_data", chunk_size=None, wl_range=[670, 790]):
     """ Wraps pC() function from spectralinvariants.py module to process hyperspectral data.
     
+    Uses the transformed reference leaf albedo. 
     The input file is processed in chunks. A raster of the same spatial dimension with 5 layers is created to store the results produced consecutively.
     
     Args:
@@ -174,7 +176,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     output_band_names = { "band names": ("p", "intercept", "DASF", "R2", "C") }
     num_output_bands = len(output_band_names['band names'])
 
-    description = "Spectral invariants computed for " + hypfile_name + " "\
+    description = "Spectral invariants computed with transformed reference leaf albedo for " + hypfile_name + " "\
         + str( wavelength[wl_idx[0]] ) + "-" + str( wavelength[wl_idx[-1]] ) + " nm."
 
     outdata = create_raster_like(img, output_filename, description=description,
@@ -187,9 +189,9 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     num_idx = num_rows * num_cols
 
     # Preparing inputs for p function (710 >= lambda <= 790)
-    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), 0.5*referencealbedo_transformed())
+    ref_spectra_p = np.interp(wavelength[ wl_idx ], reference_wavelengths(), referencealbedo_transformed())
 
-    # Converts input and output data into 2D shape
+    # Convert input and output data into 2D shape
     input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
     outdata_map = outdata_map.reshape(num_idx, num_output_bands)
 
