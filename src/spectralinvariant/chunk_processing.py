@@ -45,7 +45,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength, wl_found = get_wavelength( img )
+    wavelength, wl_found = get_wavelength( fullfilename )
     if not wl_found:
         print(functionname + " ERROR: wavelength information not found in " + fullfilename )
         return -1
@@ -67,7 +67,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     if chunk_size == None:        
         chunk_size = np.round( 0.5e9 / 128).astype(int)
 
-    scale_factor = get_scalefactor( img )
+    scale_factor = get_scalefactor( fullfilename )
     
     # creating a raster like file using create_raster_like function
     output_band_names = { "band names": ("p", "intercept", "DASF", "R2") }
@@ -146,7 +146,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength, wl_found = get_wavelength( img )
+    wavelength, wl_found = get_wavelength( fullfilename )
     if not wl_found:
         print(functionname + " ERROR: wavelength information not found in " + fullfilename )
         return -1
@@ -166,7 +166,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     b2_pC = (np.abs(wavelength - wl_range[1])).argmin()  
     wl_idx = np.arange( b1_pC, b2_pC+1 )
 
-    scale_factor = get_scalefactor( img )
+    scale_factor = get_scalefactor( fullfilename )
 
     # Defines the chunk size
     if chunk_size == None:        
@@ -218,7 +218,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     print(f"{functionname}: computing the spectral invariants completed.\nComputation time = {(process_time()-start)/60: .2f} mins.")
     return 0
 
-def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_size=None, wl_range=[670, 720], inv_algorithm=None, inv_method=None, **kwargs):
+def create_chlorophyll_map(hypfile_name, hypfile_path=None, output_filename="chl_content_map", chunk_size=None, wl_range=[670, 720], inv_algorithm=None, inv_method=None, **kwargs):
 
     """
     Wraps golden_cab (`scipy.golden`) and minimize_cab (`scipy.minimize`) algorithms implemented in inversion.py module on propspect_D model to compute chlorophyll content for a given hyperspectral data.
@@ -252,8 +252,12 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
 
     np.seterr(all="ignore")
     functionname = "create_chlorophyll_map()"
-    fullfilename = os.path.join(hypfile_path, hypfile_name)
-
+    
+    if hypfile_path is None:
+        fullfilename = hypfile_name
+    else:
+        fullfilename = os.path.join(hypfile_path, hypfile_name)
+    
     if not os.path.exists(fullfilename):
         print(functionname + " ERROR: file " + fullfilename + "does not exist")
         return -1
@@ -261,7 +265,7 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     img = envi.open( fullfilename )
     input_image = img.open_memmap()
 
-    wavelength, wl_found = get_wavelength( input_image )
+    wavelength, wl_found = get_wavelength( fullfilename )
     if not wl_found:
         print(functionname + " ERROR: wavelength information not found in " + fullfilename )
         return -1
@@ -281,11 +285,8 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     b2_cab = (np.abs(wavelength - wl_range[1])).argmin()
     wl_idx = np.arange( b1_cab, b2_cab+1 )
 
-    # Read metadata of hypdata
-    try:
-        scale_factor = img.__dict__['metadata']['reflectance scale factor'].astype(float)        
-    except:
-        scale_factor = 10000.0 # scale factor missing from metadata
+    # # Read reflectance scale factor of the hyp file/data
+    scale_factor = get_scalefactor( fullfilename )
 
     # inversion algorithm selection
     algorithm = {1:"golden_cab", 2:"minimize_cab"}
@@ -295,7 +296,7 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     if not (inv_algorithm == int(1) or inv_algorithm == int(2)):
         print(f"{functionname} ERROR: invalid argument passed for 'inv_algorithm' parameter!\nvalid argument = 1 or 2 !")
         return -1
-    print(f"Alogrithm : {algorithm[inv_algorithm]}")
+    print(f"Inversion alogrithm : {algorithm[inv_algorithm]}")
 
     # optimization methods for `scipy.minimize` algorithm
     optimization = {1:'Nelder-Mead', 2:'L-BFGS-B', 3:'TNC', 4:'SLSQP', 5:'Powell', 6:'trust-constr'}
@@ -378,7 +379,7 @@ def create_chlorophyll_map(hypfile_name, hypfile_path, output_filename, chunk_si
     print(f'Cholorphyll map compuation completed!\nCompuation time = {(time() - start)/60:.2f} mins.')
     return 0
 
-def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap_file_path, output_filename, wl_range=[670, 720]):
+def compute_inversion_invariants(hypfile_name, cmap_filename="chl_content_map.hdr", hypfile_path=None, cmap_file_path=None, output_filename="chl_inversion_invariants", wl_range=[670, 720]):
 
     """
     Wraps pc_fast function from inversion.py module on propspect_D model to compute spectral invariants from a chlorophyll map, produced using inversion algorithm.
@@ -403,13 +404,22 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     
     np.seterr(all="ignore")
     functionname = "compute_inversion_invariants()"
-    hyp_fullfilename = os.path.join(hypfile_path, hypfile_name)
-    cmap_fullfilename = os.path.join(cmap_file_path, cmap_filename)
-    
+
+    if hypfile_path is None:
+        hyp_fullfilename = hypfile_name
+    else:
+        hyp_fullfilename = os.path.join(hypfile_path, hypfile_name)
+
     if not os.path.exists(hyp_fullfilename):
         print(functionname + " ERROR: file " + hyp_fullfilename + "does not exist")
         return -1
-    if not os.path.exists:(cmap_fullfilename):
+
+    if cmap_file_path is None:
+        cmap_fullfilename = cmap_filename
+    else:
+        cmap_fullfilename = os.path.join(cmap_file_path, cmap_filename)
+    
+    if not os.path.exists(cmap_fullfilename):
         print(functionname + " ERROR: file " + cmap_fullfilename + "does not exist")
         return -1
         
@@ -438,11 +448,8 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     b2_p = (np.abs(wavelength - wl_range[1])).argmin()
     wl_idx = np.arange( b1_p, b2_p+1 )
 
-    # Read metadata of hypdata
-    try:
-        scale_factor = hyp_img.__dict__['metadata']['reflectance scale factor'].astype(float)        
-    except:
-        scale_factor = 10000.0 # scale factor missing from metadata
+    # Read reflectance scale factor of the hyp file/data
+    scale_factor = get_scalefactor( hyp_fullfilename )
 
     # Dimensions of the hypdata
     num_rows, num_cols, num_bands = input_image[:, :, :].shape
@@ -502,13 +509,11 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     # converting output back to 3D shape        
     outdata_pc_fast = outdata_pc_fast.reshape(num_rows, num_cols, num_output_layers)
     outdata_pc_fast.flush() # writes and saves in the disk
-      f
     print(f"{functionname}: process completed!\nProcess completion time = {(time() - start)/60:.2f} mins.")
     
     return 0
 
-def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path=None, inversion_filename="pC_data.hdr",
-    inversion_filepath=None, output_filename="corrected_p", chunk_size=None):
+def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path=None, inversion_filename="chl_inversion_invariants.hdr",  inversion_filepath=None, output_filename="illumination_corrected", chunk_size=None):
 
     """ Computes illumination corrected leaf spectrum using hypdata and spectral invariants (computed from inversion algorithm i.e. `pc_fast()`).
         
@@ -553,11 +558,11 @@ def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path=None,
 
     wavelength, wl_found = get_wavelength( hyp_fullfilename )
     if not wl_found:
-        print(functionname + " ERROR: wavelength information not found in " + fullfilename )
+        print(functionname + " ERROR: wavelength information not found in " + hyp_fullfilename )
         return -1
   
-    scale_factor = get_scalefactor( hyp_img )
-    s_f = {'reflectance scale factor': 10000}
+    scale_factor = get_scalefactor( hyp_fullfilename )
+    s_f = {'reflectance scale factor': scale_factor}
 
     # Dimensions of the hypdata
     num_rows, num_cols, num_bands = input_image[:, :, :].shape

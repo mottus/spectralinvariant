@@ -439,15 +439,23 @@ def minimize_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0
         Result of the inversion
     """
 
-    if not (hypdata.all()) == np.nan and not(hypdata.all()) == 0:
-        try:
-            ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
-        except:
-            ans = -1.0 # if the algorithm fails
-    else:
-        ans = np.nan # if hydata values = 0 or NaN  
+    # if not (hypdata.all()) == np.nan and not(hypdata.all()) == 0:
+    #     try:
+    #         ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
+    #     except:
+    #         ans = -1.0 # if the algorithm fails
+    # else:
+    #     ans = np.nan # if hydata values = 0 or NaN  
         
+    # return ans
+
+    try:
+        ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
+    except:
+        ans = -1.0 # if the algorithm fails
+
     return ans
+
 
 def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, bounds=(1., 100.), **kwargs):
     """Invert the leaf chlorophyll a+b content using p-theory using the golden section search method
@@ -481,12 +489,19 @@ def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, 
         Result of the inversion
     """
 
-    if not (hypdata.all()) == np.nan and not (hypdata.all()) == 0:
-        try:
-            ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
-        except:
-            ans = -1.0 # if the algorithm fails
-    else:
-        ans = np.nan # if hypdata values = 0 or NaN
+    # if not (hypdata.all()) == np.nan and not (hypdata.all()) == 0:
+    #     try:
+    #         ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
+    #     except:
+    #         ans = -1.0 # if the algorithm fails
+    # else:
+    #     ans = np.nan # if hypdata values = 0 or NaN
      
+    # return ans
+
+    try:
+        ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
+    except:
+        ans = -1.0 # if the algorithm fails
+    
     return ans
