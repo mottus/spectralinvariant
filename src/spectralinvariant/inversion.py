@@ -315,6 +315,7 @@ def pc_fast(hypdata, refspectrum):
         beta : ndarray
             The estimated values of rho, p, and c, respectively
     """
+    # np.seterr(all="ignore")
     n = len(refspectrum)
     X = np.array([np.ones(n), hypdata, 1./refspectrum]).T
     Y = hypdata / refspectrum
@@ -322,8 +323,14 @@ def pc_fast(hypdata, refspectrum):
     XTY = (X.T).dot(Y)
     try:
         beta = np.linalg.inv(XTX).dot(XTY)
-    except: # If the matrix XTX is singular, use the Moore-Penrose pseudoinverse
+    except: #np.linalg.LinAlgError as e:
+        # if 'Singular matrix' in str(e):
+            
+            # print("Inside the if statements",type(e), str(e))
+             # If the matrix XTX is singular, use the Moore-Penrose pseudoinverse
         beta = np.linalg.pinv(XTX).dot(XTY)
+        # else:
+        #     raise
     return beta
 
 
@@ -438,16 +445,23 @@ def minimize_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0
     ans : float
         Result of the inversion
     """
+    try:
+        ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
+    except:
+        ans = -1.0 # if the algorithm fails
 
-    if not (hypdata.all()) == np.nan and not(hypdata.all()) == 0:
-        try:
-            ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
-        except:
-            ans = -1.0 # if the algorithm fails
-    else:
-        ans = np.nan # if hydata values = 0 or NaN  
-        
     return ans
+
+    # if not (hypdata.all()) == np.nan and not(hypdata.all()) == 0:
+    #     try:
+    #         ans = minimize(rss_function, x0=initial_guess, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), bounds=bounds, method=method, tol=1e-4, **kwargs).x[0]
+    #     except:
+    #         ans = -1.0 # if the algorithm fails
+    # else:
+    #     ans = -1.0 # if hydata values = 0 or NaN
+    
+    # return ans
+
 
 def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, bounds=(1., 100.), **kwargs):
     """Invert the leaf chlorophyll a+b content using p-theory using the golden section search method
@@ -481,12 +495,19 @@ def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, 
         Result of the inversion
     """
 
-    if not (hypdata.all()) == np.nan and not (hypdata.all()) == 0:
-        try:
-            ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
-        except:
-            ans = -1.0 # if the algorithm fails
-    else:
-        ans = np.nan # if hypdata values = 0 or NaN
-     
+    # if not (hypdata.all()) == np.nan and not (hypdata.all()) == 0:
+    #     try:
+    #         ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
+    #     except:
+    #         ans = -1.0 # if the algorithm fails
+    # else:
+    #     ans = -1.0 # if hypdata values = 0 or NaN
+
+    # return ans
+
+    try:
+        ans = golden(rss_function, args=(prospect_instance, hypdata, gamma, p_lower, p_upper, rho_lower, rho_upper), brack=bounds, tol=1e-4, maxiter=10, **kwargs)
+    except:
+        ans = -1.0 # if the algorithm fails
+    
     return ans

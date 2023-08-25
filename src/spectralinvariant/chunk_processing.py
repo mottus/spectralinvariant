@@ -432,7 +432,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     
     hyp_img = envi.open( hyp_fullfilename )
     input_image = hyp_img.open_memmap()
-    
+
     wavelength = get_wavelength(hyp_fullfilename )[0] # get_wavelength returns a tuple
 
     if wl_idx is None:
@@ -498,7 +498,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     model = PROSPECT_D(N=1.5, Car=1.0, Cw=0.0, Cm=0.0)
     model.subset(wavelength[wl_idx])
     
-        
+    
     #################################
     ###  Computing rho, p, and C  ###
     #################################
@@ -530,7 +530,7 @@ def compute_inversion_invariants(hypfile_name, hypfile_path, cmap_filename, cmap
     
     return 0
 
-def compute_illumination_corrected_leaf_spectra(hypfile_name, hypfile_path, inversion_filename, inversion_filepath, output_filename, chunk_size=None):
+def compute_illumination_correction(hypfile_name, hypfile_path, inversion_filename, inversion_filepath, output_filename, chunk_size=None):
 
     """
     Computes illumination corrected leaf spectrum using hypdata and spectral invariants (computed from inversion algorithm i.e. `pc_fast()`).
