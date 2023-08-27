@@ -55,16 +55,25 @@ if __name__ == "__main__":
     print( "All functions passed the test" )
     print( '-' * n)
     
-    ### delete output files after the test run
-    ### uncomment the following block of code after to remove the test files
+    ### delete output files after the test run ?
+    
+    ans = str(input( "Do you want to remove test ouptput files? : (Y/N) " ) )
 
-    # output_files = [ output_p, output_pC, output_chl_map, output_inv_invariants, output_illum_correction ]
+    if ans.upper() == "Y":
 
-    # for i in range( len( output_files ) ):
-    #     remove( output_files[i] )
-    #     remove( output_files[i] + str( '.hdr' ) )
+        output_files = [ output_p, output_pC, output_chl_map, output_inv_invariants, output_illum_correction ]
 
-    # print()
-    # print("Test output files removed from the disk!")
-    # print()
+        for i in range( len( output_files ) ):
+            remove( output_files[i] )
+            remove( output_files[i] + str( '.hdr' ) )
+
+        print()
+        print( "Test output files removed from the disk!" )
+        print()
+    
+    else:        
+        print()
+        print("Test output files were not deleted")
+        print()
+
 
