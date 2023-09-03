@@ -35,18 +35,16 @@ def test_illumination_correction():
 
 if __name__ == "__main__":
 
-    # hypfile_name = "TAIGA_subset.hdr" # a small airborne hyperspectral image
-    hypfile_name = "Julich_20180626_subset02.hdr"
-    # hypfile_path = "../data" # relative to the location of this script, part of spectralinvariants
-    hypfile_path = r"C:\Users\BKBIJAY\OneDrive - Teknologian Tutkimuskeskus VTT\Documents\data\julich"
+    hypfile_name = "TAIGA_subset.hdr" # a small airborne hyperspectral image
+    hypfile_path = "../data" # relative to the location of this script, part of spectralinvariants
     hypfile_full = path.join( hypfile_path, hypfile_name )
 
     # output file names, (default values used for the test purpose. Can be changed to suitable file names)
-    output_p = "Julich_20180626_subset02_p_data"
-    output_pC = "Julich_20180626_subset02_pC_data"
-    output_chl_map = "Julich_20180626_subset02_chl_content_map"
-    output_inv_invariants = "Julich_20180626_subset02_chl_inversion_invariants"
-    output_illum_correction = "Julich_20180626_subset02_illumination_corrected"
+    output_p = "p_data"
+    output_pC = "pC_data"
+    output_chl_map = "chl_content_map"
+    output_inv_invariants = "chl_inversion_invariants"
+    output_illum_correction = "illumination_corrected"
 
     functions = [ test_chunk_processing_p, test_chunk_processing_pC, test_create_chlorophyll_map, test_compute_inversion, test_illumination_correction ]
     n = 75
