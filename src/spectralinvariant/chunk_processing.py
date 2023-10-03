@@ -21,7 +21,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     
     Args:
         hypfile_name: ENVI header file,
-        input_file_path: Envi file path (optional)
+        hypfile_path: Envi file path (optional)
         output_filename: Envi file name (absolute) for processed data: i.e. p, rho, DASF and R 
             if None, default name in current working directory is used (NOTE: this may change to a more reasonable default!)
         chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 spectra
@@ -120,7 +120,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     
     Args:
         hypfile_name: ENVI header file,
-        input_file_path: Envi file path (optional)
+        hypfile_path: Envi file path (optional)
         output_filename: Envi file name (absolute) for processed data: i.e. p, rho, DASF, R2 and C 
             if None, default name in current working directory is used (NOTE: this may change to a more reasonable default!)
         chunk_size: number of spectra in each each chunk (int value). Default value = 3906250 spectra

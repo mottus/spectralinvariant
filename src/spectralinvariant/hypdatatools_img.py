@@ -105,7 +105,7 @@ def get_scalefactor(hypfilename, hypdata=None, defaultSF=10000.0 ):
         hyp_metadata = hypdata.metadata
         
     try:
-        scale_factor = hyp_metadata['reflectance scale factor'].astype(float)
+        scale_factor = float(hyp_metadata['reflectance scale factor'])
     except: # if scale factor missing from hyp metadata
         # next, check data type
         try:
