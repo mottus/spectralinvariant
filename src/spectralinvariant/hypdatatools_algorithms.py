@@ -30,6 +30,7 @@ def p_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, t
     the function is designed to run in a separate thread with feedback on progress, but
     currently, computation is done in one go for the whole image. At some point, memory 
     limits may be hit and then the old code in p_processing_old may again be handy.
+    NOTE: will be replaced at some point by the functions in chunk_processing.py
 
     Args:
       refspecfilename (str): reference spectrum file name (incl full directory)
@@ -124,7 +125,7 @@ def p_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, t
     t_0 = time.time()
     t_0p = time.process_time()
 
-    pdata[:,:,:] = np.stack( p( hypdata_map[ :,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
+    pdata[:,:,:] = np.stack( compute_p( hypdata_map[ :,:,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=2 )
     
     t_1 = time.time()
     t_1p = time.process_time()
@@ -141,6 +142,7 @@ def pC_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, 
     currently, computation is done in one go for the whole image. At some point, memory 
     limits may be hit and then the old code in p_processing_old may again be handy.
     Based on p_processing()
+    NOTE: will be replaced at some point by the functions in chunk_processing.py
 
     Args:
       refspecfilename (str): reference spectrum file name (incl full directory)
@@ -259,7 +261,7 @@ def pC_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, 
         else:
             print("#",end='')
         if not break_signaled:
-            pfile_map[hyp_idx:max_idx,:] = np.stack( pC( hypdata_map_linear[ hyp_idx:max_idx,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=1 )
+            pfile_map[hyp_idx:max_idx,:] = np.stack( compute_pC( hypdata_map_linear[ hyp_idx:max_idx,i_wlp ]*hypdata_factor, refspec_hyp_subset ), axis=1 )
     
     t_1 = time.time()
     t_1p = time.process_time()

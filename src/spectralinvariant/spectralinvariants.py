@@ -14,7 +14,7 @@ from numpy.linalg import solve
 
 
 
-def p(hypdata, refspectrum):
+def compute_p(hypdata, refspectrum):
     """ Calculate p (by fitting a line).
 
     Based on p_forpixel()
@@ -84,7 +84,7 @@ def pC_forpixel(hypdata, refspectrum):
     return (beta[1], beta[0], DASF_out, 1.-RSS/TSS, beta[2])
 
 
-def pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
+def compute_pC(hypdata, refspectrum, wl_fit=None, verbose=False ):
     """ Calculate rho, p and c.
 
     Estimates parameters `rho`, `p`, and `c` for :math:`R/S = \rho + p R + c/S`
@@ -389,31 +389,42 @@ def reference_wavelengths():
     """
     return prospect.prospect_wavelengths()
 
-def transform_albedo( albedo, refalbedo, wl=None ):
+def transform_albedo( wl, albedo, refalbedo=None, iR=1, return_iL=False ):
     """Transforms the albedo, i.e., forces it to cross referencealbedo at referencealbedo=1.
 
     Details:
     M.A. Schull et al. / Journal of Quantitative Spectroscopy & Radiative Transfer 112 (2011) 736–750
         see Appendix A
+    Used wavelength range: 710-790 nm
 
-    Args:
-        albedo: TBW
-        refalbedo: TBW
+    Args: (all
+        wl: the wavelength vector, same length as albedo [nm]
+        albedo: the spectrum to be transformed
+        refalbedo: the reference albedo against which to tansform
+        iR: the i_R parameter, correction factor for the reference albedo
+        return_iL: if True, returns the correction term iL, otherwise
 
     Returns:
-        np.array of the transformed albedo
+        np.array of the transformed albedo (default, return_iL==False), or
+            iL (a single value) if return_iL==True
     """
 
-    # perform a very simple linear regression
+    i_subset = np.nonzero( (wl>709)&(wl<791) )[0]
+    albedo_subset = albedo[i_subset]
+    if refalbedo is None:
+        refalbedo_subset = referencealbedo_transformed( wl[i_subset] )
+    else:
+        reflabedo_subset = refalbedo[i_subset]
+    k, b, DASF, R =  compute_p(albedo_subset, refalbedo_subset)
+    iL = iR*k/(1-k*iR)
+    if return_iL:
+        return iL
+    else:
+        # the approximation in Appendix A is W=w*iL => w=w/iL, but this is an approximation
+        #   we can use the correct expression
+        w = ( albedo-(1-iL) )/iL
+        return w
 
-    n = hypdata.shape[0]
-    Sx = hypdata.sum()
-    Sxx = (hypdata * hypdata).sum() - Sx * Sx / n
-    Sy = y_DASF.sum()
-    Syy = (y_DASF * y_DASF).sum() - Sy * Sy / n
-    Sxy = (hypdata * y_DASF).sum() - Sx * Sy / n
-    p_values[0] = Sxy / Sxx  # p = slope
-    p_values[1] = (Sy - p_values[0] * Sx) / n  # rho = intercept
 
 # ====== deprecated functions below this line
 
@@ -515,7 +526,7 @@ def p_forpixel_old(hypdata, refspectrum, p_values):
     p_values[3] = np.corrcoef(hypdata, y_DASF)[0][1]
     p_values[2] = p_values[1] / (1 - p_values[0])  # DASF
 
-def pC_old(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
+def compute_pC_old(BRF,w, wl=None, wl_fit=(670,710,790), verbose=False):
     """ Fit the p-equation with a constant reflectance component.
         DEPRECATED, please use the similar newer function pC() instead!
 

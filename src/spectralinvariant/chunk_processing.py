@@ -10,7 +10,7 @@ from os import cpu_count
 
 from spectral import envi
 from spectralinvariant.inversion import PROSPECT_D, pc_fast, minimize_cab, golden_cab
-from spectralinvariant.spectralinvariants import p,  pC, referencealbedo_transformed, reference_wavelengths
+from spectralinvariant.spectralinvariants import compute_p,  compute_pC, referencealbedo_transformed, reference_wavelengths
 from spectralinvariant.hypdatatools_img import create_raster_like, get_wavelength, get_scalefactor
 
 def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data", chunk_size=None, wl_range=[710,790]):
@@ -92,11 +92,8 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
     input_image_linear = input_image[:, :, wl_idx[0]:wl_idx[-1]+1].reshape(num_idx, num_bands)
     outdata_map = outdata_map.reshape(num_idx, num_output_bands)
 
-    print()
-    print("Please wait! Processing the data ....")
-    
+    print("\nPlease wait! Processing the data...")
     chunk = range(0, num_idx, chunk_size)
-
     start = process_time()
     for i in range(len(chunk)):
         data = input_image_linear[chunk[i]:chunk[i] + chunk_size, :]
@@ -104,7 +101,7 @@ def chunk_processing_p(hypfile_name, hypfile_path=None, output_filename="p_data"
         data_float /= scale_factor
         
         # Computes spectral invariants using p() function
-        processed_chunk = p(data_float[:, :], ref_spectra_p)
+        processed_chunk = compute_p(data_float[:, :], ref_spectra_p)
         outdata_map[chunk[i]:chunk[i] + chunk_size, :num_output_bands] = np.transpose(processed_chunk, (1, 0))
 
     # Converts the output data back to 3D shape
@@ -196,10 +193,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
     outdata_map = outdata_map.reshape(num_idx, num_output_bands)
 
     chunk = range(0, num_idx, chunk_size)
-
-    print()
-    print("Please wait! Processing the data ....")
-
+    print("\nPlease wait! Processing the data...")
     start = process_time()
     for i in range(len(chunk)):
         data = input_image_linear[chunk[i]:chunk[i] + chunk_size, :]
@@ -207,7 +201,7 @@ def chunk_processing_pC(hypfile_name, hypfile_path=None, output_filename="pC_dat
         data_float /= scale_factor
         
         # Compute spectral invariants using p() function
-        processed_chunk = pC(data_float[:, :], ref_spectra_p)
+        processed_chunk = compute_pC(data_float[:, :], ref_spectra_p)
         outdata_map[chunk[i]:chunk[i] + chunk_size, :num_output_bands] = np.transpose(processed_chunk, (1, 0))
 
     # Convert the output data back to 3D shape
