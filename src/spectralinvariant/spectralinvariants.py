@@ -414,17 +414,16 @@ def transform_albedo( wl, albedo, refalbedo=None, iR=1, return_iL=False ):
     if refalbedo is None:
         refalbedo_subset = referencealbedo_transformed( wl[i_subset] )
     else:
-        reflabedo_subset = refalbedo[i_subset]
-    k, b, DASF, R =  compute_p(albedo_subset, refalbedo_subset)
-    iL = iR*k/(1-k*iR)
+        refalbedo_subset = refalbedo[i_subset]
+    k, b, DASF, R = compute_p(albedo_subset, refalbedo_subset)
+    iL = iR*b/(1-k*iR)
     if return_iL:
         return iL
     else:
-        # the approximation in Appendix A is W=w*iL => w=w/iL, but this is an approximation
-        #   we can use the correct expression
-        w = ( albedo-(1-iL) )/iL
+        # the approximation in Appendix A, W=w*iL => w=w/iL,
+        #   is actually the exact equation to force albedo=1 if refalbedo=1
+        w = albedo/iL
         return w
-
 
 # ====== deprecated functions below this line
 
