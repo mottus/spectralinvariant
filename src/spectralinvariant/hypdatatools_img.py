@@ -22,11 +22,15 @@ import numpy as np
 from spectralinvariant.hypdatatools_utils import readtextfile
 
 def get_wavelength(hypfilename, hypdata=None):
-    """
-    Get the array of wavelengths in nm as numpy float array. If not present, return a range of decreasing integers starting at -1
-    hypdata is a Spectral Python file handle. If set, hyperspectral file will not be reopened.
-        alternatively, it can be the metadata dictionary.
-    output
+    """ Get the array of wavelengths in nm as numpy float array. If not present,
+        return a range of decreasing integers starting at -1.
+        
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+        
+    Returns:
         wl : wavelength in nm
         wl_found : boolean flag
     """
@@ -50,8 +54,15 @@ def get_wavelength(hypfilename, hypdata=None):
     return wl_hyp, wl_found
     
 def get_DIV( hypfilename, hypdata=None ):
-    """ read the Data Ignore Value from ENVI header
-    return None if not found
+    """ read the Data Ignore Value from ENVI header, return None if not found
+    
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+
+    Returns:
+    Data Ignore Value used in the data file
     """
     if hypdata is None:
         hypdata = spectral.open_image( hypfilename )
@@ -73,6 +84,183 @@ def get_DIV( hypfilename, hypdata=None ):
     else:
         return None
         
+def get_scalefactor(hypfilename, hypdata=None, defaultSF=10000.0 ):
+    """ read the Reflectance Scale Factor from ENVI header
+    
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+    defaultSF: the common scale factor default value in hyperspectral images, 10,000
+    
+    Returns:
+    the default scale factor value (i.e. defaultSF) if not found
+    """
+    if hypdata is None:
+        hypdata = spectral.open_image( hypfilename )
+
+    if type(hypdata) is dict:
+        hyp_metadata = hypdata
+    else:
+        hyp_metadata = hypdata.metadata
+        
+    try:
+        scale_factor = float(hyp_metadata['reflectance scale factor'])
+    except: # if scale factor missing from hyp metadata
+        # next, check data type
+        try:
+            data_type = int( hypdata.metadata['data type'] )
+        except: # if scale factor missing from hyp metadata
+            return defaultSF
+        if data_type in (1,2,3,12,13):
+            # these are integer data codes. assume it's reflectance*10,000
+            scale_factor = 10000.0
+
+    return scale_factor
+    
+        
+def get_pixelsize(hypfilename, hypdata=None ):
+    """ Get the pixel size (in both x and y directions) of ENVI data from metadata in hypfilename 
+
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+    
+    Returns: (dx, dy)
+    """
+    
+    if hypdata is None:
+        hypdata = spectral.open_image( hypfilename )
+
+    if type(hypdata) is dict:
+        hyp_metadata = hypdata
+    else:
+        hyp_metadata = hypdata.metadata
+
+    if 'map info' in hyp_metadata:
+        mapinfo = hyp_metadata['map info']
+        dx = float(mapinfo[5])
+        dy = float(mapinfo[6])
+        pixelsize = [dx, dy]
+    else:
+        pixelsize = []
+    return pixelsize
+
+
+def get_imagesize(hypfilename, hypdata=None ):
+    """ Get the image size of ENVI data file based on metadata in envihdrfilename 
+    
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+        
+    Returns: (x, y) [ x=samples, y=lines ]
+    """
+    if hypdata is None:
+        hypdata = spectral.open_image( hypfilename )
+
+    if type(hypdata) is dict:
+        hyp_metadata = hypdata
+    else:
+        hyp_metadata = hypdata.metadata
+
+    if 'lines' in hyp_metadata and 'samples' in hyp_metadata:
+        x = int(hyp_metadata['samples'])
+        y = int(hyp_metadata['lines'])
+        imagesize = [x, y]
+    else:
+        imagesize = []
+    return imagesize
+
+
+def get_geotrans(hypfilename, hypdata=None):
+    """ Get the geometry transform of ENVI data file associated with hypfilename.
+    Uses only hdr data, assumes that images are already oriented along the cardinal directions (i.e., no rotations)
+    NOTE: this function ignores the start values in hdr files (as I am not sure how they work) 
+    
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
+        
+    Returns: Geotransform (list with 6 numeric elements)
+    """
+    if hypdata is None:
+        hypdata = spectral.open_image( hypfilename )
+
+    if type(hypdata) is dict:
+        hyp_metadata = hypdata
+    else:
+        hyp_metadata = hypdata.metadata
+
+    map_info = hyp_metadata['map info']  # the standard line containing image geometry description
+    referencepixel = map_info[1:3]
+    referencecoord = map_info[3:5]
+    pixelsize = map_info[5:7]
+    # convert these lists of strings to int or float using list comprehension
+    referencepixel = [int(float(x)) for x in referencepixel]
+    referencecoord = [float(x) for x in referencecoord]
+    pixelsize = [float(x) for x in pixelsize]
+
+    # What we need are GeoTrans (GT) coefficients, for transforming between
+    #    pixel/line (P,L) raster space, and projection coordinates (Xp,Yp) space
+    # Xp = GT[0] + P*GT[1] + L*GT[2];
+    # Yp = GT[3] + P*GT[4] + L*GT[5];
+    # The inverse in the general case is  
+    # P = ( Xp*GT[5] - GT[0]*GT[5] + GT[2]*GT[3] - Yp*GT[2] ) / ( GT[1]*GT[5] - GT[2]*GT[4] )
+    # L = ( Yp*GT[1] - GT[1]*GT[3] + GT[0]*GT[4] - Xp*GT[4] ) / ( GT[1]*GT[5] - GT[2]*GT[4] )
+    # NOTE: ENVI files refer to pixels by their upper-left corner. It is more convenient to use pixel center coordinates
+    #   if the coordinates p and l are given relative to pixel centers, we get
+    # Xp = GT[0] + (p+0.5)*GT[1] + (l+0.5)*GT[2];
+    # Yp = GT[3] + (p+0.5)*GT[4] + (l+0.5)*GT[5];
+    # D = GT[1]*GT[5] - GT[2]*GT[4]
+    # p = ( Xp*GT[5] - GT[0]*GT[5] + GT[2]*GT[3] - Yp*GT[2] ) / D - 0.5
+    # l = ( Yp*GT[1] - GT[1]*GT[3] + GT[0]*GT[4] - Xp*GT[4] ) / D - 0.5
+
+    GT = np.zeros(6)
+    GT[0] = referencecoord[0] - (referencepixel[0] - 1) * pixelsize[0]  # x-coordinate of upper-left pixel
+    GT[1] = pixelsize[0]
+    GT[3] = referencecoord[1] + (referencepixel[1] - 1) * pixelsize[
+        1]  # y-coordinate of upper-left pixel. Note: y-axis is inverted
+    GT[5] = -pixelsize[1]
+
+    return GT
+
+def avg_spectrum(hypfilename, coordlist, DIV=-1, hypdata=None, hypdata_map=None):
+    """ exctract data point values from hypfilename
+    
+    Args:
+        hypfilename: name of hyperspectral data file
+        coordlist: list of two lists: [ [y] , [x] ] in image coordinates
+            NOTE! Envi BIL files have y (line) for first coordinate [0], x (pixel) for second [1]
+        DIV : value used as Data Ignore Value. If not used, set DIV=-1
+        hypdata, hypdata_map: spectral handles for file and memmap (optional). If given, hypfilename will not be reopened
+        
+    Returns:
+        avg_spectrum: average spectrum for all points
+        N: number of spectra averaged
+    """
+    if hypdata is None:
+        # open the file if not open yet. This only gives access to metadata.                
+        hypdata = spectral.open_image(hypfilename)
+        # open the file as memmap to get the actual hyperspectral data
+        hypdata_map = hypdata.open_memmap()  # open as BIP
+
+    hypdata_sub = hypdata_map[coordlist[0],coordlist[1],:]
+    if DIV != -1:
+        # look for no data values
+        hypdata_sub_min = np.min(hypdata_sub, axis=1)
+        hypdata_sub_max = np.max(hypdata_sub, axis=1)
+        sub_incl = np.where(np.logical_and(hypdata_sub_min != float('nan'),
+                                           np.logical_or(hypdata_sub_min != DIV, hypdata_sub_max != DIV)))[0]
+        hypdata_sub = hypdata_sub[sub_incl, :]
+    spectrum = np.mean(hypdata_sub, axis=0)
+    N = (hypdata_sub.shape[0])
+    return spectrum, N
+
+
 def envi_isfloat( hypfilename, hypdata=None ):
     """ return if the file type contains floating-point.
     If False, it's integer or byte. If type not given, return None. From documentation:
@@ -84,6 +272,11 @@ def envi_isfloat( hypfilename, hypdata=None ):
         12=16-bit unsigned integer; 13=32-bit unsigned long integer;
         14=64-bit signed long integer; and 15=64-bit unsigned long
         integer.
+        
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
     """
     if hypdata is None:
         hypdata = spectral.open_image( hypfilename )
@@ -107,9 +300,10 @@ def envi_isfloat( hypfilename, hypdata=None ):
 def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcommand=None, 
     plotmode='default', plotbands=None, fig_hypdata=None, clip_up=0.95, clip_upvalue=None,
     clip_low=None, clip_lowvalue=0, stretch_individual=True ):
-    """
-    Create a figure with hyperspectral image and return handle
+    """ Create a figure with hyperspectral image and return handle
        before using, check if SPy.imshow() could be used instead
+    
+    Args:
     hypfilename: the name + full path to Envi hdr file
     hypdata is a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -266,9 +460,10 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
 def plot_singleband(hypfilename, hypdata=None, hypdata_map=None, bandnumber=None, fig_hypdata=None,
     clip_up=0.95, clip_upvalue=None, clip_low=None, clip_lowvalue=0,
     outputcommand=None):
-    """
-    Create a figure with a single band from hypersectral image and return handle
+    """ Create a figure with a single band from hypersectral image and return handle
         before using, check if SPy.imshow() could be used instead
+    
+    Args:
     hypfilename: the name + full path to Envi hdr file
     hypdata: a Spectral Python file handle. If set, hyperspectral file will not be reopened.
         alternatively, it can be the metadata dictionary.
@@ -333,15 +528,18 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     """ Plot a 2D matrix using imshow() as RGB or grayscale
         the actual plotting work for plotting a RGB hyperspectral data matrix
             before using, check if SPy.imshow() could be used instead
-    in: hypdata_rgb: 3-band numpy matrix
+            
+    Args:
+        hypdata_rgb: 3-band numpy matrix
         plottitle: string with the plot title
+        fig_hypdata: figure handle to use and return
         clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
         clip_upvalue: the value above which to draw as white
         clip_low: the percentile below which everything is black, ignored by default (unless set)
         clip_lowvalue: the value below which everything is black, ignored if clip_low set
         stretch_individual: whether to stretch bands individually
-    inout: fig_hypdata: figure handle to use and return
-    out: returns figure handle
+
+    Returns: figure handle
     """
     
     axestoapply = None; # this will apply the command along all axis (whole datacube)
@@ -425,15 +623,18 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
     """ Plot a 2D matrix using imshow()
         the actual plotting work for plotting a single-band hyperspectral data matrix
             before using, check if SPy.imshow() could be used instead
-    in: hypdata_band: 1-band numpy matrix
+            
+    Args:
+        hypdata_band: 1-band numpy matrix
         plottitle: string with the plot title
         falsecolor: plot with band #0 as hue. Useful for classified images. SLOW because of hsv->rgb conversion
+        fig_hypdata: figure handle to use and return
         clip_up: the percentile above which to draw as white, ignored if clip_upvalue is set
         clip_upvalue: the value above which to draw as white
         clip_low: the percentile below which everything is black, ignored by default (unless set)
         clip_lowvalue: the value below which everything is black, ignored if clip_low set
-    inout: fig_hypdata: figure handle to use and return
-    out: returns figure handle
+        
+    Returns: returns figure handle
     """
 
     functionname = "plot_hypdatamatrix_singleband(): "  # used in messaging
@@ -512,72 +713,7 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
     fig_hypdata.show()
     outputcommand(" done.\n")
     return fig_hypdata
-
-
-def get_pixelsize(envihdrfilename):
-    """
-    Get the pixel size (in both x and y directions) of ENVI data from metadata in envihdrfilename 
-    outputs: (dx, dy)
-    envihdrfilename : the name with full path of ENVI .hdr file
-    """
-    hypdata = spectral.open_image(envihdrfilename)
-    if 'map info' in hypdata.metadata:
-        mapinfo = hypdata.metadata['map info']
-        dx = float(mapinfo[5])
-        dy = float(mapinfo[6])
-        pixelsize = [dx, dy]
-    else:
-        pixelsize = []
-    return pixelsize
-
-
-def get_imagesize(envihdrfilename):
-    """
-    Get the image size of ENVI data file based on metadata in envihdrfilename 
-    outputs: (x, y) [ x=samples, y=lines ]
-    envihdrfilename : the name with full path of ENVI .hdr file
-    """
-    hypdata = spectral.open_image(envihdrfilename)
-    if 'lines' in hypdata.metadata and 'samples' in hypdata.metadata:
-        x = int(hypdata.metadata['samples'])
-        y = int(hypdata.metadata['lines'])
-        imagesize = [x, y]
-    else:
-        imagesize = []
-    return imagesize
-
-
-def avg_spectrum(hypfilename, coordlist, DIV=-1, hypdata=None, hypdata_map=None):
-    """
-    exctract data point values from hypfilename
-    input:
-        hypfilename: name of hyperspectral data file
-        coordlist: list of two lists: [ [y] , [x] ] in image coordinates
-            NOTE! Envi BIL files have y (line) for first coordinate [0], x (pixel) for second [1]
-        DIV : value used as Data Ignore Value. If not used, set DIV=-1
-        hypdata, hypdata_map: spectral handles for file and memmap (optional). If given, hypfilename will not be reopened
-    output:
-        avg_spectrum: average spectrum for all points
-        N: number of spectra averaged
-    """
-    if hypdata is None:
-        # open the file if not open yet. This only gives access to metadata.                
-        hypdata = spectral.open_image(hypfilename)
-        # open the file as memmap to get the actual hyperspectral data
-        hypdata_map = hypdata.open_memmap()  # open as BIP
-
-    hypdata_sub = hypdata_map[coordlist[0],coordlist[1],:]
-    if DIV != -1:
-        # look for no data values
-        hypdata_sub_min = np.min(hypdata_sub, axis=1)
-        hypdata_sub_max = np.max(hypdata_sub, axis=1)
-        sub_incl = np.where(np.logical_and(hypdata_sub_min != float('nan'),
-                                           np.logical_or(hypdata_sub_min != DIV, hypdata_sub_max != DIV)))[0]
-        hypdata_sub = hypdata_sub[sub_incl, :]
-    spectrum = np.mean(hypdata_sub, axis=0)
-    N = (hypdata_sub.shape[0])
-    return spectrum, N
-
+    
 
 def set_display_square(windowhandle):
     """
@@ -607,6 +743,11 @@ def zoomtoimage(fig_hypdata, hypdata_map):
     """
     Try to zoom fig_hypdata (a matpotlib figure handle) to extents of hypdata_map (a raster or similar)
     if hypdata_map is None, use simple autoscale(), which does the work sometimes, especially if image is the only thing in the figure
+    
+    Args:
+    hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
+    hypdata: a Spectral Python file handle or the hyperspectral metadata dictionary.
+        If set, hyperspectral data file will not be reopened.
     """
     if hypdata_map is None:
         fig_hypdata.axes[0].autoscale()  # not always working??
@@ -719,9 +860,9 @@ def create_raster_like(envifile, outfilename, Nlayers=1, outtype=4, interleave='
 
 
 def subset_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=None, localprintcommand=None):
-    """
-    subset the raster by local image coordinates (starting with 0,0)
-    in:
+    """ subset the raster by local image coordinates (starting with 0,0)
+    
+    Args:
         hypdata = the ENVI (Spectral python) raster to subset. Note: if hypdata_map is given, hypdata is not reopened
         subset = integers [ xmin, ymin, xmax, ymax ]
             if subset is larger than image, subset is shrunk
@@ -896,9 +1037,9 @@ def crop_raster(hypdata, outfilename, subset, hypdata_map=None, interleave=None,
 
 
 def figure2image(fig_hypdata, hypdata, hypdata_map, outfilename, interleave="bil", localprintcommand=None):
-    """
-    save the zoomed area in fig_hypdata as a new ENVI file
-    input
+    """ save the zoomed area in fig_hypdata as a new ENVI file
+    
+    Args:
         fig_hypdata: matplotlib figure handle
         hypdata: the spectral python (SPy) file handle
         hypata_map: the data raster which is extracted and saved
@@ -929,50 +1070,6 @@ def figure2image(fig_hypdata, hypdata, hypdata_map, outfilename, interleave="bil
         subset_raster(hypdata, outfilename, [xmin, ymin, xmax, ymax], hypdata_map, interleave,
                       localprintcommand=localprintcommand)
         localprintcommand("figure2image(): Saved " + outfilename + "\n")
-
-
-def get_geotrans(envihdrfilename):
-    """
-    Get the geometry transform of ENVI data file associated with envihdrfilename.
-    Uses only hdr data, assumes that images are already oriented along the cardinal directions (i.e., no rotations)
-    outputs: Geotransform (list with 6 numeric elements)
-    envihdrfilename : the name with full path of ENVI .hdr file
-    NOTE: this function ignores the start values in hdr files (as I am not sure how they work) 
-    """
-    hypdata = spectral.open_image(envihdrfilename)  # open envi header file for metadata access
-
-    map_info = hypdata.metadata['map info']  # the standard line containing image geometry description
-    referencepixel = map_info[1:3]
-    referencecoord = map_info[3:5]
-    pixelsize = map_info[5:7]
-    # convert these lists of strings to int or float using list comprehension
-    referencepixel = [int(float(x)) for x in referencepixel]
-    referencecoord = [float(x) for x in referencecoord]
-    pixelsize = [float(x) for x in pixelsize]
-
-    # What we need are GeoTrans (GT) coefficients, for transforming between
-    #    pixel/line (P,L) raster space, and projection coordinates (Xp,Yp) space
-    # Xp = GT[0] + P*GT[1] + L*GT[2];
-    # Yp = GT[3] + P*GT[4] + L*GT[5];
-    # The inverse in the general case is  
-    # P = ( Xp*GT[5] - GT[0]*GT[5] + GT[2]*GT[3] - Yp*GT[2] ) / ( GT[1]*GT[5] - GT[2]*GT[4] )
-    # L = ( Yp*GT[1] - GT[1]*GT[3] + GT[0]*GT[4] - Xp*GT[4] ) / ( GT[1]*GT[5] - GT[2]*GT[4] )
-    # NOTE: ENVI files refer to pixels by their upper-left corner. It is more convenient to use pixel center coordinates
-    #   if the coordinates p and l are given relative to pixel centers, we get
-    # Xp = GT[0] + (p+0.5)*GT[1] + (l+0.5)*GT[2];
-    # Yp = GT[3] + (p+0.5)*GT[4] + (l+0.5)*GT[5];
-    # D = GT[1]*GT[5] - GT[2]*GT[4]
-    # p = ( Xp*GT[5] - GT[0]*GT[5] + GT[2]*GT[3] - Yp*GT[2] ) / D - 0.5
-    # l = ( Yp*GT[1] - GT[1]*GT[3] + GT[0]*GT[4] - Xp*GT[4] ) / D - 0.5
-
-    GT = np.zeros(6)
-    GT[0] = referencecoord[0] - (referencepixel[0] - 1) * pixelsize[0]  # x-coordinate of upper-left pixel
-    GT[1] = pixelsize[0]
-    GT[3] = referencecoord[1] + (referencepixel[1] - 1) * pixelsize[
-        1]  # y-coordinate of upper-left pixel. Note: y-axis is inverted
-    GT[5] = -pixelsize[1]
-
-    return GT
 
 
 def world2envi(envihdrfilename, pointmatrix):
@@ -1012,10 +1109,11 @@ def envi2world(envihdrfilename, pointmatrix_local):
 def simulate_multispectral(hyp_infile, spectralsensitivityfile, out_pixelsize, out_multifilename=None, hypdata=None,
                            hypdata_map=None, pixelsizereserve=None, max_DIVfraction=0.1, out_interleave='bip',
                            multi_progressvar=None, localprintcommand=None):
-    """
-    Joins pixels and bands of hyperspectral data to simulate a medium-resolution multispectral image.
+    """ Joins pixels and bands of hyperspectral data to simulate a medium-resolution multispectral image.
+    
     Implemented as a wrapper function around read_spectralsensitivity() + resample_hyperspectral()
-    parameters:
+    
+    Args:
     hyp_infile: input hyperspectral data hdr file
     spectralsensitivityfile: file with spectral sensitivity functions. First column:wavlength, next columns sensitivity functions, 1 column per band
         spectral sensitivities will be renormalized to sum to unity over the hyperspectral bands
@@ -1035,7 +1133,8 @@ def simulate_multispectral(hyp_infile, spectralsensitivityfile, out_pixelsize, o
     out_interleave: interleave format of output data, can be bsq, bil or bip
     multi_progressvar: variable of type tkinter.DoubleVar() for tracking progress and disrupting processing
     localprintcommand: command for communicating to the user.
-    output:
+    
+    Returns:
         3-dim np.ndarray-like object, either a memmap (if a file was opened) or a 3d array in memory
         metadata dictionary (similar to spectral envi ones)
     """
@@ -1073,9 +1172,9 @@ def simulate_multispectral(hyp_infile, spectralsensitivityfile, out_pixelsize, o
 
 
 def read_spectralsensitivity(spectralsensitivityfile, hyp_wl=None, localprintcommand=None):
-    """
-    read a spectral sensitivity file and calculates the weights for the (hyper)spectral channels which will be used to simulate this data 
-    input parameters:
+    """ read a spectral sensitivity file and calculates the weights for the (hyper)spectral channels which will be used to simulate this data 
+    
+    Args:
     spectralsensitivityfile: file with spectral sensitivity functions. First column:wavlength, next columns sensitivity functions, 1 column per band
         spectral sensitivities will be renormalized to sum to unity over the hyperspectral bands
         Sentinel-2 spectral response functions can be downloaded from https://earth.esa.int/web/sentinel/user-guides/sentinel-2-msi/document-library/-/asset_publisher/Wk0TKajiISaR/content/sentinel-2a-spectral-responses
@@ -1083,7 +1182,8 @@ def read_spectralsensitivity(spectralsensitivityfile, hyp_wl=None, localprintcom
     hyp_wl: (hyper)spectral channels (in nm) which will be used to simulate this data
         if None, the original wavelengths in sensitivity file are used
     localprintcommand: command for communicating to the user.
-    outputs: numpy arrays
+    
+    Returns: numpy arrays
         spectral sensitivity matrix (resampled to hyp_wl if hyp_wl set) (2d array)
         wavelength array (1d)
             * if wl_hyp set -- multispectral band central wavelengths (because this information may get lost in resampling)
@@ -1139,9 +1239,9 @@ def resample_hyperspectral(hyp_infile, spectralsensitivitymatrix, out_pixelsize,
                            hypdata=None, hypdata_map=None, multi_bandcenters=None, pixelsizereserve=None,
                            max_DIVfraction=0.1, out_interleave='bip',
                            spectralsensitivityfile=None, multi_progressvar=None, localprintcommand=None):
-    """
-    joins pixels and bands of hyperspectral data to simulate a medium-resolution multispectral image
-    parameters:
+    """ joins pixels and bands of hyperspectral data to simulate a medium-resolution multispectral image
+    
+    Args:
     hyp_infile: input hyperspectral data hdr file
     spectralsensitivitymatrix: matrix with spectral sensitivity functions in columns, 1 column per band
         spectral sensitivities will NOT be renormalized 
@@ -1162,7 +1262,8 @@ def resample_hyperspectral(hyp_infile, spectralsensitivitymatrix, out_pixelsize,
     spectralsensitivityfile: the name of the file used for reading spectralsensitivitymatrix. For informational purposes only
     multi_progressvar: variable of type tkinter.DoubleVar() for tracking progress and disrupting processing
     localprintcommand: command for communicating to the user.
-    output:
+    
+    Returns:
         3-dim np.ndarray-like object, either a memmap (if a file was opened) or a 3d array in memory
         metadata dictionary (similar to spectral envi ones)
     """
@@ -1352,7 +1453,8 @@ def envihdr2datafile( hdrfilename, localprintcommand=None ):
     """
     try to locate the data file associated with the ENVI header file hdrfilename
     because gdal wants the name of the data file, not hdr
-    out:
+    
+    Returns:
         the full filename of the data file
     """
     if localprintcommand is None:
@@ -1432,9 +1534,11 @@ def envi_endiannesscode( aisa1_map ):
     return endianness
     
 def envi_addheaderfield( envifilename, fieldname, values, vectorfield=None, checkifexists=True, localprintcommand=None ):
-    """
-    Adds a aline to ENVI header file
+    """ Adds a aline to ENVI header file
+    
     ENVI file should be closed before rewriting.
+    
+    Args:
     envifilename: string, file name
     fieldname: name of the field to add
     values: the value to add. Can be a list, e.g. one per band

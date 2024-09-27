@@ -1,3 +1,10 @@
+# outputs of tests
+chl_content_map*
+chl_inversion_invariants*
+illumination_corrected*
+p_data*
+pC_data*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
