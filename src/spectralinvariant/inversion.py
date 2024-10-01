@@ -229,12 +229,13 @@ class PROSPECT_D:
         Returns
         -------
         RN : ndarray
-           leaf hemispherical-directional reflectance factor of the N layers
+           Leaf hemispherical-directional reflectance factor of the N layers
 
         To do
         -----
         - Write a C extension of the Swamee & Ohija approximation for exp1 to improve computational speed
         - Handle runtime warnings etc., especially in the `vb` variable
+
         """
         if N is None: N=self.N
         if Cab is None: Cab=self.Cab
@@ -374,8 +375,8 @@ def rss_function(u, prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=
 
     Returns
     -------
-        beta : ndarray
-            The estimated values of rho, p, and c, respectively
+        rss : float
+            The residual sum of squares between the model and the measurement
     """
     # Generate leaf reflectance specturm using PROSPECT
     refspectrum = prospect_instance.PROSPECT(N=1.5, Cab=u, Cw=0., Cm=0., Car=0., Cbrown=0.0, Canth=0., Cp=0., Ccl=0.)
@@ -400,7 +401,7 @@ def rss_function(u, prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=
 def minimize_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, rho_lower=0.0, rho_upper=2.0, initial_guess=30., bounds=[(1., 100.)], method='Powell', **kwargs):
     """Invert the leaf chlorophyll a+b content using p-theory with `scipy.minimize` function
 
-    This is basically a wrapper for the `scipy.minimize` function which supports several optimization.
+    This is basically a wrapper for the `scipy.minimize` function which supports several optimization methods.
 
     Parameters
     ----------
@@ -436,7 +437,7 @@ def minimize_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0
     Returns
     -------
     ans : float
-        Result of the inversion
+        Inverted chlorophyll content (cab). If ans = -1.0, the inversion has failed.
     """
 
     # if not (hypdata.all()) == np.nan and not(hypdata.all()) == 0:
@@ -486,7 +487,7 @@ def golden_cab(prospect_instance, hypdata, gamma=1.0, p_lower=0.0, p_upper=1.0, 
     Returns
     -------
     ans : float
-        Result of the inversion
+        Inverted chlorophyll content (cab). If ans = -1.0, the inversion has failed.
     """
 
     # if not (hypdata.all()) == np.nan and not (hypdata.all()) == 0:
