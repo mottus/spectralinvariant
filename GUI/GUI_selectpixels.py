@@ -2,7 +2,7 @@
 import numpy as np
 import spectral
 import spectral.io.envi as envi
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from tkinter.scrolledtext import ScrolledText
 from tkinter import *
 import copy
@@ -15,7 +15,6 @@ from osgeo import osr
 import matplotlib
 import sys
 
-# sys.path.append("C:/data/koodid/python/hyperspectral/spectralinvariant/GUI")
 from GUI_pointsfromband import PfBGUI
 from spectralinvariant.hypdatatools_gdal import *
 from spectralinvariant.hypdatatools_utils import *
