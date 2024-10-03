@@ -10,7 +10,7 @@ import os
 import time
 import sys
 from spectralinvariant.hypdatatools_algorithms import p_processing, pC_processing
-from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, p, pC
+from spectralinvariant.spectralinvariants import reference_wavelengths, referencealbedo_transformed, compute_p, compute_pC
 
 # GUI for running p-computations
     
@@ -61,6 +61,7 @@ class p_thread( threading.Thread ):
         a wrapper for running p_processing in a separate thread
         """
         # do the thing
+        # WWW -- later, these should be changed to the newer functions in chunk_processing.py
         print("starting thread for processname "+self.processname)
         if self.processname == "p":
             p_processing( self.filename1, self.refspecno, self.wl_p, self.filename2, self.filename3, self.tkroot, self.hypdata, self.hypdata_map, 
@@ -499,7 +500,7 @@ class pGUI:
                 BRF_subset = reflectance[ii] # convert to reflectance units
                 wl_subset = self.wl_hyp[ii]
                 
-                pvec = p( BRF_subset, refspec_hyp_subset )
+                pvec = compute_p( BRF_subset, refspec_hyp_subset )
                 # p_values:output, ndarray of length 4
                 # 0:slope 1:intercept 2: DASF 3:R
                 
@@ -615,7 +616,7 @@ class pGUI:
                 BRF_subset = reflectance[ii] 
                 wl_subset = self.wl_hyp[ii] 
 
-                pvec = pC( BRF_subset, refspec_hyp_subset )
+                pvec = compute_pC( BRF_subset, refspec_hyp_subset )
                 # p_values:output, ndarray of length 5
                 # 0:slope 1:intercept 2: DASF 3:RSS 4:C
                                 

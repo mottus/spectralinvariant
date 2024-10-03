@@ -21,7 +21,7 @@ import time
 import sys
 from scipy.optimize import curve_fit, least_squares
 
-from spectralinvariant.spectralinvariants import p,pC,p_forpixel
+from spectralinvariant.spectralinvariants import compute_p,compute_pC,p_forpixel
 from spectralinvariant.hypdatatools_img import get_wavelength, get_DIV, get_scalefactor
 
 def p_processing( refspecfilename, refspecno, i_wlp, hypfilename, outfilename, tkroot=None, hypdata=None, hypdata_map=None, progressvar=None, 
