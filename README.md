@@ -21,6 +21,7 @@ $ git clone https://github.com/mottus/spectralinvariant
 # Examples
 The `examples` directory contains scripts for running the spectral invariant algorithms. They include examples for performing illumination correction using methods appearing in journal articles.
 - `random_forest_example_RSE_D_24_02041.py` - Random Forest Regression based method by [Ihalainen et al. (2024)](http://dx.doi.org/10.2139/ssrn.4903267).
+- `random_forest_example_RSE_D_24_02041.ipynb` - A `jupyter notebook` version for the Random Forest Regression based method by [Ihalainen et al. (2024)](http://dx.doi.org/10.2139/ssrn.4903267).
 - `inversion_example_RSE_D_23_00736.py` - Regularized inversion method using PROSPECT by [Ihalainen et al. (2023)](https://doi.org/10.1016/j.rse.2023.113810).
 - `processing_example.py` - Running spectral invariant algorithms on large hyperspectral images.
 
