@@ -256,8 +256,8 @@ def avg_spectrum(hypfilename, coordlist, DIV=-1, hypdata=None, hypdata_map=None)
         sub_incl = np.where(np.logical_and(hypdata_sub_min != float('nan'),
                                            np.logical_or(hypdata_sub_min != DIV, hypdata_sub_max != DIV)))[0]
         hypdata_sub = hypdata_sub[sub_incl, :]
-    spectrum = np.mean(hypdata_sub, axis=0)
     N = (hypdata_sub.shape[0])
+    spectrum = DIV*np.ones(hypdata_map.shape[2]) if N==0 else np.mean(hypdata_sub, axis=0)
     return spectrum, N
 
 

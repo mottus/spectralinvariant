@@ -63,7 +63,7 @@ def pC_forpixel(hypdata, refspectrum):
 
     Returns:
         list of length 4: 0:p 1:rho 2:R2, 3:c
-        XXX the used algorithms (true or pseudoinverse) needs to be reported to the used somehow, maybe via R2?
+        XXX the used algorithms (true or pseudoinverse) needs to be reported to the user somehow, maybe via R2?
     """
     X = np.array([np.ones(len(refspectrum)), hypdata, 1./refspectrum]) # Matrix of independent variables
     y = hypdata / refspectrum # Vector of dependent variables

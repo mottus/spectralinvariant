@@ -26,7 +26,7 @@ class pixelGUI:
         
         self.master = master
         self.polygonlist = [] #  A list of GDAL geometries containing the polygons (rings in POLYGONs)
-
+        self.polygonIDlist = [] #  A list names (IDs) for each polygon in the poygonlist
         #  Currently, use of just 1 polygon is implemented
 
         self.pointlist = [] # list of points, each point is a tuple: ( id, x, y ) (in global projected coordinates )
@@ -86,11 +86,11 @@ class pixelGUI:
         self.button_quit = Button( self.frame_button, width=bw, text='Quit', command=self.buttonquit_fun )
         self.button_loadpoints = Button( self.frame_button, width=bw, text='Load points from .txt', command=self.loadpoints_fun )
         self.button_loadfile = Button( self.frame_button, width=bw, text='Load raster files', command=self.loadfiles_fun )
-        self.button_pixelvalue = Button( self.frame_button, width=bw, text='Store values at points', command=self.pixelvalue_fun, state=DISABLED )
+        self.button_pixelvalue = Button( self.frame_button, width=bw, text='Store spectrum values', command=self.pixelvalue_fun, state=DISABLED )
         self.button_plotspectra = Button( self.frame_button, width=bw, text='Plot spectra', command=self.plotspectra_fun, state=DISABLED )
-        self.button_analyzepoints = Button( self.frame_button, width=bw, text='Analyze point data', command=self.analyzepoints_fun, state=DISABLED )
-        self.button_loadshp = Button( self.frame_button, width=bw, text='Load polygon from .shp', command=self.loadshp_fun )
-        self.button_plotshp = Button( self.frame_button, width=bw, text='Plot polygon', command=self.plotshp_fun, state=DISABLED )
+        self.button_analyzepoints = Button( self.frame_button, width=bw, text='Analyze spectra', command=self.analyzepoints_fun, state=DISABLED )
+        self.button_loadshp = Button( self.frame_button, width=bw, text='Load polygons from .shp', command=self.loadshp_fun )
+        self.button_plotshp = Button( self.frame_button, width=bw, text='Draw polygons', command=self.plotshp_fun, state=DISABLED )
         self.button_zoomtoshp = Button( self.frame_button, width=bw, text='Zoom to polygon', command=self.zoomtoshp_fun, state=DISABLED )
         self.button_pointsfromband = Button( self.frame_button, width=bw, text='Points from band threshold', command=self.pointsfromband_fun, state=DISABLED )
         self.option_areashape = OptionMenu( self.frame_button, self.areashape_string, *areashape_list )
@@ -767,79 +767,109 @@ class pixelGUI:
             GUI = PfBGUI( self.master, openfilelist=self.openfilelist[selection], 
                 exportpointlist=self.pointlist )
     
-    def loadshp_fun( self ):
+    def loadshp_fun( self, idfieldname = None ):
         """
         loads a shapefile, or unloads it if loaded
+        
+        In:
+        idfieldname: name of the field to use as ID for each polygon. If not given, automatic detection attempted or feature number used
         """
         if self.button_loadshp.cget('text') == "Load polygon from .shp":
             filename_shape = filedialog.askopenfilename(initialdir = self.foldername1, title = "Load vector shapefile",filetypes = (("shp files","*.shp"),("all files","*.*")))
+            N_pts = 0 # the number of points in the final polygon. Used also to test if a polygon has been found
             if filename_shape != "":
                 if len( self.polygonlist ) > 0:
                     self.printlog("loadshp_fun(): Some polygons already exist. Deleting.\n")
                     self.polygonlist = []
+                    self.polygonIDlist = []
                 sh_file = ogr.Open( filename_shape )
-                
-                # get some information and check for validity
-                N_layers = sh_file.GetLayerCount() 
-                self.printlog("Shapefile: " + str( N_layers ) + " layers" )
-                N_pts = 0 # the number of points in the final polygon. Used also to test if a polygon has been found
-                i_poly = 0 # the index counting the polygons in the file
-                # find the first layer with some features
-                for il in range(N_layers):
-                    sh_layer = sh_file.GetLayerByIndex(il)
-                    # print( sh_layer.GetExtent() )
-                    sh_SpatialReference = sh_layer.GetSpatialRef()
-                    self.printlog(", layer " + str(il) + ", "+ sh_layer.GetName() + ", has " + str(sh_layer.GetFeatureCount()) + " feature(s).\n" )
-                    self.printlog("layer :" + sh_SpatialReference.ExportToProj4() +".\n")
-                    # sh_f = sh_layer.GetFeature(0) #  The returned feature should be free with OGR_F_Destroy(). -- not done in Cookbook?
-                    sh_f = sh_layer.GetNextFeature() 
-                    while sh_f != None:
-                        sh_g = sh_f.GetGeometryRef()
-                        # try to make sure we have SpatialReference set. It seems to be lost sometimes
-                        if sh_g.GetSpatialReference()==None and sh_SpatialReference!=None:
-                            sh_g.AssignSpatialReference( sh_SpatialReference )
-                        elif sh_g.GetSpatialReference()!=None:
-                            sh_SpatialReference = sh_g.GetSpatialReference()                        
-                        sh_g_type = sh_g.GetGeometryName() 
-                        if sh_g_type == 'POLYGON':
-                            # NOTE: some other geometries may also be potentially useful, see para 8.2.8 (page 66) of
-                            #   http://portal.opengeospatial.org/files/?artifact_id=25355
-                            # Points of polygon cannot be accessed directly, we need to get to the "ring" first
-                            sh_g_ring = sh_g.GetGeometryRef(0)
+                if sh_file is not None:
+                    # get some information and check for validity
+                    N_layers = sh_file.GetLayerCount() 
+                    self.printlog("Shapefile: " + str( N_layers ) + " layers" )
+                    i_poly = 0 # the index counting the polygons in the file
+                    # find the first layer with some features
+                    for il in range(N_layers):
+                        sh_layer = sh_file.GetLayerByIndex(il)
+                        # print( sh_layer.GetExtent() )
+                        sh_SpatialReference = sh_layer.GetSpatialRef()
+                        self.printlog(", layer " + str(il) + ", "+ sh_layer.GetName() + ", has " + str(sh_layer.GetFeatureCount()) + " feature(s).\n" )
+                        self.printlog("layer :" + sh_SpatialReference.ExportToProj4() +".\n")
+                        # sh_f = sh_layer.GetFeature(0) #  The returned feature should be free with OGR_F_Destroy(). -- not done in Cookbook?
+                        # get the names of all fields in the layer
+                        #   also, identify a field to use as ID - use the first field with "id" in field name
+                        fieldnames = []
+                        ldefn = sh_layer.GetLayerDefn()
+                        for iF in range(ldefn.GetFieldCount()):
+                            fieldnames.append( ldefn.GetFieldDefn( iF ).name )
+                            if idfieldname is None:
+                                if fieldnames[-1].lower().find("id") > -1:
+                                    idfieldname = fieldnames[-1]
+                        self.printlog( "Fields " + ", ".join(fieldnames)+".\n"  )
+                        if idfieldname is not None:
+                            if idfieldname in fieldnames:
+                                self.printlog( "Using field " + idfieldname + " for ID .\n")
+                            else:
+                                # this can happen if the idfieldname was given as input to the function
+                                self.printlog( "Field " + idfieldname + " not found, not using for ID .\n")
+                                idfieldname = None
+                        sh_f = sh_layer.GetNextFeature()
+                        featurenum = 1
+                        while sh_f != None:
+                            sh_g = sh_f.GetGeometryRef()
+                            if idfieldname is not None:
+                                field_ID = sh_f.GetFieldAsString(idfieldname)
+                            else:
+                                field_ID = str(il)+"_"+str(featurenum)
                             # try to make sure we have SpatialReference set. It seems to be lost sometimes
-                            if sh_g_ring.GetSpatialReference()==None and sh_SpatialReference!=None:
-                                sh_g_ring.AssignSpatialReference( sh_SpatialReference )
-                            N_pts = sh_g_ring.GetPointCount()
-                            if N_pts > 2:                                
-                                self.printlog( "Found geometry "+str(i_poly)+" of type " + sh_g_type + " with " + str(N_pts) + " points.\n")
-                                # plot the feature
-                                R = sh_g_ring.Clone() # store a clone so the file can be (hopefully) closed
-                                # self.printlog( "ring : "+ R.GetSpatialReference().ExportToProj4() +"\n" )
-                                self.polygonlist.append( R )
-                                self.button_loadshp.configure( text = "Unload polygon")
-                                self.button_plotshp.configure( state=ACTIVE )
-                                self.button_zoomtoshp.configure( state=ACTIVE )
-                                self.button_pixelvalue.configure( state=DISABLED )
-                                self.button_zoomtopoints.configure( state=DISABLED )
-                                self.button_selectzoomedpoints.configure( state=DISABLED )
-                                self.button_showpoints.configure( state=DISABLED )
-                                self.button_addpoint.configure( state=DISABLED )
-                                self.button_deletepoints.configure( state=DISABLED )
-                                self.button_savepoints.configure( state=DISABLED )
-                                self.button_pixelvalue.configure( state=ACTIVE )
-                                self.button_plotspectra.configure( state=ACTIVE )
-                                self.button_analyzepoints.configure( state=ACTIVE )
-                                if len(self.figurelist) > 0:
+                            if sh_g.GetSpatialReference()==None and sh_SpatialReference!=None:
+                                sh_g.AssignSpatialReference( sh_SpatialReference )
+                            elif sh_g.GetSpatialReference()!=None:
+                                sh_SpatialReference = sh_g.GetSpatialReference()                        
+                            sh_g_type = sh_g.GetGeometryName() 
+                            if sh_g_type == 'POLYGON':
+                                # NOTE: some other geometries may also be potentially useful, see para 8.2.8 (page 66) of
+                                #   http://portal.opengeospatial.org/files/?artifact_id=25355
+                                # Points of polygon cannot be accessed directly, we need to get to the "ring" first
+                                sh_g_ring = sh_g.GetGeometryRef(0)
+                                # try to make sure we have SpatialReference set. It seems to be lost sometimes
+                                if sh_g_ring.GetSpatialReference()==None and sh_SpatialReference!=None:
+                                    sh_g_ring.AssignSpatialReference( sh_SpatialReference )
+                                N_pts = sh_g_ring.GetPointCount()
+                                if N_pts > 2:                                
+                                    self.printlog( "Found geometry "+str(i_poly)+" of type " + sh_g_type + " with " + str(N_pts) + " points, ID="+field_ID+".\n")
+                                    # plot the feature
+                                    R = sh_g_ring.Clone() # store a clone so the file can be (hopefully) closed
+                                    # self.printlog( "ring : "+ R.GetSpatialReference().ExportToProj4() +"\n" )
+                                    self.polygonlist.append( R )
+                                    self.polygonIDlist.append( field_ID )
+                                    self.button_loadshp.configure( text = "Unload polygon")
                                     self.button_plotshp.configure( state=ACTIVE )
                                     self.button_zoomtoshp.configure( state=ACTIVE )
-                                # plot
-                                # if len(self.figurelist) > 0:
-                                #    self.plotshp_fun( i_poly )
-                                i_poly += 1
-                                # break
-                        sh_f = sh_layer.GetNextFeature() 
+                                    self.button_pixelvalue.configure( state=DISABLED )
+                                    self.button_zoomtopoints.configure( state=DISABLED )
+                                    self.button_selectzoomedpoints.configure( state=DISABLED )
+                                    self.button_showpoints.configure( state=DISABLED )
+                                    self.button_addpoint.configure( state=DISABLED )
+                                    self.button_deletepoints.configure( state=DISABLED )
+                                    self.button_savepoints.configure( state=DISABLED )
+                                    self.button_pixelvalue.configure( state=ACTIVE )
+                                    self.button_plotspectra.configure( state=ACTIVE )
+                                    self.button_analyzepoints.configure( state=ACTIVE )
+                                    if len(self.figurelist) > 0:
+                                        self.button_plotshp.configure( state=ACTIVE )
+                                        self.button_zoomtoshp.configure( state=ACTIVE )
+                                    # plot
+                                    # if len(self.figurelist) > 0:
+                                    #    self.plotshp_fun( i_poly )
+                                    i_poly += 1
+                                    # break
+                            sh_f = sh_layer.GetNextFeature()
+                            featurenum += 1
+                        # end while loop over features
+                    # end while loop  over layers
                 if N_pts == 0:
-                    self.printlog("loadshp_fun(): Could not load shapefile, no suitable features found.\n")
+                    self.printlog("loadshp_fun(): Could not load shapefile or no suitable features found.\n")
                 # close file explicitly
                 sh_file = None
             else:
@@ -853,6 +883,8 @@ class pixelGUI:
             # activate point selection buttons, if appropriate
             self.listbox_points.configure( state=NORMAL )
             self.button_addpoint.configure( state=ACTIVE)
+            self.polygonlist = []
+            self.polygonIDlist = []
             if len(self.pointlist)>0:
                 self.button_pixelvalue.configure( state=ACTIVE )
                 if len(self.figurelist) > 0:
@@ -903,7 +935,7 @@ class pixelGUI:
                     col = i % len(self.plotlinecolors)
                     fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c=self.plotlinecolors[col] )
                     self.printlog("#")
-                    fig_hypdata.canvas.draw()
+                fig_hypdata.canvas.draw()
                 self.printlog("\n")
             else:
                 self.printlog("plotvector(): Figure " +str(curfigno) + " not open, cannot plot.\n")
@@ -1094,25 +1126,26 @@ class pixelGUI:
         store the selected pixel values in a csv file
         double loop: over selected files and selected points
         """
+        fn_name="pixelvalue_fun()"
         all_set = False
         selectedfileslist = self.listbox_files.curselection()
         N_files = len(selectedfileslist)
         if N_files == 0:
-            self.printlog("pixelvalue(): No files selected, cannot continue.\n")
+            self.printlog(fn_name+": No files selected, cannot continue.\n")
             # the for loop below will be skipped and no results produced
         # get the shape and dimensions of the requested area
         if self.button_loadshp.cget('text') == "Unload polygon":
             # the area is taken from polygon
-            self.printlog("pixelvalue(): choosing by polygon.\n")
+            self.printlog(fn_name+": choosing by polygon.\n")
             N_points = len(self.polygonlist)
-            all_set = True
-
         else:
             # select pixels based on user selection
             areasize = float( self.areasize_string.get() )
             self.printlog("Area size:"+str(areasize) )
             if areasize == 0:
-                self.printlog("pixelvalue(): could not get the value for area size. Aborting.\n")
+                self.printlog(fn_name+": could not get the value for area size. Aborting.\n")
+                self.update_figures_fun() # this should be called as often as possible
+                return
             else:
                 areashape = self.areashape_string.get()
                 areashape = areashape.split(" ")[1] # this returns either 'square,' or 'circle,'
@@ -1120,98 +1153,100 @@ class pixelGUI:
                 self.printlog( areaunit + ' ' + areashape + ".\n" )
                 if areaunit == 'pixels':
                     areasize = int( round(areasize) )
-                self.printlog("pixelvalue: selecting a " + areashape + " " + str(areasize) + " " + areaunit + ".\n" )
+                self.printlog( fn_name+": selecting a " + areashape + " " + str(areasize) + " " + areaunit + ".\n" )
                 selectedpointlist = self.listbox_points.curselection()
                 N_points = len( selectedpointlist )
                 pointids = [ self.pointlist[i][0] for i in selectedpointlist ] 
                 if N_points == 0:
-                    self.printlog("pixelvalue(): No points selected, cannot continue.\n")
-                else:
-                    all_set = True
-        if all_set:
-            big_spectrumlist = [] # output: list of spectra
-            wllist = [] # output: list of wavelengths. Will be ignored if usebands is set to True during processing
-            filenamelist = [] # output: spectrum names
-            big_Nlist = [] # output: the actual number of pixels averaged for each spectrum
-            ProcessingFirstFile = True
-            for i_file in selectedfileslist:
-                self.openhypfile( i_file )
-                hypfilename = self.openfilelist[i_file][0]
-                shortfilename = os.path.split( hypfilename )[1]
-                shortfilename = os.path.splitext( shortfilename )[0]
-                filenamelist.append( shortfilename )
-                hypdata = self.openfilelist[i_file][1]
-                hypdata_map = self.openfilelist[i_file][2]
-                DIV = self.openfilelist[i_file][3]
-                
-                if self.button_loadshp.cget('text') == "Unload polygon":                
-                    # retrieve spectra from polygons
-                    self.printlog("Loading spectrum data for " + str( N_points ) + " rings: " )
-                    wl,use_spectra = get_wavelength( hypfilename, hypdata )
-                    spectrumlist = []
-                    Nlist = []
-                    pointids = []
-                    for ring in self.polygonlist:
-                        pointids.append( "x"+str(round(ring.GetX(),3))+"y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
-                        pointarray_i = points_from_shape( hypfilename, ring )
-                        # if ProcessingFirstFile:
-                        #     print(pointarray_i.shape)
-                        coordlist = [ list( pointarray_i[:,0] ), list( pointarray_i[:,1]) ]
-                        spectrum, N = avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
-                        spectrumlist.append( spectrum )
-                        Nlist.append( N )
-                        if ProcessingFirstFile:
-                            self.printlog("(" + str(N) + ") ")
+                    self.printlog(fn_name+": No points selected, cannot continue.\n")
+                    self.update_figures_fun() # this should be called as often as possible
+                    return
+        # ready to go!
+        big_spectrumlist = [] # output: list of spectra
+        wllist = [] # output: list of wavelengths. Will be ignored if usebands is set to True during processing
+        filenamelist = [] # output: spectrum names
+        big_Nlist = [] # output: the actual number of pixels averaged for each spectrum
+        ProcessingFirstFile = True
+        for i_file in selectedfileslist:
+            self.openhypfile( i_file )
+            hypfilename = self.openfilelist[i_file][0]
+            shortfilename = os.path.split( hypfilename )[1]
+            shortfilename = os.path.splitext( shortfilename )[0]
+            filenamelist.append( shortfilename )
+            hypdata = self.openfilelist[i_file][1]
+            hypdata_map = self.openfilelist[i_file][2]
+            DIV = self.openfilelist[i_file][3]
+            
+            if self.button_loadshp.cget('text') == "Unload polygon":                
+                # retrieve spectra from polygons
+                self.printlog(fn_name+": Loading spectrum data for " + str( N_points ) + " rings: " )
+                wl,use_spectra = get_wavelength( hypfilename, hypdata )
+                spectrumlist = []
+                Nlist = []
+                pointids = []
+                for ring, featureID in zip(self.polygonlist, self.polygonIDlist):
+                    pointids.append( featureID+":x"+str(round(ring.GetX(),3))+"y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
+                    coordlist = points_from_shape( hypfilename, ring )
+                    # if ProcessingFirstFile:
+                    #     print(len(coordlist)
+                    spectrum, N = avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
+                    spectrumlist.append( spectrum )
+                    Nlist.append( N )
                     if ProcessingFirstFile:
-                        self.printlog(" points ... done\n")
-                else:
-                    pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
-                    spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
-                
-                big_Nlist.append( Nlist )
-                big_spectrumlist.append( spectrumlist )
-                wllist.append( wl )
-                ProcessingFirstFile = False
+                        self.printlog("(" + str(N) + ") ")
+                if ProcessingFirstFile:
+                    self.printlog(" points ... done\n")
+            else:
+                # spectra for points
+                pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
+                spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
             
-            # process the loaded spectra
-            # find all possible wavelengths
-            allwl = np.unique( np.concatenate( wllist ) )
-            outmatrix = np.empty( (allwl.shape[0], N_points*N_files+1 ) )
-            outmatrix[:,0] = allwl # wavelength as the first column
-            legends = [ 'wl' ] # column headings in outmatrix
-            c = 0 # the current column in outmatrix, set to zero (the column where wavelength is stored)
-            for i_file in range( N_files ):
-                wl = wllist[ i_file ]
-                spectrumlist = big_spectrumlist[ i_file ]
-                Nlist = big_Nlist[ i_file ]
-                for i_point in range( N_points ):
-                    c += 1 # current column
-                    legends.append( filenamelist[ i_file ] + ":" + pointids[ i_point ]
-                        + "(" + str( Nlist[ i_point] ) + ")" ) # legend: point_id with number of averaged spectra in parentheses
-                    for i_wl in range( allwl.shape[0] ):
-                        #loop over wavelengths, ie. outmatrix rows
-                        j = np.where( allwl[i_wl] == wl )[0] # find the location of the current wl in this specific hyp file
-                        wl_exists = j.shape[0] != 0 # was this wavelength present in this file?
-                        if wl_exists:
-                            outmatrix[ i_wl , c ] = spectrumlist[ i_point ][ j[0] ]
-                        else:
-                            outmatrix[ i_wl , c ] = float('nan')
-        else: # if all_set
-            self.printlog("savepoints_fun(): No spectra retrieved, ")
-            outmatrix = np.empty(0)
-            
+            big_Nlist.append( Nlist )
+            big_spectrumlist.append( spectrumlist )
+            wllist.append( wl )
+            ProcessingFirstFile = False
+        self.printlog( fn_name+": read spectra from "+str(N_files)+" file(s), preparing to save. \n")
+        # process the loaded spectra
+        # find all possible wavelengths
+        allwl = np.unique( np.concatenate( wllist ) )
+        outmatrix = np.empty( (allwl.shape[0], N_points*N_files+1 ) )
+        outmatrix[:,0] = allwl # wavelength as the first column
+        legends = [ 'wl' ] # column headings in outmatrix
+        c = 0 # the current column in outmatrix, set to zero (the column where wavelength is stored)
+        for i_file in range( N_files ):
+            wl = wllist[ i_file ]
+            spectrumlist = big_spectrumlist[ i_file ]
+            Nlist = big_Nlist[ i_file ]
+            for i_point in range( N_points ):
+                c += 1 # current column
+                legends.append( filenamelist[ i_file ] + ":" + pointids[ i_point ]
+                    + "(" + str( Nlist[ i_point] ) + ")" ) # legend: point_id with number of averaged spectra in parentheses
+                for i_wl in range( allwl.shape[0] ):
+                    #loop over wavelengths, ie. outmatrix rows
+                    j = np.where( allwl[i_wl] == wl )[0] # find the location of the current wl in this specific hyp file
+                    wl_exists = j.shape[0] != 0 # was this wavelength present in this file?
+                    if wl_exists:
+                        outmatrix[ i_wl , c ] = spectrumlist[ i_point ][ j[0] ]
+                    else:
+                        outmatrix[ i_wl , c ] = float('nan')
+                    # end if
+                # end loop over wavelengths
+            # end loop over points
+        # end loop over files
         if outmatrix.shape[0] > 0:
+            self.printlog(fn_name+": opening file dialog ...")
             filename =  filedialog.asksaveasfilename(initialdir = self.foldername1, title = "Save extracted spectra",filetypes = (("csv files","*.csv"),("txt files","*.txt"),("all files","*.*")))
             if filename != '':
                 delimiter = '\t'
                 headerstring = ';'.join(legends)
                 np.savetxt( filename, outmatrix, delimiter=delimiter, header=headerstring )
+                self.printlog(" saved file "+filename+".\n")
             else:
-                self.printlog("Saving of spectra aborted.\n")
+                self.printlog(" saving of spectra aborted.\n")
         else:
-            self.printlog(" nothing to save.\n")
-            
+            self.printlog(fn_name+": nothing to save, finishing\n")
         self.update_figures_fun() # this should be called as often as possible
+
 
     def plotspectra_fun( self ):
         """ Plot the spectra of selected points or loaded shapefile.
@@ -1365,7 +1400,7 @@ class pixelGUI:
         N_points = len( selectedpointlist )
         points = [ self.pointlist[i] for i in selectedpointlist ]
         if N_points == 0:
-            self.printlog("pixelvalue(): No points selected, cannot continue.\n")
+            self.printlog(fn_name+": No points selected, cannot continue.\n")
             return None
         pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
         
