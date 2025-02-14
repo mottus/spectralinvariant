@@ -1220,7 +1220,7 @@ class pixelGUI:
             for i_point in range( N_points ):
                 c += 1 # current column
                 legends.append( filenamelist[ i_file ] + ":" + pointids[ i_point ]
-                    + "(" + str( Nlist[ i_point] ) + ")" ) # legend: point_id with number of averaged spectra in parentheses
+                    + ":" + str( Nlist[ i_point] ) ) # legend: filename : point_id : coordinates : number of averaged spectra
                 for i_wl in range( allwl.shape[0] ):
                     #loop over wavelengths, ie. outmatrix rows
                     j = np.where( allwl[i_wl] == wl )[0] # find the location of the current wl in this specific hyp file
