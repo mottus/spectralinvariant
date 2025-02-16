@@ -258,7 +258,7 @@ class pixelGUI:
                     elif firstchar == 'y' and i_y==-1:
                         i_y = i
                         self.printlog( filename + ": Found column for Y: %i %s.\n" %(i_y+1,c) )
-                    elif firstchar == 'i' and i_id==-1:
+                    elif c.lower().find("id")>-1 and i_id==-1:
                         i_id = i
                         self.printlog( filename + ": Found column for ID: %i %s.\n" %(i_id+1,c) )
             
@@ -298,22 +298,12 @@ class pixelGUI:
                     else:
                         # use just sequential numbers as IDs
                         id_in.append( str( counter_rows ) )
-    
+            if counter_rows == 0:
+                self.printlog("loadpoints_fun(): No points with intelligible coordinates found.\n")
+                return
+            else:
+                self.printlog("loadpoints_fun(): Coordinate for "+str(counter_rows)+" points loaded.\n")
             # store the points in listbox and self.pointlist
-            # select format based on their values
-            if x_in[0] < 500:
-                #likely, in degrees, give high accuracy
-                xfmt = '{:.5f}'
-            else:
-                # likely, in meters, 10 cm is already an overkill
-                xfmt = '{:.1f}'
-            # just in case, although it's likely very safe to use the same format for x and y
-            if y_in[0] < 500:
-                yfmt = '{:.5f}'
-            else:
-                yfmt = '{:.1f}'
-            self.xy_arr = []
-            xy_str = []
 
             #clear the listbox of any existing data
             # self.listbox_points.delete( 0, END )            
@@ -321,13 +311,10 @@ class pixelGUI:
             
             olditems = len( self.pointlist )
             for x,y,id in zip(x_in,y_in,id_in):
-                xy_str.append( id+","+xfmt.format(x)+","+yfmt.format(y) )
-                self.xy_arr.append( [str(x),str(y),id] )
                 self.pointlist.append( ( id, float(x), float(y) ) )
             # populate the listbox
-            for item in xy_str:
-                self.listbox_points.insert( END, item )
-                
+            self.updatepoints_fun()
+
             # select newly inserted points
             self.listbox_points.selection_clear( 0, END )
             self.listbox_points.selection_set( olditems, END )
@@ -349,6 +336,39 @@ class pixelGUI:
                     self.button_addpoint.configure( state=ACTIVE )
         else:
             self.printlog("loadpoints_fun(): loading of points aborted.\n")
+
+    def updatepoints_fun( self, *args ):
+        """
+        update the listbox containing points. Not done automatically because of a mysterious python crash
+        """
+        self.listbox_points.delete(0,END)
+        if len( self.pointlist ) > 0:
+            # select format based on point values. Check the x-coordinate of first point
+            if abs(self.pointlist[0][1]) <= 180:
+                #likely in degrees, give high accuracy
+                xfmt = '{:.5f}'
+            else:
+                # likely, in meters, 10 cm is already an overkill
+                xfmt = '{:.1f}'
+            # just in case, although it's likely very safe to use the same format for x and y
+            if abs(self.pointlist[0][2]) <= 90:
+                yfmt = '{:.5f}'
+            el
+                yfmt = '{:.1f}'
+            for point in self.pointlist:
+                xp_str = xfmt.format(point[1])
+                yp_str = yfmt.format(point[2])
+                self.listbox_points.insert( END, point[0]+ ':' + xp_str + ',' + yp_str )
+            self.button_zoomtopoints.configure( state=ACTIVE )
+            self.button_selectzoomedpoints.configure( state=ACTIVE )
+            self.button_showpoints.configure( state=ACTIVE )
+            self.button_deletepoints.configure( state=ACTIVE )
+            self.button_savepoints.configure( state=ACTIVE )
+            self.button_plotspectra.configure( state=ACTIVE )
+            self.button_analyzepoints.configure( state=ACTIVE )
+            self.button_pixelvalue.configure( state=ACTIVE )
+            self.update_figures_fun() # this should be called as often as possible
+
             
     def savezoomed_fun( self ):
         """ 
@@ -490,25 +510,6 @@ class pixelGUI:
         # just in case 
         self.update_figures_fun()
                     
-    def updatepoints_fun( self, *args ):
-        """
-        update the listbox containing points. Not done automatically because of a mysterious python crash
-        """
-        self.listbox_points.delete(0,END)
-        if len( self.pointlist ) > 0:
-            for point in self.pointlist:
-                xp_str = "%1.1f" % point[1] # convert to string with one decimal
-                yp_str = "%1.1f" % point[2]
-                self.listbox_points.insert( END, point[0]+ ',' + xp_str + ',' + yp_str )
-            self.button_zoomtopoints.configure( state=ACTIVE )
-            self.button_selectzoomedpoints.configure( state=ACTIVE )
-            self.button_showpoints.configure( state=ACTIVE )
-            self.button_deletepoints.configure( state=ACTIVE )
-            self.button_savepoints.configure( state=ACTIVE )
-            self.button_plotspectra.configure( state=ACTIVE )
-            self.button_analyzepoints.configure( state=ACTIVE )
-            self.button_pixelvalue.configure( state=ACTIVE )
-            self.update_figures_fun() # this should be called as often as possible
             
     def addpoint_fun( self, event=None ):
         """
@@ -1123,7 +1124,7 @@ class pixelGUI:
                 
     def pixelvalue_fun( self ):
         """
-        store the selected pixel values in a csv file
+        store the spectra around selected pixels or polygons in a csv file
         double loop: over selected files and selected points
         """
         fn_name="pixelvalue_fun()"
@@ -1185,7 +1186,7 @@ class pixelGUI:
                 Nlist = []
                 pointids = []
                 for ring, featureID in zip(self.polygonlist, self.polygonIDlist):
-                    pointids.append( featureID+":x"+str(round(ring.GetX(),3))+"y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
+                    pointids.append( featureID+":x"+str(round(ring.GetX(),3))+":y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
                     coordlist = points_from_shape( hypfilename, ring )
                     # if ProcessingFirstFile:
                     #     print(len(coordlist)
