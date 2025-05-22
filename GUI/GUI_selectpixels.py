@@ -353,7 +353,7 @@ class pixelGUI:
             # just in case, although it's likely very safe to use the same format for x and y
             if abs(self.pointlist[0][2]) <= 90:
                 yfmt = '{:.5f}'
-            el
+            else:
                 yfmt = '{:.1f}'
             for point in self.pointlist:
                 xp_str = xfmt.format(point[1])
