@@ -7,13 +7,13 @@ from tkinter.scrolledtext import ScrolledText
 from tkinter import *
 # import copy
 import os
+import sys
 # import math
 import matplotlib.pyplot as plt
 import matplotlib.path 
 from osgeo import ogr # in anaconda, available from GDAL package: conda install gdal
 from osgeo import osr
 # import matplotlib
-# import sys
 
 from GUI_pointsfromband import PfBGUI
 from spectralinvariant.hypdatatools_gdal import *
@@ -62,21 +62,21 @@ class pixelGUI:
         self.w = Toplevel( master )
         self.w.title("GUI for selecting pixels")
         
-        self.areashape_string = StringVar() # string to set and read option_areashape OptionMenu
-        self.areaunit_string = StringVar() # string to set and read option_areaunit OptionMenu
-        self.plotmode_string = StringVar() # string to set and read option_plotmode OptionMenu
+        self.areashape_string = StringVar(  self.w ) # string to set and read option_areashape OptionMenu
+        self.areaunit_string = StringVar(  self.w ) # string to set and read option_areaunit OptionMenu
+        self.plotmode_string = StringVar(  self.w ) # string to set and read option_plotmode OptionMenu
         areashape_list = [ 'Select square, side' , 'Select circle, d=' ]
         areaunit_list = [ 'pixels' , 'meters' ]
         plotmode_list = [ 'default' , 'RGB' , 'NIR' , 'falsecolor' ]
 
-        self.areasize_string = StringVar() # the string to be read as input from user via Entry entry_areasize
+        self.areasize_string = StringVar(  self.w  ) # the string to be read as input from user via Entry entry_areasize
         self.areashape_string.set( areashape_list[0] )
         self.areaunit_string.set( areaunit_list[0] )
         self.areasize_string.set("3")
         self.plotmode_string.set( plotmode_list[0] )
         
         pythonplotcolors_list =  [ 'red', 'blue', 'green', 'cyan', 'magenta', 'yellow', 'black', 'white' ]
-        self.pointcolor_string = StringVar() # string for the OptionMenu to set mark color
+        self.pointcolor_string = StringVar(  self.w ) # string for the OptionMenu to set mark color
         self.pointcolor_string.set( pythonplotcolors_list[0] )
         
         self.textlog = ScrolledText( self.w, height=6 )
@@ -1613,9 +1613,12 @@ class pixelGUI:
         note: the pyplot windows are not closed. Maybe, it would be nice to keep track of those to close them
         """
         set_hyperspectral_datafolder( self.foldername1 )
-        self.master.destroy() # destruction of root required for program to continue
-
-
+        plt.close('all')
+        try:
+            self.master.tk.eval('proc bgerror {msg} {}')  # silence bgerror: replace Tcl background error handler with a no-op
+        except:
+            pass
+        self.master.after(100, lambda: (self.master.quit(), self.master.destroy(), sys.exit(0)))  # delay destruction to let pending events flush
 
 class AnalyzeGUI:
     """
