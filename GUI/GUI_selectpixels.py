@@ -1173,7 +1173,15 @@ class pixelGUI:
         wllist = [] # output: list of wavelengths. Will be ignored if usebands is set to True during processing
         filenamelist = [] # output: spectrum names
         big_Nlist = [] # output: the actual number of pixels averaged for each spectrum
-        ProcessingFirstFile = True
+
+        self.printlog( fn_name+f": Reading spectra from {N_files} file(s) x ")
+        if self.button_loadshp.cget('text') == "Unload polygon":
+            polygons_exist = True
+            self.printlog(f"{len(self.polygonIDlist)} polygons...\n")
+        else:
+            polygons_exist = False
+            self.printlog(f"{len(selectedpointlist)} points...\n")
+
         for i_file in selectedfileslist:
             self.openhypfile( i_file )
             hypfilename = self.openfilelist[i_file][0]
@@ -1184,7 +1192,9 @@ class pixelGUI:
             hypdata_map = self.openfilelist[i_file][2]
             DIV = self.openfilelist[i_file][3]
             
-            if self.button_loadshp.cget('text') == "Unload polygon":                
+            self.printlog( f'file {i_file+1}:')
+            
+            if polygons_exist:                
                 # retrieve spectra from polygons
                 self.printlog(fn_name+": Loading spectrum data for " + str( N_points ) + " rings: " )
                 wl,use_spectra = get_wavelength( hypfilename, hypdata )
@@ -1194,15 +1204,10 @@ class pixelGUI:
                 for ring, featureID in zip(self.polygonlist, self.polygonIDlist):
                     pointids.append( featureID+":x"+str(round(ring.GetX(),3))+":y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
                     coordlist = points_from_shape( hypfilename, ring )
-                    # if ProcessingFirstFile:
-                    #     print(len(coordlist)
                     spectrum, N = avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
                     spectrumlist.append( spectrum )
                     Nlist.append( N )
-                    if ProcessingFirstFile:
-                        self.printlog("(" + str(N) + ") ")
-                if ProcessingFirstFile:
-                    self.printlog(" points ... done\n")
+                    self.printlog(f"[{N}] ")
             else:
                 # spectra for points
                 pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
@@ -1211,8 +1216,8 @@ class pixelGUI:
             big_Nlist.append( Nlist )
             big_spectrumlist.append( spectrumlist )
             wllist.append( wl )
-            ProcessingFirstFile = False
-        self.printlog( fn_name+f": Read spectra from {N_files} file(s) x {N_points} points:\n")
+            self.printlog( " ... done \n")
+            
         # process the loaded spectra
         # find all possible wavelengths
         allwl = np.unique( np.concatenate( wllist ) )
@@ -1224,9 +1229,7 @@ class pixelGUI:
             wl = wllist[ i_file ]
             spectrumlist = big_spectrumlist[ i_file ]
             Nlist = big_Nlist[ i_file ]
-            self.printlog( f'file {i_file+1}:')
             for i_point in range( N_points ):
-                self.printlog( "#")
                 c += 1 # current column
                 legends.append( filenamelist[ i_file ] + ":" + pointids[ i_point ]
                     + ":" + str( Nlist[ i_point] ) ) # legend: filename : point_id : coordinates : number of averaged spectra
@@ -1245,7 +1248,6 @@ class pixelGUI:
                         # end if
                     # end loop over wavelengths
                 # end if len(spectrumlist[ i_point ]) == 0:
-            self.printlog( "\n")
             # end loop over points
         # end loop over files
         if outmatrix.shape[0] > 0:
