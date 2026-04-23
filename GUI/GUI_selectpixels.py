@@ -250,28 +250,34 @@ class pixelGUI:
             
             # try to locate the proper columns
             for i,c in enumerate(column_names):
-                if len(c) > 0:
-                    firstchar = c[0].lower() 
-                    if firstchar == 'x' and i_x==-1:
-                        i_x = i
-                        self.printlog( filename + ": Found column for X: %i %s.\n" %(i_x+1,c) )
-                    elif firstchar == 'y' and i_y==-1:
-                        i_y = i
-                        self.printlog( filename + ": Found column for Y: %i %s.\n" %(i_y+1,c) )
-                    elif c.lower().find("id")>-1 and i_id==-1:
-                        i_id = i
-                        self.printlog( filename + ": Found column for ID: %i %s.\n" %(i_id+1,c) )
+                            if len(c) > 0:
+                                cl = c.lower()
+                                firstchar = cl[0]
+                                if (firstchar == 'x' or cl in ('easting','longitude')) and i_x==-1:
+                                    i_x = i
+                                    self.printlog( filename + ": Found column for X: %i %s.\n" %(i_x+1,c) )
+                                elif (firstchar == 'y' or cl in ('northing','latitude')) and i_y==-1:
+                                    i_y = i
+                                    self.printlog( filename + ": Found column for Y: %i %s.\n" %(i_y+1,c) )
+                                elif cl.find("id")>-1 and i_id==-1:
+                                    i_id = i
+                                    self.printlog( filename + ": Found column for ID: %i %s.\n" %(i_id+1,c) )
             
             if (i_x == -1) or ( i_y == -1 ):
-                self.printlog( filename + ": Could not identify X,Y columns. Setting 1st=X ,2nd=Y.\n")
-                # use default values
-                i_x = 0 # xcoordinates of points
-                i_y = 1 # y coordinates of points
-                
+                # use default values -- but beware to not use the column identified as ID if possible
+                if ( i_id != 0 ):
+                    i_x = 0 # xcoordinates of points
+                else: 
+                    i_x = 1
+                if ( i_id != i_x+1 ):
+                    i_y = i_x+1 # y coordinates of points
+                else:
+                    i_y = i_x+2
+                self.printlog( filename + f": Could not identify X,Y columns. Reading X from {i_x+1}, Y from {i_y+1}.\n")
             if ( i_id == -1 ):
                 if xy.shape[1] > 2:
                     i_id = 2
-                    self.printlog( filename + ": Using 3rd column as ID.\n")
+                    self.printlog( filename + f": Using column {i_id+1} as ID.\n")
                 else:
                     i_id = None
                     self.printlog( filename + ": Using counter as ID.\n")
@@ -1206,7 +1212,7 @@ class pixelGUI:
             big_spectrumlist.append( spectrumlist )
             wllist.append( wl )
             ProcessingFirstFile = False
-        self.printlog( fn_name+": read spectra from "+str(N_files)+" file(s), preparing to save. \n")
+        self.printlog( fn_name+f": Read spectra from {N_files} file(s) x {N_points} points:\n")
         # process the loaded spectra
         # find all possible wavelengths
         allwl = np.unique( np.concatenate( wllist ) )
@@ -1218,20 +1224,28 @@ class pixelGUI:
             wl = wllist[ i_file ]
             spectrumlist = big_spectrumlist[ i_file ]
             Nlist = big_Nlist[ i_file ]
+            self.printlog( f'file {i_file+1}:')
             for i_point in range( N_points ):
+                self.printlog( "#")
                 c += 1 # current column
                 legends.append( filenamelist[ i_file ] + ":" + pointids[ i_point ]
                     + ":" + str( Nlist[ i_point] ) ) # legend: filename : point_id : coordinates : number of averaged spectra
-                for i_wl in range( allwl.shape[0] ):
-                    #loop over wavelengths, ie. outmatrix rows
-                    j = np.where( allwl[i_wl] == wl )[0] # find the location of the current wl in this specific hyp file
-                    wl_exists = j.shape[0] != 0 # was this wavelength present in this file?
-                    if wl_exists:
-                        outmatrix[ i_wl , c ] = spectrumlist[ i_point ][ j[0] ]
-                    else:
-                        outmatrix[ i_wl , c ] = float('nan')
-                    # end if
-                # end loop over wavelengths
+                if len(spectrumlist[ i_point ]) == 0:
+                    # spectrumlist = [] (empty) if the point is outside the file
+                    outmatrix[ :, c ] = float('nan')
+                else:
+                    for i_wl in range( allwl.shape[0] ):
+                        #loop over wavelengths, ie. outmatrix rows
+                        j = np.where( allwl[i_wl] == wl )[0] # find the location of the current wl in this specific hyp file
+                        wl_exists = j.shape[0] != 0 # was this wavelength present in this file?
+                        if wl_exists:
+                            outmatrix[ i_wl , c ] = spectrumlist[ i_point ][ j[0] ]
+                        else:
+                            outmatrix[ i_wl , c ] = float('nan')
+                        # end if
+                    # end loop over wavelengths
+                # end if len(spectrumlist[ i_point ]) == 0:
+            self.printlog( "\n")
             # end loop over points
         # end loop over files
         if outmatrix.shape[0] > 0:
@@ -1800,4 +1814,6 @@ if __name__ == '__main__':
     root = Tk()
     GUI = pixelGUI( root )
     root.withdraw()
+    GUI.w.lift()          # raise window to top
+    GUI.w.focus_force()   # force keyboard focus to it
     root.mainloop()
