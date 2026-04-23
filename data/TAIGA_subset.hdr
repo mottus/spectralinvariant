@@ -1,5 +1,5 @@
 ENVI
-description = { A small subset of the TAIG hyperspectral image}
+description = { A small subset of the TAIGA hyperspectral image}
 samples = 347
 lines   = 344
 bands   = 128

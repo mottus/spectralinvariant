@@ -5,15 +5,15 @@ import spectral.io.envi as envi
 from tkinter import filedialog, ttk
 from tkinter.scrolledtext import ScrolledText
 from tkinter import *
-import copy
+# import copy
 import os
-import math
+# import math
 import matplotlib.pyplot as plt
 import matplotlib.path 
-from osgeo import ogr
+from osgeo import ogr # in anaconda, available from GDAL package: conda install gdal
 from osgeo import osr
-import matplotlib
-import sys
+# import matplotlib
+# import sys
 
 from GUI_pointsfromband import PfBGUI
 from spectralinvariant.hypdatatools_gdal import *
@@ -353,7 +353,7 @@ class pixelGUI:
             # just in case, although it's likely very safe to use the same format for x and y
             if abs(self.pointlist[0][2]) <= 90:
                 yfmt = '{:.5f}'
-            else:
+            else:   
                 yfmt = '{:.1f}'
             for point in self.pointlist:
                 xp_str = xfmt.format(point[1])

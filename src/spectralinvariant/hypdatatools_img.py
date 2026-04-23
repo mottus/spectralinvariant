@@ -178,7 +178,9 @@ def get_imagesize(hypfilename, hypdata=None ):
 def get_geotrans(hypfilename, hypdata=None):
     """ Get the geometry transform of ENVI data file associated with hypfilename.
     Uses only hdr data, assumes that images are already oriented along the cardinal directions (i.e., no rotations)
-    NOTE: this function ignores the start values in hdr files (as I am not sure how they work) 
+    NOTE: this function ignores the start values in hdr files (as I am not sure how they work). According
+    to documentation, x start and y start define the image coordinates for the upper-left hand pixel in the 
+    image. The default values are (1,1) so that the upper-left hand pixel has an image coordinate of (1,1).
     
     Args:
     hypfilename: name of the hyperspectral ENVI file (header file .hdr). Not used if hypdata given
@@ -196,6 +198,8 @@ def get_geotrans(hypfilename, hypdata=None):
         hyp_metadata = hypdata.metadata
 
     map_info = hyp_metadata['map info']  # the standard line containing image geometry description
+    # projection name (e.g., UTM), reference pixel x location (in file coordinates starting from 1), pixel
+    # y, pixel easting, pixel northing, x pixel size, y pixel size, projection zone, North or South (UTM only).
     referencepixel = map_info[1:3]
     referencecoord = map_info[3:5]
     pixelsize = map_info[5:7]

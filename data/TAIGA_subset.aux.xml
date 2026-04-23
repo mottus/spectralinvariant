@@ -1,0 +1,1228 @@
+<PAMDataset>
+  <Metadata domain="IMAGE_STRUCTURE">
+    <MDI key="INTERLEAVE">BAND</MDI>
+  </Metadata>
+  <Metadata>
+    <MDI key="Band_1">Resize (band 1 refl [%*100]:20170615_reflectance_mosaic_128b) (0.400570 Micrometers)</MDI>
+    <MDI key="Band_10">Resize (band 10 refl [%*100]:20170615_reflectance_mosaic_128b) (0.439920 Micrometers)</MDI>
+    <MDI key="Band_100">Resize (band 100 refl [%*100]:20170615_reflectance_mosaic_128b) (0.858530 Micrometers)</MDI>
+    <MDI key="Band_101">Resize (band 101 refl [%*100]:20170615_reflectance_mosaic_128b) (0.863300 Micrometers)</MDI>
+    <MDI key="Band_102">Resize (band 102 refl [%*100]:20170615_reflectance_mosaic_128b) (0.868050 Micrometers)</MDI>
+    <MDI key="Band_103">Resize (band 103 refl [%*100]:20170615_reflectance_mosaic_128b) (0.872820 Micrometers)</MDI>
+    <MDI key="Band_104">Resize (band 104 refl [%*100]:20170615_reflectance_mosaic_128b) (0.877590 Micrometers)</MDI>
+    <MDI key="Band_105">Resize (band 105 refl [%*100]:20170615_reflectance_mosaic_128b) (0.882350 Micrometers)</MDI>
+    <MDI key="Band_106">Resize (band 106 refl [%*100]:20170615_reflectance_mosaic_128b) (0.887110 Micrometers)</MDI>
+    <MDI key="Band_107">Resize (band 107 refl [%*100]:20170615_reflectance_mosaic_128b) (0.891870 Micrometers)</MDI>
+    <MDI key="Band_108">Resize (band 108 refl [%*100]:20170615_reflectance_mosaic_128b) (0.896620 Micrometers)</MDI>
+    <MDI key="Band_109">Resize (band 109 refl [%*100]:20170615_reflectance_mosaic_128b) (0.901380 Micrometers)</MDI>
+    <MDI key="Band_11">Resize (band 11 refl [%*100]:20170615_reflectance_mosaic_128b) (0.444330 Micrometers)</MDI>
+    <MDI key="Band_110">Resize (band 110 refl [%*100]:20170615_reflectance_mosaic_128b) (0.906130 Micrometers)</MDI>
+    <MDI key="Band_111">Resize (band 111 refl [%*100]:20170615_reflectance_mosaic_128b) (0.910890 Micrometers)</MDI>
+    <MDI key="Band_112">Resize (band 112 refl [%*100]:20170615_reflectance_mosaic_128b) (0.915640 Micrometers)</MDI>
+    <MDI key="Band_113">Resize (band 113 refl [%*100]:20170615_reflectance_mosaic_128b) (0.920400 Micrometers)</MDI>
+    <MDI key="Band_114">Resize (band 114 refl [%*100]:20170615_reflectance_mosaic_128b) (0.925140 Micrometers)</MDI>
+    <MDI key="Band_115">Resize (band 115 refl [%*100]:20170615_reflectance_mosaic_128b) (0.929890 Micrometers)</MDI>
+    <MDI key="Band_116">Resize (band 116 refl [%*100]:20170615_reflectance_mosaic_128b) (0.934640 Micrometers)</MDI>
+    <MDI key="Band_117">Resize (band 117 refl [%*100]:20170615_reflectance_mosaic_128b) (0.939380 Micrometers)</MDI>
+    <MDI key="Band_118">Resize (band 118 refl [%*100]:20170615_reflectance_mosaic_128b) (0.944130 Micrometers)</MDI>
+    <MDI key="Band_119">Resize (band 119 refl [%*100]:20170615_reflectance_mosaic_128b) (0.948870 Micrometers)</MDI>
+    <MDI key="Band_12">Resize (band 12 refl [%*100]:20170615_reflectance_mosaic_128b) (0.448760 Micrometers)</MDI>
+    <MDI key="Band_120">Resize (band 120 refl [%*100]:20170615_reflectance_mosaic_128b) (0.953610 Micrometers)</MDI>
+    <MDI key="Band_121">Resize (band 121 refl [%*100]:20170615_reflectance_mosaic_128b) (0.958350 Micrometers)</MDI>
+    <MDI key="Band_122">Resize (band 122 refl [%*100]:20170615_reflectance_mosaic_128b) (0.963080 Micrometers)</MDI>
+    <MDI key="Band_123">Resize (band 123 refl [%*100]:20170615_reflectance_mosaic_128b) (0.967810 Micrometers)</MDI>
+    <MDI key="Band_124">Resize (band 124 refl [%*100]:20170615_reflectance_mosaic_128b) (0.972540 Micrometers)</MDI>
+    <MDI key="Band_125">Resize (band 125 refl [%*100]:20170615_reflectance_mosaic_128b) (0.977270 Micrometers)</MDI>
+    <MDI key="Band_126">Resize (band 126 refl [%*100]:20170615_reflectance_mosaic_128b) (0.981990 Micrometers)</MDI>
+    <MDI key="Band_127">Resize (band 127 refl [%*100]:20170615_reflectance_mosaic_128b) (0.986710 Micrometers)</MDI>
+    <MDI key="Band_128">Resize (band 128 refl [%*100]:20170615_reflectance_mosaic_128b) (0.991430 Micrometers)</MDI>
+    <MDI key="Band_13">Resize (band 13 refl [%*100]:20170615_reflectance_mosaic_128b) (0.453190 Micrometers)</MDI>
+    <MDI key="Band_14">Resize (band 14 refl [%*100]:20170615_reflectance_mosaic_128b) (0.457630 Micrometers)</MDI>
+    <MDI key="Band_15">Resize (band 15 refl [%*100]:20170615_reflectance_mosaic_128b) (0.462070 Micrometers)</MDI>
+    <MDI key="Band_16">Resize (band 16 refl [%*100]:20170615_reflectance_mosaic_128b) (0.466520 Micrometers)</MDI>
+    <MDI key="Band_17">Resize (band 17 refl [%*100]:20170615_reflectance_mosaic_128b) (0.470990 Micrometers)</MDI>
+    <MDI key="Band_18">Resize (band 18 refl [%*100]:20170615_reflectance_mosaic_128b) (0.475460 Micrometers)</MDI>
+    <MDI key="Band_19">Resize (band 19 refl [%*100]:20170615_reflectance_mosaic_128b) (0.479930 Micrometers)</MDI>
+    <MDI key="Band_2">Resize (band 2 refl [%*100]:20170615_reflectance_mosaic_128b) (0.404910 Micrometers)</MDI>
+    <MDI key="Band_20">Resize (band 20 refl [%*100]:20170615_reflectance_mosaic_128b) (0.484420 Micrometers)</MDI>
+    <MDI key="Band_21">Resize (band 21 refl [%*100]:20170615_reflectance_mosaic_128b) (0.488910 Micrometers)</MDI>
+    <MDI key="Band_22">Resize (band 22 refl [%*100]:20170615_reflectance_mosaic_128b) (0.493410 Micrometers)</MDI>
+    <MDI key="Band_23">Resize (band 23 refl [%*100]:20170615_reflectance_mosaic_128b) (0.497910 Micrometers)</MDI>
+    <MDI key="Band_24">Resize (band 24 refl [%*100]:20170615_reflectance_mosaic_128b) (0.502430 Micrometers)</MDI>
+    <MDI key="Band_25">Resize (band 25 refl [%*100]:20170615_reflectance_mosaic_128b) (0.506940 Micrometers)</MDI>
+    <MDI key="Band_26">Resize (band 26 refl [%*100]:20170615_reflectance_mosaic_128b) (0.511470 Micrometers)</MDI>
+    <MDI key="Band_27">Resize (band 27 refl [%*100]:20170615_reflectance_mosaic_128b) (0.516000 Micrometers)</MDI>
+    <MDI key="Band_28">Resize (band 28 refl [%*100]:20170615_reflectance_mosaic_128b) (0.520540 Micrometers)</MDI>
+    <MDI key="Band_29">Resize (band 29 refl [%*100]:20170615_reflectance_mosaic_128b) (0.525090 Micrometers)</MDI>
+    <MDI key="Band_3">Resize (band 3 refl [%*100]:20170615_reflectance_mosaic_128b) (0.409250 Micrometers)</MDI>
+    <MDI key="Band_30">Resize (band 30 refl [%*100]:20170615_reflectance_mosaic_128b) (0.529640 Micrometers)</MDI>
+    <MDI key="Band_31">Resize (band 31 refl [%*100]:20170615_reflectance_mosaic_128b) (0.534200 Micrometers)</MDI>
+    <MDI key="Band_32">Resize (band 32 refl [%*100]:20170615_reflectance_mosaic_128b) (0.538770 Micrometers)</MDI>
+    <MDI key="Band_33">Resize (band 33 refl [%*100]:20170615_reflectance_mosaic_128b) (0.543340 Micrometers)</MDI>
+    <MDI key="Band_34">Resize (band 34 refl [%*100]:20170615_reflectance_mosaic_128b) (0.547910 Micrometers)</MDI>
+    <MDI key="Band_35">Resize (band 35 refl [%*100]:20170615_reflectance_mosaic_128b) (0.552500 Micrometers)</MDI>
+    <MDI key="Band_36">Resize (band 36 refl [%*100]:20170615_reflectance_mosaic_128b) (0.557080 Micrometers)</MDI>
+    <MDI key="Band_37">Resize (band 37 refl [%*100]:20170615_reflectance_mosaic_128b) (0.561670 Micrometers)</MDI>
+    <MDI key="Band_38">Resize (band 38 refl [%*100]:20170615_reflectance_mosaic_128b) (0.566270 Micrometers)</MDI>
+    <MDI key="Band_39">Resize (band 39 refl [%*100]:20170615_reflectance_mosaic_128b) (0.570880 Micrometers)</MDI>
+    <MDI key="Band_4">Resize (band 4 refl [%*100]:20170615_reflectance_mosaic_128b) (0.413610 Micrometers)</MDI>
+    <MDI key="Band_40">Resize (band 40 refl [%*100]:20170615_reflectance_mosaic_128b) (0.575500 Micrometers)</MDI>
+    <MDI key="Band_41">Resize (band 41 refl [%*100]:20170615_reflectance_mosaic_128b) (0.580110 Micrometers)</MDI>
+    <MDI key="Band_42">Resize (band 42 refl [%*100]:20170615_reflectance_mosaic_128b) (0.584730 Micrometers)</MDI>
+    <MDI key="Band_43">Resize (band 43 refl [%*100]:20170615_reflectance_mosaic_128b) (0.589360 Micrometers)</MDI>
+    <MDI key="Band_44">Resize (band 44 refl [%*100]:20170615_reflectance_mosaic_128b) (0.593990 Micrometers)</MDI>
+    <MDI key="Band_45">Resize (band 45 refl [%*100]:20170615_reflectance_mosaic_128b) (0.598630 Micrometers)</MDI>
+    <MDI key="Band_46">Resize (band 46 refl [%*100]:20170615_reflectance_mosaic_128b) (0.603270 Micrometers)</MDI>
+    <MDI key="Band_47">Resize (band 47 refl [%*100]:20170615_reflectance_mosaic_128b) (0.607920 Micrometers)</MDI>
+    <MDI key="Band_48">Resize (band 48 refl [%*100]:20170615_reflectance_mosaic_128b) (0.612570 Micrometers)</MDI>
+    <MDI key="Band_49">Resize (band 49 refl [%*100]:20170615_reflectance_mosaic_128b) (0.617230 Micrometers)</MDI>
+    <MDI key="Band_5">Resize (band 5 refl [%*100]:20170615_reflectance_mosaic_128b) (0.417970 Micrometers)</MDI>
+    <MDI key="Band_50">Resize (band 50 refl [%*100]:20170615_reflectance_mosaic_128b) (0.621880 Micrometers)</MDI>
+    <MDI key="Band_51">Resize (band 51 refl [%*100]:20170615_reflectance_mosaic_128b) (0.626550 Micrometers)</MDI>
+    <MDI key="Band_52">Resize (band 52 refl [%*100]:20170615_reflectance_mosaic_128b) (0.631220 Micrometers)</MDI>
+    <MDI key="Band_53">Resize (band 53 refl [%*100]:20170615_reflectance_mosaic_128b) (0.635890 Micrometers)</MDI>
+    <MDI key="Band_54">Resize (band 54 refl [%*100]:20170615_reflectance_mosaic_128b) (0.640570 Micrometers)</MDI>
+    <MDI key="Band_55">Resize (band 55 refl [%*100]:20170615_reflectance_mosaic_128b) (0.645250 Micrometers)</MDI>
+    <MDI key="Band_56">Resize (band 56 refl [%*100]:20170615_reflectance_mosaic_128b) (0.649930 Micrometers)</MDI>
+    <MDI key="Band_57">Resize (band 57 refl [%*100]:20170615_reflectance_mosaic_128b) (0.654620 Micrometers)</MDI>
+    <MDI key="Band_58">Resize (band 58 refl [%*100]:20170615_reflectance_mosaic_128b) (0.659320 Micrometers)</MDI>
+    <MDI key="Band_59">Resize (band 59 refl [%*100]:20170615_reflectance_mosaic_128b) (0.664010 Micrometers)</MDI>
+    <MDI key="Band_6">Resize (band 6 refl [%*100]:20170615_reflectance_mosaic_128b) (0.422350 Micrometers)</MDI>
+    <MDI key="Band_60">Resize (band 60 refl [%*100]:20170615_reflectance_mosaic_128b) (0.668710 Micrometers)</MDI>
+    <MDI key="Band_61">Resize (band 61 refl [%*100]:20170615_reflectance_mosaic_128b) (0.673410 Micrometers)</MDI>
+    <MDI key="Band_62">Resize (band 62 refl [%*100]:20170615_reflectance_mosaic_128b) (0.678120 Micrometers)</MDI>
+    <MDI key="Band_63">Resize (band 63 refl [%*100]:20170615_reflectance_mosaic_128b) (0.682830 Micrometers)</MDI>
+    <MDI key="Band_64">Resize (band 64 refl [%*100]:20170615_reflectance_mosaic_128b) (0.687550 Micrometers)</MDI>
+    <MDI key="Band_65">Resize (band 65 refl [%*100]:20170615_reflectance_mosaic_128b) (0.692260 Micrometers)</MDI>
+    <MDI key="Band_66">Resize (band 66 refl [%*100]:20170615_reflectance_mosaic_128b) (0.696980 Micrometers)</MDI>
+    <MDI key="Band_67">Resize (band 67 refl [%*100]:20170615_reflectance_mosaic_128b) (0.701700 Micrometers)</MDI>
+    <MDI key="Band_68">Resize (band 68 refl [%*100]:20170615_reflectance_mosaic_128b) (0.706430 Micrometers)</MDI>
+    <MDI key="Band_69">Resize (band 69 refl [%*100]:20170615_reflectance_mosaic_128b) (0.711160 Micrometers)</MDI>
+    <MDI key="Band_7">Resize (band 7 refl [%*100]:20170615_reflectance_mosaic_128b) (0.426720 Micrometers)</MDI>
+    <MDI key="Band_70">Resize (band 70 refl [%*100]:20170615_reflectance_mosaic_128b) (0.715890 Micrometers)</MDI>
+    <MDI key="Band_71">Resize (band 71 refl [%*100]:20170615_reflectance_mosaic_128b) (0.720620 Micrometers)</MDI>
+    <MDI key="Band_72">Resize (band 72 refl [%*100]:20170615_reflectance_mosaic_128b) (0.725360 Micrometers)</MDI>
+    <MDI key="Band_73">Resize (band 73 refl [%*100]:20170615_reflectance_mosaic_128b) (0.730100 Micrometers)</MDI>
+    <MDI key="Band_74">Resize (band 74 refl [%*100]:20170615_reflectance_mosaic_128b) (0.734830 Micrometers)</MDI>
+    <MDI key="Band_75">Resize (band 75 refl [%*100]:20170615_reflectance_mosaic_128b) (0.739580 Micrometers)</MDI>
+    <MDI key="Band_76">Resize (band 76 refl [%*100]:20170615_reflectance_mosaic_128b) (0.744320 Micrometers)</MDI>
+    <MDI key="Band_77">Resize (band 77 refl [%*100]:20170615_reflectance_mosaic_128b) (0.749060 Micrometers)</MDI>
+    <MDI key="Band_78">Resize (band 78 refl [%*100]:20170615_reflectance_mosaic_128b) (0.753810 Micrometers)</MDI>
+    <MDI key="Band_79">Resize (band 79 refl [%*100]:20170615_reflectance_mosaic_128b) (0.758560 Micrometers)</MDI>
+    <MDI key="Band_8">Resize (band 8 refl [%*100]:20170615_reflectance_mosaic_128b) (0.431120 Micrometers)</MDI>
+    <MDI key="Band_80">Resize (band 80 refl [%*100]:20170615_reflectance_mosaic_128b) (0.763310 Micrometers)</MDI>
+    <MDI key="Band_81">Resize (band 81 refl [%*100]:20170615_reflectance_mosaic_128b) (0.768070 Micrometers)</MDI>
+    <MDI key="Band_82">Resize (band 82 refl [%*100]:20170615_reflectance_mosaic_128b) (0.772820 Micrometers)</MDI>
+    <MDI key="Band_83">Resize (band 83 refl [%*100]:20170615_reflectance_mosaic_128b) (0.777580 Micrometers)</MDI>
+    <MDI key="Band_84">Resize (band 84 refl [%*100]:20170615_reflectance_mosaic_128b) (0.782330 Micrometers)</MDI>
+    <MDI key="Band_85">Resize (band 85 refl [%*100]:20170615_reflectance_mosaic_128b) (0.787090 Micrometers)</MDI>
+    <MDI key="Band_86">Resize (band 86 refl [%*100]:20170615_reflectance_mosaic_128b) (0.791850 Micrometers)</MDI>
+    <MDI key="Band_87">Resize (band 87 refl [%*100]:20170615_reflectance_mosaic_128b) (0.796610 Micrometers)</MDI>
+    <MDI key="Band_88">Resize (band 88 refl [%*100]:20170615_reflectance_mosaic_128b) (0.801370 Micrometers)</MDI>
+    <MDI key="Band_89">Resize (band 89 refl [%*100]:20170615_reflectance_mosaic_128b) (0.806130 Micrometers)</MDI>
+    <MDI key="Band_9">Resize (band 9 refl [%*100]:20170615_reflectance_mosaic_128b) (0.435510 Micrometers)</MDI>
+    <MDI key="Band_90">Resize (band 90 refl [%*100]:20170615_reflectance_mosaic_128b) (0.810890 Micrometers)</MDI>
+    <MDI key="Band_91">Resize (band 91 refl [%*100]:20170615_reflectance_mosaic_128b) (0.815650 Micrometers)</MDI>
+    <MDI key="Band_92">Resize (band 92 refl [%*100]:20170615_reflectance_mosaic_128b) (0.820420 Micrometers)</MDI>
+    <MDI key="Band_93">Resize (band 93 refl [%*100]:20170615_reflectance_mosaic_128b) (0.825180 Micrometers)</MDI>
+    <MDI key="Band_94">Resize (band 94 refl [%*100]:20170615_reflectance_mosaic_128b) (0.829940 Micrometers)</MDI>
+    <MDI key="Band_95">Resize (band 95 refl [%*100]:20170615_reflectance_mosaic_128b) (0.834710 Micrometers)</MDI>
+    <MDI key="Band_96">Resize (band 96 refl [%*100]:20170615_reflectance_mosaic_128b) (0.839480 Micrometers)</MDI>
+    <MDI key="Band_97">Resize (band 97 refl [%*100]:20170615_reflectance_mosaic_128b) (0.844230 Micrometers)</MDI>
+    <MDI key="Band_98">Resize (band 98 refl [%*100]:20170615_reflectance_mosaic_128b) (0.849000 Micrometers)</MDI>
+    <MDI key="Band_99">Resize (band 99 refl [%*100]:20170615_reflectance_mosaic_128b) (0.853760 Micrometers)</MDI>
+    <MDI key="wavelength_units">Micrometers</MDI>
+  </Metadata>
+  <Metadata domain="ENVI">
+    <MDI key="bands">128</MDI>
+    <MDI key="band_names">{ Resize (band 1 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 2 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 3 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 4 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 5 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 6 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 7 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 8 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 9 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 10 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 11 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 12 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 13 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 14 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 15 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 16 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 17 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 18 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 19 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 20 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 21 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 22 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 23 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 24 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 25 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 26 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 27 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 28 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 29 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 30 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 31 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 32 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 33 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 34 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 35 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 36 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 37 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 38 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 39 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 40 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 41 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 42 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 43 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 44 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 45 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 46 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 47 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 48 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 49 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 50 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 51 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 52 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 53 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 54 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 55 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 56 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 57 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 58 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 59 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 60 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 61 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 62 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 63 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 64 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 65 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 66 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 67 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 68 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 69 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 70 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 71 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 72 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 73 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 74 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 75 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 76 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 77 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 78 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 79 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 80 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 81 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 82 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 83 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 84 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 85 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 86 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 87 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 88 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 89 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 90 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 91 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 92 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 93 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 94 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 95 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 96 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 97 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 98 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 99 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 100 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 101 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 102 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 103 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 104 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 105 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 106 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 107 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 108 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 109 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 110 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 111 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 112 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 113 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 114 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 115 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 116 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 117 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 118 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 119 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 120 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 121 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 122 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 123 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 124 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 125 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 126 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 127 refl [%*100]:20170615_reflectance_mosaic_128b),  Resize (band 128 refl [%*100]:20170615_reflectance_mosaic_128b)}</MDI>
+    <MDI key="byte_order">0</MDI>
+    <MDI key="coordinate_system_string">{PROJCS["UTM_Zone_35N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",27.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]}</MDI>
+    <MDI key="data_ignore_value">0</MDI>
+    <MDI key="data_type">2</MDI>
+    <MDI key="default_bands">{97,65,33}</MDI>
+    <MDI key="description">{ A small subset of the TAIG hyperspectral image}</MDI>
+    <MDI key="file_type">ENVI Standard</MDI>
+    <MDI key="fwhm">{ 0.004080, 0.004090, 0.004090, 0.004100, 0.004100, 0.004110, 0.004120, 0.004120, 0.004130, 0.004140, 0.004150, 0.004150, 0.004160, 0.004160, 0.004170, 0.004190, 0.004200, 0.004210, 0.004220, 0.004240, 0.004250, 0.004260, 0.004270, 0.004280, 0.004290, 0.004300, 0.004310, 0.004310, 0.004320, 0.004330, 0.004330, 0.004340, 0.004350, 0.004360, 0.004370, 0.004380, 0.004380, 0.004390, 0.004400, 0.004410, 0.004420, 0.004430, 0.004450, 0.004460, 0.004470, 0.004480, 0.004490, 0.004500, 0.004510, 0.004520, 0.004530, 0.004540, 0.004560, 0.004570, 0.004590, 0.004600, 0.004620, 0.004640, 0.004650, 0.004660, 0.004680, 0.004690, 0.004700, 0.004720, 0.004730, 0.004750, 0.004760, 0.004780, 0.004790, 0.004800, 0.004820, 0.004830, 0.004830, 0.004840, 0.004850, 0.004850, 0.004850, 0.004860, 0.004860, 0.004870, 0.004880, 0.004880, 0.004890, 0.004890, 0.004900, 0.004910, 0.004910, 0.004910, 0.004920, 0.004930, 0.004930, 0.004940, 0.004950, 0.004960, 0.004960, 0.004960, 0.004970, 0.004970, 0.004980, 0.004980, 0.004980, 0.004990, 0.004990, 0.004990, 0.004990, 0.004990, 0.005000, 0.005000, 0.005000, 0.004990, 0.004990, 0.004990, 0.004980, 0.004980, 0.004970, 0.004970, 0.004970, 0.004960, 0.004960, 0.004960, 0.004960, 0.004960, 0.004960, 0.004960, 0.004950, 0.004950, 0.004950, 0.004940}</MDI>
+    <MDI key="header_offset">0</MDI>
+    <MDI key="interleave">bsq</MDI>
+    <MDI key="lines">344</MDI>
+    <MDI key="reflectance_scale_factor">10000.000000</MDI>
+    <MDI key="samples">347</MDI>
+    <MDI key="sensor_type">AISA Eagle</MDI>
+    <MDI key="wavelength">{ 0.400570, 0.404910, 0.409250, 0.413610, 0.417970, 0.422350, 0.426720, 0.431120, 0.435510, 0.439920, 0.444330, 0.448760, 0.453190, 0.457630, 0.462070, 0.466520, 0.470990, 0.475460, 0.479930, 0.484420, 0.488910, 0.493410, 0.497910, 0.502430, 0.506940, 0.511470, 0.516000, 0.520540, 0.525090, 0.529640, 0.534200, 0.538770, 0.543340, 0.547910, 0.552500, 0.557080, 0.561670, 0.566270, 0.570880, 0.575500, 0.580110, 0.584730, 0.589360, 0.593990, 0.598630, 0.603270, 0.607920, 0.612570, 0.617230, 0.621880, 0.626550, 0.631220, 0.635890, 0.640570, 0.645250, 0.649930, 0.654620, 0.659320, 0.664010, 0.668710, 0.673410, 0.678120, 0.682830, 0.687550, 0.692260, 0.696980, 0.701700, 0.706430, 0.711160, 0.715890, 0.720620, 0.725360, 0.730100, 0.734830, 0.739580, 0.744320, 0.749060, 0.753810, 0.758560, 0.763310, 0.768070, 0.772820, 0.777580, 0.782330, 0.787090, 0.791850, 0.796610, 0.801370, 0.806130, 0.810890, 0.815650, 0.820420, 0.825180, 0.829940, 0.834710, 0.839480, 0.844230, 0.849000, 0.853760, 0.858530, 0.863300, 0.868050, 0.872820, 0.877590, 0.882350, 0.887110, 0.891870, 0.896620, 0.901380, 0.906130, 0.910890, 0.915640, 0.920400, 0.925140, 0.929890, 0.934640, 0.939380, 0.944130, 0.948870, 0.953610, 0.958350, 0.963080, 0.967810, 0.972540, 0.977270, 0.981990, 0.986710, 0.991430}</MDI>
+    <MDI key="wavelength_units">Micrometers</MDI>
+    <MDI key="x_start">6886</MDI>
+    <MDI key="y_start">4026</MDI>
+    <MDI key="z_plot_titles">{wavelength [!7l!3m]!N, reflectance [%*100]}</MDI>
+  </Metadata>
+  <PAMRasterBand band="1">
+    <Description>Resize (band 1 refl [%*100]:20170615_reflectance_mosaic_128b) (0.400570 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Histograms>
+      <HistItem>
+        <HistMin>0.5009823182711198</HistMin>
+        <HistMax>509.4990176817289</HistMax>
+        <BucketCount>509</BucketCount>
+        <IncludeOutOfRange>0</IncludeOutOfRange>
+        <Approximate>0</Approximate>
+        <HistCounts>34|29|42|39|44|46|61|75|56|57|62|71|94|96|72|104|91|115|139|153|167|170|144|140|192|215|195|200|248|244|273|281|312|336|303|324|421|426|391|436|506|468|470|504|518|560|530|577|611|616|699|692|706|715|771|722|834|863|821|858|886|878|983|1001|953|1031|991|1119|1079|1050|1122|1107|1175|1139|1088|1175|1249|1253|1294|1220|1266|1312|1360|1338|1242|1306|1283|1232|1269|1501|1316|1360|1322|1228|1284|1365|1315|1224|1174|1272|1245|1159|1303|1204|1231|1219|1166|1155|1190|1085|1154|1176|1121|1092|1013|1020|969|964|983|936|880|911|938|886|865|841|906|824|743|758|723|720|579|629|647|587|590|545|540|557|509|482|528|440|416|421|420|438|357|404|377|349|313|348|282|304|330|299|227|264|255|235|205|185|191|183|169|131|184|168|153|129|116|109|155|126|127|108|103|73|57|99|108|92|73|84|69|75|70|89|63|57|49|46|48|52|43|63|42|40|41|33|32|30|22|32|31|48|35|40|34|41|33|24|39|26|29|34|23|16|32|28|19|23|28|24|24|26|22|29|18|23|22|27|13|20|14|18|17|16|25|20|15|18|28|19|14|32|15|24|23|26|14|13|17|16|19|7|9|7|11|9|14|7|11|17|17|16|6|20|16|15|11|9|13|8|15|11|16|12|10|13|1|9|14|8|17|15|12|15|11|2|15|14|10|13|6|11|20|16|10|22|6|3|5|10|9|6|10|10|12|5|17|13|5|5|10|12|13|9|7|8|9|8|7|6|8|9|4|8|12|2|7|9|10|5|6|12|9|2|2|9|7|5|6|3|3|6|11|8|5|4|9|3|6|2|7|8|10|6|7|6|3|6|5|3|7|9|2|6|7|5|5|6|4|2|2|5|7|4|8|2|0|3|1|6|2|9|6|0|4|2|1|3|0|2|3|4|0|1|4|0|4|1|0|6|0|4|0|3|5|2|5|1|4|7|6|5|2|4|5|1|2|1|0|3|2|0|0|0|2|1|0|0|2|3|2|2|3|0|0|2|0|2|0|0|0|0|0|3|0|0|3|2|1|0|0|0|0|1|4|0|2|0|0|0|3|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|2</HistCounts>
+      </HistItem>
+    </Histograms>
+    <Metadata>
+      <MDI key="STATISTICS_MAXIMUM">509</MDI>
+      <MDI key="STATISTICS_MEAN">98.413058413487</MDI>
+      <MDI key="STATISTICS_MINIMUM">1</MDI>
+      <MDI key="STATISTICS_STDDEV">44.563754383563</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">99.99</MDI>
+      <MDI key="wavelength">0.400570</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="2">
+    <Description>Resize (band 2 refl [%*100]:20170615_reflectance_mosaic_128b) (0.404910 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Histograms>
+      <HistItem>
+        <HistMin>0.5010266940451745</HistMin>
+        <HistMax>487.4989733059548</HistMax>
+        <BucketCount>487</BucketCount>
+        <IncludeOutOfRange>0</IncludeOutOfRange>
+        <Approximate>0</Approximate>
+        <HistCounts>27|30|33|30|50|51|67|71|53|73|93|80|103|136|113|164|146|158|201|169|216|196|235|211|279|283|321|326|329|337|384|384|411|497|465|533|532|587|653|687|668|677|723|775|768|807|850|877|946|969|925|1001|1054|1019|1211|1170|1147|1294|1249|1217|1319|1412|1359|1324|1375|1454|1515|1479|1471|1502|1539|1479|1517|1565|1459|1609|1535|1492|1540|1505|1585|1557|1433|1509|1456|1549|1500|1461|1449|1475|1417|1448|1452|1434|1343|1249|1352|1273|1185|1149|1178|1174|1096|1104|998|986|944|1004|914|902|792|825|781|784|766|719|655|690|625|613|529|664|527|493|494|452|455|405|390|411|399|374|339|351|298|323|300|303|250|239|245|193|221|201|227|195|152|141|172|171|145|130|130|141|114|90|105|89|108|105|92|72|70|67|76|68|58|67|67|71|58|55|44|49|48|54|47|43|32|33|36|25|54|45|26|28|33|30|29|38|37|35|26|20|34|27|29|30|26|27|20|22|20|22|34|30|20|22|27|31|14|16|12|17|18|14|13|23|22|16|29|19|9|18|23|10|11|23|7|6|24|16|15|7|14|12|7|18|10|17|18|13|15|12|19|19|13|8|11|11|10|9|23|15|18|18|18|28|12|22|15|12|13|14|11|14|13|13|6|10|20|9|10|13|9|18|10|9|11|15|5|20|5|11|12|7|4|12|13|17|8|11|15|5|9|10|17|8|8|6|7|12|6|9|7|13|6|11|10|10|6|7|5|8|15|6|8|6|5|10|18|13|1|10|3|11|9|10|11|12|4|7|10|5|8|5|13|2|6|8|4|9|6|7|9|5|4|5|9|6|4|6|5|9|5|4|3|3|13|7|4|0|4|10|9|5|2|1|6|0|2|2|1|1|1|0|2|6|3|2|2|3|1|0|4|1|2|6|2|4|4|5|0|4|2|3|8|3|2|3|8|2|2|4|0|15|6|1|2|2|0|4|0|2|0|3|0|2|2|2|0|1|0|4|2|0|0|2|3|1|0|0|0|7|0|0|0|1|0|0|0|0|2|0|0|0|0|0|1|0|0|0|0|0|0|3|0|0|0|2|0|0|0|4|0|0|3|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|3</HistCounts>
+      </HistItem>
+    </Histograms>
+    <Metadata>
+      <MDI key="STATISTICS_MAXIMUM">487</MDI>
+      <MDI key="STATISTICS_MEAN">85.730055130117</MDI>
+      <MDI key="STATISTICS_MINIMUM">1</MDI>
+      <MDI key="STATISTICS_STDDEV">41.302359830629</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">99.99</MDI>
+      <MDI key="wavelength">0.404910</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="3">
+    <Description>Resize (band 3 refl [%*100]:20170615_reflectance_mosaic_128b) (0.409250 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Histograms>
+      <HistItem>
+        <HistMin>1.500897666068223</HistMin>
+        <HistMax>558.4991023339318</HistMax>
+        <BucketCount>557</BucketCount>
+        <IncludeOutOfRange>0</IncludeOutOfRange>
+        <Approximate>0</Approximate>
+        <HistCounts>4|0|3|0|0|0|1|0|10|1|6|4|2|4|10|13|15|10|14|26|14|22|19|30|46|37|34|37|60|52|48|66|94|83|88|93|97|101|128|110|117|162|167|191|212|226|238|246|260|309|381|321|327|388|406|388|491|486|441|529|581|569|577|642|718|705|706|761|758|897|754|759|983|1005|945|1013|1013|1096|1067|1229|1123|1225|1261|1254|1134|1254|1313|1430|1331|1401|1378|1467|1416|1442|1471|1440|1421|1531|1512|1485|1413|1521|1463|1462|1560|1468|1515|1496|1512|1526|1429|1400|1475|1457|1320|1336|1348|1320|1313|1304|1269|1276|1219|1212|1140|1142|1110|1089|1065|1014|965|978|931|860|785|820|763|785|793|686|714|683|609|641|564|576|611|526|519|493|496|408|428|408|354|410|343|339|341|319|311|321|267|262|233|234|221|224|226|184|208|170|159|161|135|166|146|141|110|145|110|120|118|102|110|96|94|89|88|83|75|108|61|52|69|51|81|69|46|52|55|61|61|57|60|41|39|54|48|44|50|59|45|46|38|25|29|26|19|54|51|23|17|26|21|33|18|22|33|22|33|30|35|27|33|27|18|23|14|18|31|11|20|21|16|21|18|11|17|15|36|35|20|17|14|23|19|15|12|17|13|19|19|15|12|12|6|20|16|7|5|23|10|23|9|18|13|7|7|17|9|5|13|12|12|13|13|13|11|9|8|13|9|10|5|4|9|20|7|8|23|15|10|12|14|5|8|7|14|15|11|13|4|19|11|12|12|7|12|2|22|6|6|11|9|8|13|7|8|11|8|12|10|10|12|8|11|6|9|11|11|15|14|14|9|14|13|13|5|8|11|8|17|11|12|6|5|15|12|15|13|6|11|10|5|8|11|2|11|11|10|5|7|11|10|18|10|6|12|8|4|1|11|10|4|7|7|6|12|6|4|10|3|11|5|6|4|3|2|7|6|3|3|1|3|7|11|8|1|2|3|2|6|2|10|8|2|2|2|5|6|4|10|2|8|6|3|3|6|6|3|1|4|3|3|3|7|2|2|3|7|2|0|4|3|3|8|6|3|4|0|7|2|6|0|2|0|2|4|2|1|7|5|0|3|1|2|4|2|0|2|5|2|3|2|4|3|3|7|0|2|6|0|0|0|5|0|0|0|2|4|3|0|5|0|1|1|0|1|2|1|1|2|8|0|3|2|0|0|0|1|0|0|1|0|2|0|0|1|0|0|0|0|0|0|0|0|0|0|0|2|0|0|0|0|0|0|0|0|0|0|2|0|0|0|0|0|2|0|0|0|0|0|0|0|0|2</HistCounts>
+      </HistItem>
+    </Histograms>
+    <Metadata>
+      <MDI key="STATISTICS_MAXIMUM">558</MDI>
+      <MDI key="STATISTICS_MEAN">112.25926546478</MDI>
+      <MDI key="STATISTICS_MINIMUM">2</MDI>
+      <MDI key="STATISTICS_STDDEV">45.471872540981</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">100</MDI>
+      <MDI key="wavelength">0.409250</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="4">
+    <Description>Resize (band 4 refl [%*100]:20170615_reflectance_mosaic_128b) (0.413610 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.413610</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="5">
+    <Description>Resize (band 5 refl [%*100]:20170615_reflectance_mosaic_128b) (0.417970 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.417970</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="6">
+    <Description>Resize (band 6 refl [%*100]:20170615_reflectance_mosaic_128b) (0.422350 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.422350</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="7">
+    <Description>Resize (band 7 refl [%*100]:20170615_reflectance_mosaic_128b) (0.426720 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.426720</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="8">
+    <Description>Resize (band 8 refl [%*100]:20170615_reflectance_mosaic_128b) (0.431120 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.431120</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="9">
+    <Description>Resize (band 9 refl [%*100]:20170615_reflectance_mosaic_128b) (0.435510 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.435510</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="10">
+    <Description>Resize (band 10 refl [%*100]:20170615_reflectance_mosaic_128b) (0.439920 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.439920</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="11">
+    <Description>Resize (band 11 refl [%*100]:20170615_reflectance_mosaic_128b) (0.444330 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.444330</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="12">
+    <Description>Resize (band 12 refl [%*100]:20170615_reflectance_mosaic_128b) (0.448760 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.448760</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="13">
+    <Description>Resize (band 13 refl [%*100]:20170615_reflectance_mosaic_128b) (0.453190 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.453190</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="14">
+    <Description>Resize (band 14 refl [%*100]:20170615_reflectance_mosaic_128b) (0.457630 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.457630</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="15">
+    <Description>Resize (band 15 refl [%*100]:20170615_reflectance_mosaic_128b) (0.462070 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.462070</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="16">
+    <Description>Resize (band 16 refl [%*100]:20170615_reflectance_mosaic_128b) (0.466520 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.466520</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="17">
+    <Description>Resize (band 17 refl [%*100]:20170615_reflectance_mosaic_128b) (0.470990 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.470990</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="18">
+    <Description>Resize (band 18 refl [%*100]:20170615_reflectance_mosaic_128b) (0.475460 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.475460</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="19">
+    <Description>Resize (band 19 refl [%*100]:20170615_reflectance_mosaic_128b) (0.479930 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.479930</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="20">
+    <Description>Resize (band 20 refl [%*100]:20170615_reflectance_mosaic_128b) (0.484420 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.484420</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="21">
+    <Description>Resize (band 21 refl [%*100]:20170615_reflectance_mosaic_128b) (0.488910 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.488910</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="22">
+    <Description>Resize (band 22 refl [%*100]:20170615_reflectance_mosaic_128b) (0.493410 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.493410</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="23">
+    <Description>Resize (band 23 refl [%*100]:20170615_reflectance_mosaic_128b) (0.497910 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.497910</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="24">
+    <Description>Resize (band 24 refl [%*100]:20170615_reflectance_mosaic_128b) (0.502430 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.502430</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="25">
+    <Description>Resize (band 25 refl [%*100]:20170615_reflectance_mosaic_128b) (0.506940 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.506940</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="26">
+    <Description>Resize (band 26 refl [%*100]:20170615_reflectance_mosaic_128b) (0.511470 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.511470</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="27">
+    <Description>Resize (band 27 refl [%*100]:20170615_reflectance_mosaic_128b) (0.516000 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.516000</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="28">
+    <Description>Resize (band 28 refl [%*100]:20170615_reflectance_mosaic_128b) (0.520540 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.520540</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="29">
+    <Description>Resize (band 29 refl [%*100]:20170615_reflectance_mosaic_128b) (0.525090 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.525090</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="30">
+    <Description>Resize (band 30 refl [%*100]:20170615_reflectance_mosaic_128b) (0.529640 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.529640</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="31">
+    <Description>Resize (band 31 refl [%*100]:20170615_reflectance_mosaic_128b) (0.534200 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.534200</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="32">
+    <Description>Resize (band 32 refl [%*100]:20170615_reflectance_mosaic_128b) (0.538770 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.538770</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="33">
+    <Description>Resize (band 33 refl [%*100]:20170615_reflectance_mosaic_128b) (0.543340 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.543340</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="34">
+    <Description>Resize (band 34 refl [%*100]:20170615_reflectance_mosaic_128b) (0.547910 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.547910</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="35">
+    <Description>Resize (band 35 refl [%*100]:20170615_reflectance_mosaic_128b) (0.552500 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.552500</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="36">
+    <Description>Resize (band 36 refl [%*100]:20170615_reflectance_mosaic_128b) (0.557080 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.557080</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="37">
+    <Description>Resize (band 37 refl [%*100]:20170615_reflectance_mosaic_128b) (0.561670 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.561670</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="38">
+    <Description>Resize (band 38 refl [%*100]:20170615_reflectance_mosaic_128b) (0.566270 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.566270</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="39">
+    <Description>Resize (band 39 refl [%*100]:20170615_reflectance_mosaic_128b) (0.570880 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.570880</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="40">
+    <Description>Resize (band 40 refl [%*100]:20170615_reflectance_mosaic_128b) (0.575500 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.575500</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="41">
+    <Description>Resize (band 41 refl [%*100]:20170615_reflectance_mosaic_128b) (0.580110 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.580110</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="42">
+    <Description>Resize (band 42 refl [%*100]:20170615_reflectance_mosaic_128b) (0.584730 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.584730</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="43">
+    <Description>Resize (band 43 refl [%*100]:20170615_reflectance_mosaic_128b) (0.589360 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.589360</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="44">
+    <Description>Resize (band 44 refl [%*100]:20170615_reflectance_mosaic_128b) (0.593990 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.593990</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="45">
+    <Description>Resize (band 45 refl [%*100]:20170615_reflectance_mosaic_128b) (0.598630 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.598630</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="46">
+    <Description>Resize (band 46 refl [%*100]:20170615_reflectance_mosaic_128b) (0.603270 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.603270</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="47">
+    <Description>Resize (band 47 refl [%*100]:20170615_reflectance_mosaic_128b) (0.607920 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.607920</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="48">
+    <Description>Resize (band 48 refl [%*100]:20170615_reflectance_mosaic_128b) (0.612570 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.612570</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="49">
+    <Description>Resize (band 49 refl [%*100]:20170615_reflectance_mosaic_128b) (0.617230 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.617230</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="50">
+    <Description>Resize (band 50 refl [%*100]:20170615_reflectance_mosaic_128b) (0.621880 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.621880</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="51">
+    <Description>Resize (band 51 refl [%*100]:20170615_reflectance_mosaic_128b) (0.626550 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.626550</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="52">
+    <Description>Resize (band 52 refl [%*100]:20170615_reflectance_mosaic_128b) (0.631220 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.631220</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="53">
+    <Description>Resize (band 53 refl [%*100]:20170615_reflectance_mosaic_128b) (0.635890 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.635890</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="54">
+    <Description>Resize (band 54 refl [%*100]:20170615_reflectance_mosaic_128b) (0.640570 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.640570</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="55">
+    <Description>Resize (band 55 refl [%*100]:20170615_reflectance_mosaic_128b) (0.645250 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.645250</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="56">
+    <Description>Resize (band 56 refl [%*100]:20170615_reflectance_mosaic_128b) (0.649930 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.649930</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="57">
+    <Description>Resize (band 57 refl [%*100]:20170615_reflectance_mosaic_128b) (0.654620 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.654620</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="58">
+    <Description>Resize (band 58 refl [%*100]:20170615_reflectance_mosaic_128b) (0.659320 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.659320</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="59">
+    <Description>Resize (band 59 refl [%*100]:20170615_reflectance_mosaic_128b) (0.664010 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.664010</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="60">
+    <Description>Resize (band 60 refl [%*100]:20170615_reflectance_mosaic_128b) (0.668710 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.668710</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="61">
+    <Description>Resize (band 61 refl [%*100]:20170615_reflectance_mosaic_128b) (0.673410 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.673410</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="62">
+    <Description>Resize (band 62 refl [%*100]:20170615_reflectance_mosaic_128b) (0.678120 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.678120</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="63">
+    <Description>Resize (band 63 refl [%*100]:20170615_reflectance_mosaic_128b) (0.682830 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.682830</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="64">
+    <Description>Resize (band 64 refl [%*100]:20170615_reflectance_mosaic_128b) (0.687550 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.687550</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="65">
+    <Description>Resize (band 65 refl [%*100]:20170615_reflectance_mosaic_128b) (0.692260 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.692260</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="66">
+    <Description>Resize (band 66 refl [%*100]:20170615_reflectance_mosaic_128b) (0.696980 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.696980</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="67">
+    <Description>Resize (band 67 refl [%*100]:20170615_reflectance_mosaic_128b) (0.701700 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.701700</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="68">
+    <Description>Resize (band 68 refl [%*100]:20170615_reflectance_mosaic_128b) (0.706430 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.706430</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="69">
+    <Description>Resize (band 69 refl [%*100]:20170615_reflectance_mosaic_128b) (0.711160 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.711160</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="70">
+    <Description>Resize (band 70 refl [%*100]:20170615_reflectance_mosaic_128b) (0.715890 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.715890</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="71">
+    <Description>Resize (band 71 refl [%*100]:20170615_reflectance_mosaic_128b) (0.720620 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.720620</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="72">
+    <Description>Resize (band 72 refl [%*100]:20170615_reflectance_mosaic_128b) (0.725360 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.725360</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="73">
+    <Description>Resize (band 73 refl [%*100]:20170615_reflectance_mosaic_128b) (0.730100 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.730100</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="74">
+    <Description>Resize (band 74 refl [%*100]:20170615_reflectance_mosaic_128b) (0.734830 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.734830</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="75">
+    <Description>Resize (band 75 refl [%*100]:20170615_reflectance_mosaic_128b) (0.739580 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.739580</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="76">
+    <Description>Resize (band 76 refl [%*100]:20170615_reflectance_mosaic_128b) (0.744320 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.744320</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="77">
+    <Description>Resize (band 77 refl [%*100]:20170615_reflectance_mosaic_128b) (0.749060 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.749060</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="78">
+    <Description>Resize (band 78 refl [%*100]:20170615_reflectance_mosaic_128b) (0.753810 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.753810</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="79">
+    <Description>Resize (band 79 refl [%*100]:20170615_reflectance_mosaic_128b) (0.758560 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.758560</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="80">
+    <Description>Resize (band 80 refl [%*100]:20170615_reflectance_mosaic_128b) (0.763310 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.763310</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="81">
+    <Description>Resize (band 81 refl [%*100]:20170615_reflectance_mosaic_128b) (0.768070 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.768070</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="82">
+    <Description>Resize (band 82 refl [%*100]:20170615_reflectance_mosaic_128b) (0.772820 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.772820</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="83">
+    <Description>Resize (band 83 refl [%*100]:20170615_reflectance_mosaic_128b) (0.777580 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.777580</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="84">
+    <Description>Resize (band 84 refl [%*100]:20170615_reflectance_mosaic_128b) (0.782330 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.782330</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="85">
+    <Description>Resize (band 85 refl [%*100]:20170615_reflectance_mosaic_128b) (0.787090 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.787090</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="86">
+    <Description>Resize (band 86 refl [%*100]:20170615_reflectance_mosaic_128b) (0.791850 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.791850</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="87">
+    <Description>Resize (band 87 refl [%*100]:20170615_reflectance_mosaic_128b) (0.796610 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.796610</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="88">
+    <Description>Resize (band 88 refl [%*100]:20170615_reflectance_mosaic_128b) (0.801370 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.801370</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="89">
+    <Description>Resize (band 89 refl [%*100]:20170615_reflectance_mosaic_128b) (0.806130 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.806130</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="90">
+    <Description>Resize (band 90 refl [%*100]:20170615_reflectance_mosaic_128b) (0.810890 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.810890</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="91">
+    <Description>Resize (band 91 refl [%*100]:20170615_reflectance_mosaic_128b) (0.815650 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.815650</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="92">
+    <Description>Resize (band 92 refl [%*100]:20170615_reflectance_mosaic_128b) (0.820420 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.820420</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="93">
+    <Description>Resize (band 93 refl [%*100]:20170615_reflectance_mosaic_128b) (0.825180 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.825180</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="94">
+    <Description>Resize (band 94 refl [%*100]:20170615_reflectance_mosaic_128b) (0.829940 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.829940</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="95">
+    <Description>Resize (band 95 refl [%*100]:20170615_reflectance_mosaic_128b) (0.834710 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.834710</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="96">
+    <Description>Resize (band 96 refl [%*100]:20170615_reflectance_mosaic_128b) (0.839480 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.839480</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="97">
+    <Description>Resize (band 97 refl [%*100]:20170615_reflectance_mosaic_128b) (0.844230 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.844230</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="98">
+    <Description>Resize (band 98 refl [%*100]:20170615_reflectance_mosaic_128b) (0.849000 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.849000</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="99">
+    <Description>Resize (band 99 refl [%*100]:20170615_reflectance_mosaic_128b) (0.853760 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.853760</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="100">
+    <Description>Resize (band 100 refl [%*100]:20170615_reflectance_mosaic_128b) (0.858530 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.858530</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="101">
+    <Description>Resize (band 101 refl [%*100]:20170615_reflectance_mosaic_128b) (0.863300 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.863300</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="102">
+    <Description>Resize (band 102 refl [%*100]:20170615_reflectance_mosaic_128b) (0.868050 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.868050</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="103">
+    <Description>Resize (band 103 refl [%*100]:20170615_reflectance_mosaic_128b) (0.872820 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.872820</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="104">
+    <Description>Resize (band 104 refl [%*100]:20170615_reflectance_mosaic_128b) (0.877590 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.877590</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="105">
+    <Description>Resize (band 105 refl [%*100]:20170615_reflectance_mosaic_128b) (0.882350 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.882350</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="106">
+    <Description>Resize (band 106 refl [%*100]:20170615_reflectance_mosaic_128b) (0.887110 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.887110</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="107">
+    <Description>Resize (band 107 refl [%*100]:20170615_reflectance_mosaic_128b) (0.891870 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.891870</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="108">
+    <Description>Resize (band 108 refl [%*100]:20170615_reflectance_mosaic_128b) (0.896620 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.896620</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="109">
+    <Description>Resize (band 109 refl [%*100]:20170615_reflectance_mosaic_128b) (0.901380 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.901380</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="110">
+    <Description>Resize (band 110 refl [%*100]:20170615_reflectance_mosaic_128b) (0.906130 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.906130</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="111">
+    <Description>Resize (band 111 refl [%*100]:20170615_reflectance_mosaic_128b) (0.910890 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.910890</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="112">
+    <Description>Resize (band 112 refl [%*100]:20170615_reflectance_mosaic_128b) (0.915640 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.915640</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="113">
+    <Description>Resize (band 113 refl [%*100]:20170615_reflectance_mosaic_128b) (0.920400 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.920400</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="114">
+    <Description>Resize (band 114 refl [%*100]:20170615_reflectance_mosaic_128b) (0.925140 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.925140</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="115">
+    <Description>Resize (band 115 refl [%*100]:20170615_reflectance_mosaic_128b) (0.929890 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.929890</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="116">
+    <Description>Resize (band 116 refl [%*100]:20170615_reflectance_mosaic_128b) (0.934640 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.934640</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="117">
+    <Description>Resize (band 117 refl [%*100]:20170615_reflectance_mosaic_128b) (0.939380 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.939380</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="118">
+    <Description>Resize (band 118 refl [%*100]:20170615_reflectance_mosaic_128b) (0.944130 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.944130</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="119">
+    <Description>Resize (band 119 refl [%*100]:20170615_reflectance_mosaic_128b) (0.948870 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.948870</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="120">
+    <Description>Resize (band 120 refl [%*100]:20170615_reflectance_mosaic_128b) (0.953610 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.953610</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="121">
+    <Description>Resize (band 121 refl [%*100]:20170615_reflectance_mosaic_128b) (0.958350 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.958350</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="122">
+    <Description>Resize (band 122 refl [%*100]:20170615_reflectance_mosaic_128b) (0.963080 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.963080</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="123">
+    <Description>Resize (band 123 refl [%*100]:20170615_reflectance_mosaic_128b) (0.967810 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.967810</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="124">
+    <Description>Resize (band 124 refl [%*100]:20170615_reflectance_mosaic_128b) (0.972540 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.972540</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="125">
+    <Description>Resize (band 125 refl [%*100]:20170615_reflectance_mosaic_128b) (0.977270 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.977270</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="126">
+    <Description>Resize (band 126 refl [%*100]:20170615_reflectance_mosaic_128b) (0.981990 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.981990</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="127">
+    <Description>Resize (band 127 refl [%*100]:20170615_reflectance_mosaic_128b) (0.986710 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.986710</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+  <PAMRasterBand band="128">
+    <Description>Resize (band 128 refl [%*100]:20170615_reflectance_mosaic_128b) (0.991430 Micrometers)</Description>
+    <NoDataValue>0.00000000000000E+00</NoDataValue>
+    <Metadata>
+      <MDI key="wavelength">0.991430</MDI>
+      <MDI key="wavelength_units">Micrometers</MDI>
+    </Metadata>
+  </PAMRasterBand>
+</PAMDataset>
