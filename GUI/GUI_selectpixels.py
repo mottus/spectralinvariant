@@ -16,9 +16,9 @@ from osgeo import osr
 # import matplotlib
 
 from GUI_pointsfromband import PfBGUI
-from spectralinvariant.hypdatatools_gdal import *
-from spectralinvariant.hypdatatools_utils import *
-from spectralinvariant.hypdatatools_img import *
+import spectralinvariant.hypdatatools_gdal as si_gdal
+import spectralinvariant.hypdatatools_utils as si_utils
+import spectralinvariant.hypdatatools_img as si_img
 
 class pixelGUI:
         
@@ -197,7 +197,7 @@ class pixelGUI:
         self.scrollbar_figures_h.pack( side='bottom', fill='x' )
         self.listbox_figures.pack( side='top', fill='y', expand=True )
         self.frame_figures.pack( side='right', fill='y' )
-        self.foldername1 = get_hyperspectral_datafolder( localprintcommand=self.printlog ) # where the data is. This is the initial value, will be modified later
+        self.foldername1 = si_utils.get_hyperspectral_datafolder( localprintcommand=self.printlog ) # where the data is. This is the initial value, will be modified later
         
         # catch the signal that the point list has been updated by PfBGUI
         master.bind("<<PfBGUI_exit>>", self.updatepoints_fun )
@@ -250,19 +250,19 @@ class pixelGUI:
             
             # try to locate the proper columns
             for i,c in enumerate(column_names):
-                            if len(c) > 0:
-                                cl = c.lower()
-                                firstchar = cl[0]
-                                if (firstchar == 'x' or cl in ('easting','longitude')) and i_x==-1:
-                                    i_x = i
-                                    self.printlog( filename + ": Found column for X: %i %s.\n" %(i_x+1,c) )
-                                elif (firstchar == 'y' or cl in ('northing','latitude')) and i_y==-1:
-                                    i_y = i
-                                    self.printlog( filename + ": Found column for Y: %i %s.\n" %(i_y+1,c) )
-                                elif cl.find("id")>-1 and i_id==-1:
-                                    i_id = i
-                                    self.printlog( filename + ": Found column for ID: %i %s.\n" %(i_id+1,c) )
-            
+               if len(c) > 0:
+                   cl = c.lower()
+                   firstchar = cl[0]
+                   if (firstchar == 'x' or any(s in cl for s in ('easting','longitude'))) and i_x==-1:
+                       i_x = i
+                       self.printlog( filename + ": Found column for X: %i %s.\n" %(i_x+1,c) )
+                   elif (firstchar == 'y' or any(s in cl for s in ('northing','latitude'))) and i_y==-1:
+                       i_y = i
+                       self.printlog( filename + ": Found column for Y: %i %s.\n" %(i_y+1,c) )
+                   elif cl.find("id")>-1 and i_id==-1:
+                       i_id = i
+                       self.printlog( filename + ": Found column for ID: %i %s.\n" %(i_id+1,c) )
+           
             if (i_x == -1) or ( i_y == -1 ):
                 # use default values -- but beware to not use the column identified as ID if possible
                 if ( i_id != 0 ):
@@ -404,7 +404,7 @@ class pixelGUI:
             outfilename =  filedialog.asksaveasfilename(initialdir = self.foldername1, title = "Save zoomed area to...", filetypes = (("ENVI hdr files","*.hdr"),("all files","*.*")))
             
             self.printlog("savezoomed(): Saving data in the first selected figure, " + str(curfigure) + " to " + outfilename + ".\n")
-            figure2image( fig_hypdata, hypdata, hypdata_map, outfilename, localprintcommand=self.printlog )
+            si_gdal.figure2image( fig_hypdata, hypdata, hypdata_map, outfilename, localprintcommand=self.printlog )
             
     def zoomout_fun( self ):
         """
@@ -452,7 +452,7 @@ class pixelGUI:
                             if fe[0] == full_filename:
                                 hypdata_map = fe[2]
                                 break
-                    zoomtoimage( fig_hypdata, hypdata_map )
+                    si_img.zoomtoimage( fig_hypdata, hypdata_map )
         else:
             self.printlog("zoomfull(): no image selected, nothing to do.\n")
 
@@ -491,13 +491,13 @@ class pixelGUI:
                             messageprinted = True
                         self.printlog( "%i " % figurenumber )                        
                         # find file dimensions and create a vector of corner points
-                        imagesize = get_imagesize( hypfilename2 )
+                        imagesize = si_gdal.get_imagesize( hypfilename2 )
                         # pixel centers of corner pixels in image coordinates of the external image
                         corner_arr2 = np.array( [ [0,0] , [ imagesize[0]-1,imagesize[1]-1 ] ] )
                         # pixel centers of corner pixels in global coordinates
-                        corner_arrglob = image2world( hypfilename2, corner_arr2 )
+                        corner_arrglob = si_gdal.image2world( hypfilename2, corner_arr2 )
                         # pixel centers of corner pixels in local coordinates of the image in the figure
-                        corner_arr = world2image( hypfilename, corner_arrglob )
+                        corner_arr = si_gdal.world2image( hypfilename, corner_arrglob )
                         
                         minx = corner_arr[0,0]
                         maxx = corner_arr[1,0]
@@ -575,7 +575,7 @@ class pixelGUI:
             fig_hypdata = self.figurelist[ self.catch_figure_listno ][ 2 ]
                        
             # convert x,y to geographic coordinates           
-            xy = image2world( hypfilename, np.asmatrix( (event.xdata,event.ydata) ) )
+            xy = si_gdal.image2world( hypfilename, np.asmatrix( (event.xdata,event.ydata) ) )
             
             # create id number: first unused number which is larger than the current number of loaded points
             # first, go through all points in pointlist
@@ -645,7 +645,7 @@ class pixelGUI:
             self.listbox_points.selection_clear( 0, END )
             # convert pointlist to two-column nd.array and then to image coordinates
             pointlistarr = self.pointlist2matrix()
-            xymatrix = world2image( hypfilename, pointlistarr )
+            xymatrix = si_gdal.world2image( hypfilename, pointlistarr )
 
             for i,xyrow in enumerate(xymatrix):
                 if xyrow[0,0]>xmin and xyrow[0,0]<xmax and xyrow[0,1]>ymin and xyrow[0,1]<ymax:
@@ -715,7 +715,7 @@ class pixelGUI:
                 curfigno = self.figurelist[ curfigure ][0]
                 if curfigno in existingfigs:
                     fig_hypdata = self.figurelist[ curfigure ][ 2 ] 
-                    xy_proj = world2image( self.figurelist[ curfigure ][ 4 ], xy )
+                    xy_proj = si_gdal.world2image( self.figurelist[ curfigure ][ 4 ], xy )
                     minxy = np.min( xy_proj, axis=0 )
                     maxxy = np.max( xy_proj, axis=0 )
                     minx_i = minxy[0,0] - zoombuffer
@@ -724,7 +724,7 @@ class pixelGUI:
                     maxy_i = maxxy[0,1] + zoombuffer
                     fig_hypdata.axes[0].set_xlim( ( minx_i, maxx_i ) )
                     fig_hypdata.axes[0].set_ylim( ( maxy_i, miny_i ) ) # y axes reversed, 0,0 in upper-left
-                    set_display_square( fig_hypdata )
+                    si_img.set_display_square( fig_hypdata )
                 else:
                     self.printlog("showpoints(): Figure " + str(curfigno) + " not open, not zooming it.\n")
         else:
@@ -748,7 +748,7 @@ class pixelGUI:
                     fig_hypdata = self.figurelist[ curfigure ][ 2 ] 
                     xy_w = self.pointlist2matrix()[ selectedpoints, : ]
                     pointids = [ self.pointlist[i][0] for i in selectedpoints ]
-                    xy = world2image( self.figurelist[ curfigure ][ 4 ] , xy_w )
+                    xy = si_gdal.world2image( self.figurelist[ curfigure ][ 4 ] , xy_w )
                     for i,xy_row in enumerate(xy):
                         fig_hypdata.axes[0].plot( xy_row[0,0], xy_row[0,1], marker='x', c=selectedcolor )
                         fig_hypdata.axes[0].annotate( pointids[i], (xy_row[0,0]+1, xy_row[0,1]-1 ), color=selectedcolor )
@@ -937,7 +937,7 @@ class pixelGUI:
                     fig_hypdata.axes[0].get_lines()[0].remove()
                 self.printlog("plotshp_fun(): plotting polygons ")
                 for i in i_range:
-                    xy = shape2imagecoords( self.polygonlist[i], hypfilename )
+                    xy = si_gdal.shape2imagecoords( self.polygonlist[i], hypfilename )
                     # fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c='k' )
                     col = i % len(self.plotlinecolors)
                     fig_hypdata.axes[0].plot( xy[:,0], xy[:,1], c=self.plotlinecolors[col] )
@@ -965,7 +965,7 @@ class pixelGUI:
                 fig_hypdata = self.figurelist[ curfigure ][2]
                 hypfilename = self.figurelist[ curfigure ][4]
                 # get SpatialReference and GeoTransform
-                SR_r, GT, startvalues = get_rastergeometry( hypfilename )  
+                SR_r, GT, startvalues = si_gdal.get_rastergeometry( hypfilename )  
                 # initialize min and max values
                 xmin_i = float('inf') 
                 ymin_i = float('inf')
@@ -1086,7 +1086,7 @@ class pixelGUI:
                     stretchfactor = 0.95
                 self.printlog("displayfile_fun: using stretch = "+str(stretchfactor)+".\n")
                 plotmode = self.plotmode_string.get()
-                fig_hypdata = plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, clip_up=stretchfactor )   
+                fig_hypdata = si_img.plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, clip_up=stretchfactor )   
                 # add figure to figurelist
                 # self.figurelist = [] # each list element should be a list: [ number, type, figurehandle, name, filename_full, DataIgnoreValue ]
                 ff = [ fig_hypdata.number, 'hyp', fig_hypdata, filename_short, hypfilename, DIV ]
@@ -1197,21 +1197,21 @@ class pixelGUI:
             if polygons_exist:                
                 # retrieve spectra from polygons
                 self.printlog(fn_name+": Loading spectrum data for " + str( N_points ) + " rings: " )
-                wl,use_spectra = get_wavelength( hypfilename, hypdata )
+                wl,use_spectra = si_img.get_wavelength( hypfilename, hypdata )
                 spectrumlist = []
                 Nlist = []
                 pointids = []
                 for ring, featureID in zip(self.polygonlist, self.polygonIDlist):
                     pointids.append( featureID+":x"+str(round(ring.GetX(),3))+":y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
-                    coordlist = points_from_shape( hypfilename, ring )
-                    spectrum, N = avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
+                    coordlist = si_gdal.points_from_shape( hypfilename, ring )
+                    spectrum, N = si_img.avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
                     spectrumlist.append( spectrum )
                     Nlist.append( N )
                     self.printlog(f"[{N}] ")
             else:
                 # spectra for points
                 pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
-                spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
+                spectrumlist, wl, Nlist = si_gdal.extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
             
             big_Nlist.append( Nlist )
             big_spectrumlist.append( spectrumlist )
@@ -1326,14 +1326,14 @@ class pixelGUI:
                 if self.button_loadshp.cget('text') == "Unload polygon":
                     # retrieve spectra from polygons
                     self.printlog( functionname + "Loading spectrum data for " + str( len(self.polygonlist) ) + " rings: " )
-                    wl,use_spectra = get_wavelength( hypfilename, hypdata )
+                    wl,use_spectra = si_img.get_wavelength( hypfilename, hypdata )
                     spectrumlist = []
                     Nlist = []
                     pointids = []
                     for ring in self.polygonlist:
                         pointids.append( "x"+str(round(ring.GetX(),3))+"y"+str(round(ring.GetY(),3)) ) # construct ID from coordinates
-                        coordlist = points_from_shape( hypfilename, ring )
-                        spectrum, N = avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
+                        coordlist = si_gdal.points_from_shape( hypfilename, ring )
+                        spectrum, N = si_img.avg_spectrum( hypfilename, coordlist, DIV, hypdata, hypdata_map )
                         spectrumlist.append( spectrum )
                         Nlist.append( N )
                         if ProcessingFirstFile:
@@ -1342,7 +1342,7 @@ class pixelGUI:
                         self.printlog(" points ... done\n")
                 else:
                     pointarray = self.pointlist2matrix()[ selectedpointlist, : ] # get numpy matrix of point coordinates
-                    spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
+                    spectrumlist, wl, Nlist = si_gdal.extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
                 for i_point in range(len(spectrumlist)):
                     spectrum = spectrumlist[ i_point ]
                     N = Nlist[ i_point ]
@@ -1447,7 +1447,7 @@ class pixelGUI:
             shortfilename = os.path.split( hypfilename )[1]
             shortfilename = os.path.splitext( shortfilename )[0]
             
-            wl_hyp, wl_found = get_wavelength( hypfilename, hypdata )
+            wl_hyp, wl_found = si_img.get_wavelength( hypfilename, hypdata )
             N_bands = int( hypdata.metadata['bands'] )
             if 'band names' in hypdata.metadata:
                 bandnames = hypdata.metadata['band names']
@@ -1466,7 +1466,7 @@ class pixelGUI:
                 mapinfo = ""
             # Note: DIVs are handled by default by extract_spectrum()
 
-            spectrumlist, wl, Nlist = extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
+            spectrumlist, wl, Nlist = si_gdal.extract_spectrum( hypfilename, pointarray, areasize, areaunit, areashape, hypdata, hypdata_map )
             # the number of pixels is reported for each point and can vary, depending if the point is at the edge of the data or has NaNs.
             #   this is difficult to pass on into the data dictionary
             
@@ -1628,7 +1628,7 @@ class pixelGUI:
         function to end the misery
         note: the pyplot windows are not closed. Maybe, it would be nice to keep track of those to close them
         """
-        set_hyperspectral_datafolder( self.foldername1 )
+        si_utils.set_hyperspectral_datafolder( self.foldername1 )
         plt.close('all')
         try:
             self.master.tk.eval('proc bgerror {msg} {}')  # silence bgerror: replace Tcl background error handler with a no-op
