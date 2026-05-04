@@ -436,6 +436,7 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
 
     # plot using pyplot.imshow -- this allows to catch clicks in the window
     outputcommand(functionname + "reading data...")
+    DIV = get_DIV(hypfilename, hypdata)
     if type(hypdata) is dict:
         if plot_rgb:
             hypdata_rgb = hypdata_map[:, :, (i_r, i_g, i_b)].astype('float32')
@@ -446,6 +447,9 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
             hypdata_rgb = hypdata.read_bands( (i_r, i_g, i_b) ).astype('float32')
         else:
             hypdata_rgb = hypdata.read_bands([i_r]).astype('float32')
+    if DIV is not None:
+        # set data inore value to zero for plotting
+        hypdata_rgb[ np.where(hypdata_rgb==DIV)] = float('nan')
     if plot_rgb:
         fig_hypdata = plot_hypdatamatrix( hypdata_rgb, plottitle=filename_short,
             fig_hypdata=fig_hypdata, clip_up=clip_up, clip_upvalue=clip_upvalue, 
