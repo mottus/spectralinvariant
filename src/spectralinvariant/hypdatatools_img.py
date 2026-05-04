@@ -327,7 +327,6 @@ def plot_hyperspectral( hypfilename, hypdata=None, hypdata_map=None, outputcomma
     """
 
     functionname = "plot_hyperspectral(): "  # used in messaging
-
     if hypdata is None:
         hypdata = spectral.open_image(hypfilename)
         hypdata_map = hypdata.open_memmap()
@@ -551,7 +550,6 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
         axestoapply = (0,1) # apply along x,y, i.e., separately for each band
         
     functionname = "plot_hypdatamatrix(): "  # used in messaging
-
     if outputcommand is None:
         # use a print command with no line feed in the end. The line feeds are given manually when needed.
         outputcommand = lambda x: print(x,end='',flush=True)
@@ -560,7 +558,6 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     hypdata_rgb_plot = hypdata_rgb.copy()
     
     # stretch the image: calculate nice scaling if needed
-    outputcommand(" calculating scaling...")
     N_notnan = None # it will be computed only when needed
     if clip_low is not None:
         # scale to the given lowe percentile. Add it to data if it's negative
@@ -654,7 +651,7 @@ def plot_hypdatamatrix_singleband( hypdata_band, plottitle="", falsecolor=False,
             hypdata_band = hypdata_band[:,:,0]
 
     # stretch the image: calculate nice scaling if needed
-    outputcommand(functionname + " calculating scaling...")
+    outputcommand(functionname + " calculating scaling ...")
     N_notnan = None # it will be computed only when needed
     if clip_low is not None:
         # scale to the given lowe percentile. Add it to data if it's negative

@@ -46,7 +46,7 @@ class pixelGUI:
         self.plotlinecolors =  ( 'r', 'b', 'g', 'c', 'm', 'y', 'k', 'w' )
         
         # the brightness stretch scale factor, colors above stretchfactor are set to 1
-        self.stretchfactor_string = StringVar()
+        self.stretchfactor_string = StringVar(master=master)
         self.stretchfactor_string.set( "0.95" )
         
         self.catch_figure = None # The figure handle from which clicks are being caught
@@ -1086,7 +1086,8 @@ class pixelGUI:
                     stretchfactor = 0.95
                 self.printlog("displayfile_fun: using stretch = "+str(stretchfactor)+".\n")
                 plotmode = self.plotmode_string.get()
-                fig_hypdata = si_img.plot_hyperspectral( hypfilename, hypdata, hypdata_map, outputcommand=self.printlog, plotmode=plotmode, clip_up=stretchfactor )   
+                fig_hypdata = si_img.plot_hyperspectral( hypfilename, hypdata, \
+                    hypdata_map, outputcommand=self.printlog, plotmode=plotmode, clip_up=stretchfactor )   
                 # add figure to figurelist
                 # self.figurelist = [] # each list element should be a list: [ number, type, figurehandle, name, filename_full, DataIgnoreValue ]
                 ff = [ fig_hypdata.number, 'hyp', fig_hypdata, filename_short, hypfilename, DIV ]
