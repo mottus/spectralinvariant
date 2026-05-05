@@ -564,7 +564,7 @@ def plot_hypdatamatrix( hypdata_rgb, plottitle="", fig_hypdata=None,
     # stretch the image: calculate nice scaling if needed
     N_notnan = None # it will be computed only when needed
     if clip_low is not None:
-        # scale to the given lowe percentile. Add it to data if it's negative
+        # scale to the given lower percentile. Add it to data if it's negative
         # add their most negative value to bands which have negative values 
         N_notnan = np.array( np.count_nonzero( ~np.isnan(hypdata_rgb_plot), axis=axestoapply ) ).min() 
         if N_notnan < 200:

@@ -1111,10 +1111,6 @@ class pixelGUI:
             # open the file as memmap to get the actual hyperspectral data
             hypdata_map = hypdata.open_memmap()
             self.printlog("opening file "+hypfilename + "\n" )
-            if hypdata.interleave == 1:
-                self.printlog("Band interleaved (BIL).\n")
-            else:
-                self.printlog( hypfilename + " not BIL -- opening still as BIL -- will be slower.\n" ) 
                 
             DIV = -1 # this means: do not use DIV
             if 'data ignore value' in hypdata.metadata:
